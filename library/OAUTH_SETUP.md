@@ -66,7 +66,7 @@ Do not mix hosted and local callback URLs in the same OAuth app unless you maint
 ### Google Cloud Console
 
 1. [Google Cloud Console](https://console.cloud.google.com/) → create or select a project
-2. **APIs & Services** → **OAuth consent screen** — configure app name, support email, and scopes (`email`, `profile`, `openid` are enough for login)
+2. **APIs & Services** → **OAuth consent screen** — set **App name** to `ShareMii`, **Homepage** / **Privacy policy** to `https://sharemii.net`, upload your logo, and add scopes (`email`, `profile`, `openid`). Users still see “continue to …supabase.co” in the domain line (see [Google consent screen branding](#google-consent-screen-branding-sharemiinet-vs-supabaseco) below).
 3. **Credentials** → **Create credentials** → **OAuth client ID** → type **Web application**
 4. **Authorized JavaScript origins** (optional for Supabase-hosted callback flow; add if Google asks):
    - `http://localhost:5173`
@@ -82,6 +82,32 @@ Dashboard → **Authentication** → **Providers** → **Google**:
 - Paste Client ID and Client secret → **Save**
 
 Docs: [Login with Google](https://supabase.com/docs/guides/auth/social-login/auth-google)
+
+### Google consent screen branding (sharemii.net vs supabase.co)
+
+If Google says **“Choose an account to continue to `bejtwsdmmvgpjcolnqdx.supabase.co`”** instead of ShareMii, that is **normal** with the default Supabase Auth URL. Google shows the host of the OAuth **redirect URI** (where Google sends the user after login), which is always your Supabase project:
+
+```text
+https://bejtwsdmmvgpjcolnqdx.supabase.co/auth/v1/callback
+```
+
+ShareMii’s site URL (`https://sharemii.net`) is only used *after* Supabase finishes auth (`redirectTo` in the app). Google does not display that on the consent screen.
+
+**What you can do without paying for Supabase add-ons**
+
+- **OAuth consent screen** → **App name** = `ShareMii`, logo, links to `https://sharemii.net` — the headline reads “Sign in to ShareMii” even if the small print still mentions `supabase.co`.
+- **Authorized domains** (if you verify `sharemii.net` in Search Console): add `sharemii.net` on the consent screen. This does not replace the `supabase.co` redirect line.
+
+**To show `sharemii.net` (or `auth.sharemii.net`) on the consent screen**
+
+Use a [Supabase custom domain](https://supabase.com/docs/guides/platform/custom-domains) (paid add-on on a paid plan), e.g. `api.sharemii.net` or `auth.sharemii.net`:
+
+1. Dashboard → **Project Settings** → **General** → **Custom Domains** (DNS CNAME + TXT verification).
+2. Add the new callback to Google: `https://auth.sharemii.net/auth/v1/callback` (keep the old one until cutover).
+3. After activation, set `VITE_SUPABASE_URL` (and GitHub Actions secrets) to the custom domain.
+4. Google’s “continue to …” line will show your subdomain instead of `bejtwsdmmvgpjcolnqdx.supabase.co`.
+
+This is optional polish; OAuth works correctly with the default `*.supabase.co` domain.
 
 ---
 
@@ -166,12 +192,56 @@ If OAuth fails with “redirect URL not allowed”, compare the browser URL orig
 
 ## 9. Troubleshooting
 
+### Supabase: “Google/GitHub isn’t enabled”
+
+This is **only** a Dashboard toggle — the ShareMii app cannot enable providers for you.
+
+1. [Supabase Dashboard](https://supabase.com/dashboard/project/bejtwsdmmvgpjcolnqdx/auth/providers) → **Authentication** → **Providers**
+2. Expand **Google** (or **GitHub**) → set **Enable** to ON
+3. Paste **Client ID** and **Client secret** from Google Cloud / GitHub OAuth App
+4. Click **Save** at the bottom of that provider panel (not just the accordion)
+
+Repeat for each provider. Until this is saved, the login modal will error even if Google/GitHub consoles are configured correctly.
+
+### Discord: “Invalid OAuth2 redirect_uri”
+
+Discord validates `redirect_uri` in the authorize URL against **OAuth2 → Redirects** on the **same application** as `client_id`.
+
+Your authorize URL uses:
+
+```text
+client_id=1506939244625657866
+redirect_uri=https://bejtwsdmmvgpjcolnqdx.supabase.co/auth/v1/callback
+```
+
+Fix in [Discord Developer Portal](https://discord.com/developers/applications):
+
+1. Open the app whose **Client ID** is `1506939244625657866` (not a different ShareMii/bot app)
+2. **OAuth2** → **Redirects** → **Add Redirect**
+3. Paste **exactly** (no trailing slash, no spaces):
+
+   ```text
+   https://bejtwsdmmvgpjcolnqdx.supabase.co/auth/v1/callback
+   ```
+
+4. **Save Changes** (bottom of OAuth2 page)
+5. In Supabase → **Providers** → **Discord**: same Client ID + Client secret, **Enabled** ON → **Save**
+
+Common mistakes:
+
+| Mistake | Why it fails |
+| ------- | ------------- |
+| Added `https://sharemii.net/...` in Discord | Discord needs the **Supabase** callback, not your site URL |
+| Trailing slash: `.../callback/` | Must match character-for-character |
+| Redirect on wrong Discord app | `client_id` in the URL must match the app you edited |
+| Forgot **Save Changes** in Discord | Redirect list not persisted |
+
+### Other issues
+
 | Symptom | Likely fix |
 | ------- | ---------- |
-| `Provider is not enabled` | Turn on the provider in Supabase Dashboard |
-| Redirect / callback mismatch | Callback in Google/GitHub/Discord must match Supabase exactly (scheme, host, path) |
+| `Provider is not enabled` | Turn on the provider in Supabase Dashboard and save credentials |
 | Lands on wrong site after login | Add your origin to Supabase Redirect URLs and `AUTH_REDIRECT_ORIGINS` |
-| `Invalid redirect_uri` from provider | OAuth app missing Supabase `/auth/v1/callback` URL |
 | User created but no profile | Ensure DB migrations ran (`npm run dev` syncs schema); profile trigger is in `supabase/migrations/002_profiles.sql` |
 | Discord works in prod but not locally | Add `http://localhost:54321/auth/v1/callback` to Discord redirects when using Supabase CLI |
 

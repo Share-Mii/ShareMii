@@ -22,6 +22,8 @@ const adminMigrationFiles = [
   join(root, 'supabase', 'migrations', '022_comment_insert_visibility_and_rate_limit.sql'),
   join(root, 'supabase', 'migrations', '023_content_auto_moderation.sql'),
   join(root, 'supabase', 'migrations', '024_revoke_public_execute_definer_rpc.sql'),
+  join(root, 'supabase', 'migrations', '026_user_privacy_and_bug_reports.sql'),
+  join(root, 'supabase', 'migrations', '027_discord_bug_notifications.sql'),
 ];
 const envLocal = join(root, '.env.local');
 

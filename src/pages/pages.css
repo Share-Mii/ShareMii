@@ -52,6 +52,17 @@
   color: var(--color-text);
 }
 
+.legal-page__list {
+  margin: var(--spacing-sm) 0 0;
+  padding-left: 1.25rem;
+  line-height: 1.65;
+  color: var(--color-text);
+}
+
+.legal-page__list li + li {
+  margin-top: var(--spacing-xs);
+}
+
 .legal-page__heading {
   font-size: var(--font-size-lg);
   margin: 0;

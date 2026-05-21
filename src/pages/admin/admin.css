@@ -512,6 +512,10 @@
   font-size: 0.75rem;
 }
 
+.admin-mono--wrap {
+  word-break: break-word;
+}
+
 .admin-badge {
   display: inline-block;
   padding: 0.15rem 0.45rem;

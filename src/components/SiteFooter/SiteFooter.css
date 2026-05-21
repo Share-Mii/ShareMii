@@ -63,6 +63,14 @@
   color: var(--color-accent);
 }
 
+.site-footer__bug-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
 .site-footer__disclaimer {
   margin: 0;
   font-size: var(--font-size-sm);

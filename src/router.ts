@@ -34,6 +34,8 @@ import { renderAdminReportDetail } from '@/pages/admin/ReportDetail';
 import { renderAdminUsers } from '@/pages/admin/Users';
 import { renderAdminAudit } from '@/pages/admin/Audit';
 import { renderAdminSettings } from '@/pages/admin/AdminSettings';
+import { renderAdminBugReports } from '@/pages/admin/BugReports';
+import { renderAdminBugReportDetail } from '@/pages/admin/BugReportDetail';
 import { requireAdminProfile, requireStaffProfile } from '@/services/staffGate';
 
 type Cleanup = () => void;
@@ -302,6 +304,36 @@ function navigate(): void {
       }
       runWithPageTransition(() => {
         void renderAdminDashboard(app, profile);
+      });
+    });
+    return;
+  }
+
+  if (hash === '#/admin/bugs') {
+    void requireStaffProfile().then((profile) => {
+      if (getHash() !== '#/admin/bugs') return;
+      if (!profile) {
+        window.location.hash = '#/';
+        return;
+      }
+      runWithPageTransition(() => {
+        void renderAdminBugReports(app, profile);
+      });
+    });
+    return;
+  }
+
+  const adminBugMatch = hash.match(/^#\/admin\/bugs\/([^/]+)$/);
+  if (adminBugMatch) {
+    const bugId = adminBugMatch[1]!;
+    void requireStaffProfile().then((profile) => {
+      if (getHash() !== `#/admin/bugs/${bugId}`) return;
+      if (!profile) {
+        window.location.hash = '#/';
+        return;
+      }
+      runWithPageTransition(() => {
+        void renderAdminBugReportDetail(app, profile, bugId);
       });
     });
     return;

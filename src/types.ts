@@ -138,6 +138,23 @@ export interface ContentReport {
   related_open_count?: number;
 }
 
+export interface BugReport {
+  id: string;
+  reporter_id: string | null;
+  title: string;
+  description: string;
+  page_url: string;
+  user_agent: string;
+  status: ReportStatus;
+  priority: ReportPriority;
+  assigned_to: string | null;
+  resolved_at: string | null;
+  resolved_by: string | null;
+  resolution_note: string;
+  created_at: string;
+  reporter_username?: string | null;
+}
+
 export interface ModerationAction {
   id: string;
   actor_id: string;

@@ -10,6 +10,9 @@ major_version = 17
 [functions.discord-notify]
 verify_jwt = false
 
+[functions.discord-bug-notify]
+verify_jwt = false
+
 [auth]
 site_url = "http://localhost:5173"
 additional_redirect_urls = [

@@ -16,6 +16,11 @@ import { isSupabaseConfigured, logProfileContentPolicyAttempt } from '@/services
 import { validateGamertag } from '@/utils/gamertag';
 import { moderationFailReasonForUserText } from '@/utils/contentModeration';
 import { escapeAttr, escapeHtml } from '@/utils/escapeHtml';
+import {
+  deleteAccount,
+  downloadUserDataExport,
+  exportUserData,
+} from '@/services/userData';
 import type { Profile } from '@/types';
 
 function avatarInitial(profile: Profile): string {
@@ -401,6 +406,120 @@ function buildSettingsPage(profile: Profile, userId: string): HTMLElement {
 
   notifCard.append(notifHeading, notifLead, toggles);
 
+  const dataCard = document.createElement('section');
+  dataCard.className = 'settings-page__card';
+  dataCard.id = 'your-data';
+  dataCard.setAttribute('aria-labelledby', 'settings-data-heading');
+
+  const dataHeading = document.createElement('h2');
+  dataHeading.id = 'settings-data-heading';
+  dataHeading.className = 'settings-page__card-title';
+  dataHeading.textContent = 'Your data & account';
+
+  const dataLead = document.createElement('p');
+  dataLead.className = 'settings-page__card-lead';
+  dataLead.textContent =
+    'Download a copy of your data, review our policies, or permanently delete your account.';
+
+  const exportRow = document.createElement('div');
+  exportRow.className = 'settings-row';
+  const exportBody = document.createElement('div');
+  exportBody.className = 'settings-row__body';
+  exportBody.innerHTML =
+    '<span class="settings-row__label">Download my data</span>' +
+    '<p class="settings-row__hint">Exports your profile, Miis, comments, favorites, and related records as JSON.</p>';
+  const exportBtn = document.createElement('button');
+  exportBtn.type = 'button';
+  exportBtn.className = 'pill-btn pill-btn--outline interactive';
+  exportBtn.textContent = 'Download';
+  exportBtn.addEventListener('click', async () => {
+    exportBtn.setAttribute('disabled', 'true');
+    try {
+      const data = await exportUserData();
+      downloadUserDataExport(data);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Export failed');
+    } finally {
+      exportBtn.removeAttribute('disabled');
+    }
+  });
+  const exportAction = document.createElement('div');
+  exportAction.className = 'settings-row__action';
+  exportAction.appendChild(exportBtn);
+  exportRow.append(exportBody, exportAction);
+
+  const legalRow = document.createElement('div');
+  legalRow.className = 'settings-row';
+  legalRow.innerHTML =
+    '<div class="settings-row__body">' +
+    '<span class="settings-row__label">Privacy & legal</span>' +
+    '<p class="settings-row__hint">Privacy Policy, Terms, and how we handle your information.</p>' +
+    '</div>' +
+    '<div class="settings-row__action settings-row__action--links">' +
+    '<a href="#/privacy" class="settings-page__inline-link interactive">Privacy</a>' +
+    '<a href="#/terms" class="settings-page__inline-link interactive">Terms</a>' +
+    '<a href="#/delete-account" class="settings-page__inline-link interactive">Deletion info</a>' +
+    '</div>';
+
+  const deleteRow = document.createElement('div');
+  deleteRow.className = 'settings-row settings-row--stacked settings-row--danger';
+  deleteRow.innerHTML =
+    '<span class="settings-row__label">Delete my account</span>' +
+    '<p class="settings-row__hint">Permanently removes your account, profile, Miis, and comments. This cannot be undone.</p>';
+
+  const confirmLabel = document.createElement('label');
+  confirmLabel.className = 'settings-row__label';
+  confirmLabel.htmlFor = 'settings-delete-confirm';
+  confirmLabel.textContent = `Type your gamertag (${escapeHtml(currentProfile.username)}) to confirm`;
+
+  const confirmInput = document.createElement('input');
+  confirmInput.id = 'settings-delete-confirm';
+  confirmInput.className = 'settings-row__input';
+  confirmInput.type = 'text';
+  confirmInput.autocomplete = 'off';
+  confirmInput.placeholder = currentProfile.username;
+
+  const deleteError = document.createElement('p');
+  deleteError.className =
+    'settings-row__hint settings-row__hint--error settings-row__hint--field-error';
+  deleteError.hidden = true;
+
+  const deleteBtn = document.createElement('button');
+  deleteBtn.type = 'button';
+  deleteBtn.className = 'pill-btn pill-btn--outline interactive settings-page__danger-btn';
+  deleteBtn.textContent = 'Delete my account';
+  deleteBtn.addEventListener('click', async () => {
+    deleteError.hidden = true;
+    const confirm = confirmInput.value.trim();
+    if (!confirm) {
+      deleteError.textContent = 'Enter your gamertag to confirm.';
+      deleteError.hidden = false;
+      return;
+    }
+    if (
+      !window.confirm(
+        'Delete your account permanently? All your Miis, comments, and profile data will be removed.',
+      )
+    ) {
+      return;
+    }
+    deleteBtn.setAttribute('disabled', 'true');
+    try {
+      await deleteAccount(confirm);
+      await signOut();
+      window.location.hash = '#/';
+      window.location.reload();
+    } catch (err) {
+      deleteError.textContent =
+        err instanceof Error ? err.message : 'Could not delete account.';
+      deleteError.hidden = false;
+      deleteBtn.removeAttribute('disabled');
+    }
+  });
+
+  deleteRow.append(confirmLabel, confirmInput, deleteError, deleteBtn);
+  dataCard.append(dataHeading, dataLead, exportRow, legalRow, deleteRow);
+
   const accountSection = document.createElement('section');
   accountSection.className = 'settings-page__account';
   accountSection.setAttribute('aria-label', 'Account');
@@ -415,14 +534,9 @@ function buildSettingsPage(profile: Profile, userId: string): HTMLElement {
     else window.location.hash = '#/';
   });
 
-  const deleteLink = document.createElement('a');
-  deleteLink.href = '#/delete-account';
-  deleteLink.className = 'settings-page__delete-link interactive';
-  deleteLink.textContent = 'Account deletion info';
-
-  accountSection.append(signOutBtn, deleteLink);
+  accountSection.append(signOutBtn);
 
   const root = document.createElement('div');
-  root.append(pageTitle, profileCard, notifCard, accountSection);
+  root.append(pageTitle, profileCard, notifCard, dataCard, accountSection);
   return root;
 }

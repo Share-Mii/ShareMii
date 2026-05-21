@@ -2,6 +2,7 @@ import { getSupabaseClient } from '@/services/supabase';
 import type {
   AdminDashboardStats,
   AdminUserSummary,
+  BugReport,
   ContentReport,
   ModerationAction,
   ModerationAutoFlag,
@@ -204,6 +205,61 @@ export async function checkIsAdmin(): Promise<boolean> {
   const { data, error } = await getSupabaseClient().rpc('is_admin');
   if (error) return false;
   return Boolean(data);
+}
+
+export async function listBugReports(
+  status?: ReportStatus | null,
+  limit = 50,
+  offset = 0,
+): Promise<BugReport[]> {
+  const { data, error } = await getSupabaseClient().rpc('admin_list_bug_reports', {
+    p_status: status ?? null,
+    p_limit: limit,
+    p_offset: offset,
+  });
+  if (error) throw new Error(formatError(error));
+  return (data ?? []) as BugReport[];
+}
+
+export async function getBugReportDetail(reportId: string): Promise<{
+  report: BugReport;
+}> {
+  const { data, error } = await getSupabaseClient().rpc('admin_get_bug_report', {
+    p_report_id: reportId,
+  });
+  if (error) throw new Error(formatError(error));
+  return data as { report: BugReport };
+}
+
+export async function assignBugReport(reportId: string): Promise<void> {
+  const { error } = await getSupabaseClient().rpc('admin_assign_bug_report', {
+    p_report_id: reportId,
+  });
+  if (error) throw new Error(formatError(error));
+}
+
+export async function resolveBugReport(
+  reportId: string,
+  status: 'resolved' | 'dismissed',
+  note = '',
+): Promise<void> {
+  const { error } = await getSupabaseClient().rpc('admin_resolve_bug_report', {
+    p_report_id: reportId,
+    p_status: status,
+    p_note: note,
+  });
+  if (error) throw new Error(formatError(error));
+}
+
+export async function setBugReportPriority(
+  reportId: string,
+  priority: ReportPriority,
+): Promise<void> {
+  const { error } = await getSupabaseClient().rpc('admin_set_bug_report_priority', {
+    p_report_id: reportId,
+    p_priority: priority,
+  });
+  if (error) throw new Error(formatError(error));
 }
 
 export async function bulkDismissReports(reportIds: string[]): Promise<number> {

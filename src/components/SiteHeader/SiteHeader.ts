@@ -29,6 +29,7 @@ import { isDarkTheme, toggleTheme } from '@/services/theme';
 import type { Profile } from '@/types';
 import { fetchActiveAnnouncement } from '@/services/admin';
 import { isStaff } from '@/utils/permissions';
+import { openBugReportModal } from '@/components/BugReportModal/BugReportModal';
 import { icon, iconSpan } from '@/utils/icon';
 
 interface NavLink {
@@ -150,6 +151,13 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
     { href: '#/collections', label: 'My Collections', icon: 'folder' },
     { href: '#/uploads', label: 'My Uploads', icon: 'cloud-arrow-up' },
     { href: '#/settings', label: 'User Settings', icon: 'gear' },
+    {
+      label: 'Report a bug',
+      icon: 'bug',
+      action: () => {
+        openBugReportModal();
+      },
+    },
   ];
 
   if (isStaff(profile)) {

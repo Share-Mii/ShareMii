@@ -10,6 +10,12 @@ const LEGAL_LINKS = [
   { href: '#/delete-account', label: 'Delete Account' },
 ] as const;
 
+let bugReportOpener: (() => void) | null = null;
+
+export function setBugReportOpener(opener: () => void): void {
+  bugReportOpener = opener;
+}
+
 export function createSiteFooter(): HTMLElement {
   const footer = document.createElement('footer');
   footer.className = 'site-footer';
@@ -38,6 +44,13 @@ export function createSiteFooter(): HTMLElement {
     a.textContent = link.label;
     nav.appendChild(a);
   }
+
+  const bugBtn = document.createElement('button');
+  bugBtn.type = 'button';
+  bugBtn.className = 'site-footer__legal-link interactive site-footer__bug-btn';
+  bugBtn.textContent = 'Report a bug';
+  bugBtn.addEventListener('click', () => bugReportOpener?.());
+  nav.appendChild(bugBtn);
 
   const discordUrl = getDiscordInviteUrl();
   if (discordUrl) {

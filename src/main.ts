@@ -8,6 +8,8 @@ import '@/styles/icons.css';
 import '@/styles/logo.css';
 import '@/components/shared.css';
 import '@/components/Skeleton/Skeleton.css';
+import { openBugReportModal } from '@/components/BugReportModal/BugReportModal';
+import { setBugReportOpener } from '@/components/SiteFooter/SiteFooter';
 import { initRouter } from '@/router';
 import { initAuth } from '@/services/auth';
 import { initProfileGate } from '@/services/profileGate';
@@ -17,6 +19,7 @@ import { initAnalytics } from '@/services/analytics';
 import { unregisterServiceWorkers } from '@/utils/unregisterServiceWorkers';
 
 initTheme();
+setBugReportOpener(() => openBugReportModal());
 migrateLegacyYeahStorage();
 initAnalytics();
 void unregisterServiceWorkers();
