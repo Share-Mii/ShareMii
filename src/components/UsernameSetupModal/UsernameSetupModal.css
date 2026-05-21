@@ -1,0 +1,80 @@
+.username-setup-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-lg);
+  background: var(--color-modal-overlay);
+  backdrop-filter: blur(4px);
+}
+
+.username-setup-modal {
+  position: relative;
+  width: min(440px, 100%);
+  background: var(--color-bg-panel);
+  border-radius: 20px;
+  box-shadow: 0 24px 64px rgba(26, 26, 46, 0.18);
+  padding: var(--spacing-xl);
+}
+
+.username-setup-modal__title {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.username-setup-modal__subtitle {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin-bottom: var(--spacing-lg);
+}
+
+.username-setup-modal__label {
+  display: block;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: var(--spacing-xs);
+}
+
+.username-setup-modal__input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  margin-bottom: var(--spacing-xs);
+}
+
+.username-setup-modal__input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--focus-ring);
+}
+
+.username-setup-modal__hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--spacing-md);
+  min-height: 1.25rem;
+}
+
+.username-setup-modal__hint--error {
+  color: var(--color-coral);
+}
+
+.username-setup-modal__error {
+  color: var(--color-coral);
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.username-setup-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}

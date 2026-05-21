@@ -1,0 +1,10 @@
+
+.create-page .mii-maker {
+  width: 100%;
+  max-width: 100%;
+  margin-top: var(--spacing-md);
+}
+
+.create-page .mii-maker__studio {
+  margin: 0;
+}

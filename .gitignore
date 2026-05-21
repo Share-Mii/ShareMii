@@ -1,0 +1,48 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment (secrets)
+.env
+.env.local
+.env.*.local
+
+# Supabase local link cache (project ref only — no secrets)
+.supabase
+supabase/.temp/
+
+# Scratch / accidental files
+Untitled
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# AI assistants & coding-agent tooling (local state; do not commit machine-specific output)
+# Allow team-shared Cursor rules to be committed.
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+.claude/
+.aider*
+.specstory/
+
+# GitHub Copilot (editor-local)
+.github/copilot/

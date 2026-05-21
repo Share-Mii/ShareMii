@@ -1,0 +1,224 @@
+.hero-polaroids {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-sm);
+  overflow: visible;
+}
+
+.hero-polaroids__composition {
+  position: relative;
+  width: min(100%, 320px);
+  min-height: 260px;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.hero-polaroids__hint {
+  position: absolute;
+  top: 0;
+  right: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 6px 12px;
+  background: var(--color-bg-panel);
+  border-radius: var(--radius-pill);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  box-shadow: var(--shadow-tile);
+  max-width: 180px;
+  line-height: 1.25;
+  z-index: 10;
+}
+
+.hero-polaroids__stack {
+  position: absolute;
+  inset: 32px 0 0;
+  margin: 0 auto;
+  width: 100%;
+  max-width: 300px;
+  height: 228px;
+  overflow: visible;
+}
+
+.hero-polaroids__card {
+  position: absolute;
+  width: var(--card-width, 140px);
+  bottom: 0;
+  transform-origin: center bottom;
+  cursor: default;
+}
+
+.hero-polaroids__card--left {
+  left: 12px;
+  bottom: 8px;
+  z-index: 1;
+  transform: rotate(-11deg);
+}
+
+.hero-polaroids__card--center {
+  left: 50%;
+  bottom: 4px;
+  z-index: 3;
+  transform: translateX(-50%) rotate(6deg);
+}
+
+.hero-polaroids__card--right {
+  right: 12px;
+  bottom: 8px;
+  z-index: 2;
+  transform: rotate(18deg);
+}
+
+.hero-polaroids--enter .hero-polaroids__hint {
+  animation: polaroid-hint-pop 0.55s var(--ease-out-smooth) both;
+  animation-delay: 0.5s;
+}
+
+.hero-polaroids--enter .hero-polaroids__card--left:not(.hero-polaroids__card--empty) {
+  animation: polaroid-fan-left 0.75s var(--ease-out-smooth) both;
+  animation-delay: 0.12s;
+}
+
+.hero-polaroids--enter .hero-polaroids__card--center:not(.hero-polaroids__card--empty) {
+  animation: polaroid-fan-center 0.8s var(--ease-out-smooth) both;
+  animation-delay: 0.22s;
+}
+
+.hero-polaroids--enter .hero-polaroids__card--right:not(.hero-polaroids__card--empty) {
+  animation: polaroid-fan-right 0.75s var(--ease-out-smooth) both;
+  animation-delay: 0.32s;
+}
+
+.hero-polaroids__card-inner {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-panel);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 3px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--color-polaroid-border);
+}
+
+.hero-polaroids__card--empty {
+  min-height: 200px;
+  background: var(--color-polaroid-empty);
+  border: 2px dashed var(--color-border);
+  border-radius: 14px;
+}
+
+.hero-polaroids__render {
+  aspect-ratio: 4 / 5;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-polaroids__render img,
+.hero-polaroids__render canvas {
+  max-height: 92%;
+  object-fit: contain;
+}
+
+.hero-polaroids__chin {
+  padding: var(--spacing-sm) var(--spacing-sm) var(--spacing-md);
+  background: var(--color-bg-panel);
+  border-top: 1px solid var(--color-border);
+  text-align: center;
+}
+
+.hero-polaroids__name {
+  font-weight: 800;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 1px;
+}
+
+.hero-polaroids__creator {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-polaroids__badge {
+  position: absolute;
+  bottom: var(--spacing-sm);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, var(--pastel-peach) 0%, var(--pastel-pink) 100%);
+  color: var(--color-text);
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--pastel-peach) 50%, transparent);
+  z-index: 2;
+}
+
+@media (max-width: 900px) {
+  .hero-polaroids__composition {
+    width: min(100%, 300px);
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-polaroids__hint {
+    position: static;
+    margin: 0 auto var(--spacing-sm);
+    max-width: none;
+    display: flex;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+
+  .hero-polaroids__stack {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    max-width: 280px;
+    height: 210px;
+    margin-top: var(--spacing-xs);
+  }
+
+  .hero-polaroids__card {
+    --card-width: 118px !important;
+  }
+
+  .hero-polaroids__card--center {
+    --card-width: 142px !important;
+  }
+
+  .hero-polaroids__card--left {
+    left: 8px;
+    bottom: 6px;
+    transform: rotate(-10deg);
+  }
+
+  .hero-polaroids__card--right {
+    right: 8px;
+    bottom: 6px;
+    transform: rotate(16deg);
+  }
+}

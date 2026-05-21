@@ -1,0 +1,58 @@
+.ui-icon,
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.btn-icon {
+  transform: scale(1);
+  transition: transform var(--transition-fast);
+}
+
+.btn-icon:active {
+  transform: scale(0.92);
+}
+
+.btn-icon .fa-solid,
+.ui-icon {
+  font-size: 1em;
+}
+
+.navbar__icon .fa-solid,
+.bottom-bar__nav-link .fa-solid {
+  font-size: 1em;
+}
+
+.qr-scanner-error__icon .fa-solid {
+  font-size: 2.5rem;
+}
+
+.mii-renderer__error-icon .fa-solid {
+  font-size: 1.25em;
+}
+
+.mii-tile__stat .fa-solid,
+.featured-mii__stat .fa-solid,
+.detail__stat .fa-solid {
+  font-size: 0.9em;
+}
+
+.yeah-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  vertical-align: -0.1em;
+  background-color: currentColor;
+  mask: url('/assets/yeah.png') center / contain no-repeat;
+  -webkit-mask: url('/assets/yeah.png') center / contain no-repeat;
+}
+
+.mii-tile__stat .yeah-icon,
+.featured-mii__stat .yeah-icon,
+.detail__stat .yeah-icon {
+  width: 0.9em;
+  height: 0.9em;
+}

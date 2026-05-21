@@ -1,0 +1,80 @@
+.tile-overflow-menu {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  z-index: 2;
+}
+
+.tile-overflow-menu__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-bg-frosted);
+  color: var(--color-text-muted);
+  box-shadow: var(--shadow-tile);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.tile-overflow-menu__btn:hover {
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg-frosted));
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.tile-overflow-menu--open .tile-overflow-menu__btn {
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
+}
+
+.tile-overflow-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 7.5rem;
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-panel);
+  box-shadow: var(--shadow-tile);
+}
+
+.tile-overflow-menu__item {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+
+.tile-overflow-menu__item:hover:not(:disabled) {
+  background: var(--color-accent-tint);
+}
+
+.tile-overflow-menu__item--danger {
+  color: var(--color-coral, #e53935);
+}
+
+.tile-overflow-menu__item--danger:hover:not(:disabled) {
+  background: rgb(229 57 53 / 12%);
+}
+
+.tile-overflow-menu__item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

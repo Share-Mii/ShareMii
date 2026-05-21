@@ -1,0 +1,17 @@
+{
+  "name": "ShareMii",
+  "short_name": "ShareMii",
+  "description": "Browse, share, and create Nintendo Miis with the community.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f5f0ff",
+  "theme_color": "#0088ff",
+  "icons": [
+    {
+      "src": "/assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

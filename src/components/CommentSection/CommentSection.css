@@ -1,0 +1,282 @@
+.comments-section {
+  margin-top: var(--spacing-xl);
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tile);
+  box-shadow: var(--shadow-tile);
+  padding: var(--spacing-xl);
+}
+
+.comments-section__head {
+  margin-bottom: var(--spacing-lg);
+}
+
+.comments-section__title-wrap {
+  min-width: 0;
+}
+
+.comments-section__title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-xs);
+}
+
+.comments-section__title .ui-icon {
+  color: var(--color-accent);
+}
+
+.comments-section__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.75rem;
+  padding: 2px 10px;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+  background: var(--color-accent-tint);
+  border-radius: var(--radius-pill);
+}
+
+.comments-section__count[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .comment-card {
+    animation: none !important;
+  }
+}
+
+.comments-section__subtitle {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.comments-section__composer {
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-body);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.comments-section__signin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.comments-section__signin-text {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.comments-composer__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.comments-composer__input {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  font-weight: 500;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-panel);
+  resize: vertical;
+  min-height: 88px;
+  line-height: 1.55;
+  color: var(--color-text);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.comments-composer__input::placeholder {
+  color: var(--color-text-muted);
+}
+
+.comments-composer__input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--focus-ring);
+}
+
+.comments-composer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.comments-composer__hint {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.comments-section__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.comments-section__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  text-align: center;
+  padding: var(--spacing-2xl) var(--spacing-lg);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  background: var(--color-bg-body);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.comments-section__empty .ui-icon {
+  font-size: 1.5rem;
+  color: var(--color-accent);
+  opacity: 0.7;
+}
+
+.comments-section__empty--error {
+  color: var(--color-coral);
+  border-color: rgba(232, 92, 77, 0.35);
+  background: rgba(232, 92, 77, 0.06);
+}
+
+.comment-card {
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: var(--spacing-md);
+  align-items: start;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--color-bg-body);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  animation: reveal-rise 0.42s var(--ease-out-smooth) both;
+  animation-delay: calc(min(var(--stagger-index, 0), 12) * 42ms);
+  transition: box-shadow var(--transition-fast);
+}
+
+.comment-card:hover {
+  box-shadow: var(--shadow-tile);
+}
+
+.comment-card__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sm);
+  font-weight: 800;
+  color: var(--color-on-accent);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.comment-card__body {
+  min-width: 0;
+}
+
+.comment-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--spacing-sm) var(--spacing-md);
+  margin-bottom: var(--spacing-xs);
+}
+
+.comment-card__report {
+  margin-left: auto;
+  padding: 0.2rem 0.35rem;
+  border: none;
+  background: transparent;
+  color: var(--color-text-muted, #888);
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.comment-card__report:hover {
+  color: var(--color-danger, #c62828);
+  background: rgb(0 0 0 / 0.05);
+}
+
+.comment-card__author {
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.comment-card__time {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.comment-card__reply {
+  margin-top: var(--spacing-xs);
+  width: 2rem;
+  height: 2rem;
+}
+
+.comment-card__replies {
+  margin-top: 0.75rem;
+  padding-left: 0.75rem;
+  border-left: 2px solid var(--color-border);
+}
+
+.comment-card__replies .comment-card {
+  grid-template-columns: 32px 1fr;
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.comment-card__replies .comment-card__avatar {
+  width: 32px;
+  height: 32px;
+  font-size: var(--font-size-caption);
+}
+
+.comment-card__text {
+  margin: 0;
+  line-height: 1.55;
+  color: var(--color-text);
+  word-break: break-word;
+}
+
+@media (max-width: 640px) {
+  .comments-section {
+    padding: var(--spacing-lg);
+  }
+
+  .comments-composer__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .comments-composer__actions .pill-btn {
+    justify-content: center;
+  }
+}

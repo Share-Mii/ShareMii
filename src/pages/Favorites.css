@@ -1,0 +1,19 @@
+.favorites-page__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+}
+
+.favorites-page__lead {
+  margin: 0 0 1.5rem;
+  color: var(--text-muted);
+}
+
+.favorites-page__grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+}
+
+.favorites-page__empty {
+  color: var(--text-muted);
+}

@@ -1,0 +1,136 @@
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  min-height: 2.25rem;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text);
+  transform: scale(1);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.pill-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.pill-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pill-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.pill-btn--active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.pill-btn--filled {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.pill-btn--filled:hover {
+  background: var(--color-accent-hover);
+}
+
+.pill-btn--outline {
+  background: var(--color-bg-panel);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.pill-btn--outline:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.pill-btn--lg {
+  min-height: 2.75rem;
+  padding: 0.75rem 1.25rem;
+  font-size: var(--font-size-body);
+  font-weight: 700;
+}
+
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nav-button-gap);
+}
+
+.pill-group > .app-tab {
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.app-tab-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--nav-button-gap);
+  min-height: 44px;
+  padding: var(--spacing-sm);
+  box-sizing: border-box;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--pastel-mint) 20%, var(--color-mix-base));
+  flex-shrink: 0;
+}
+
+.app-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  transform: scale(1);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.app-tab:active {
+  transform: scale(0.97);
+}
+
+.app-tab:hover {
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
+}
+
+.app-tab--active {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.app-tab--active:hover {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+

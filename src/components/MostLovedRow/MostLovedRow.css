@@ -1,0 +1,201 @@
+.spotlight-section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.spotlight-section--enter {
+  animation: home-section-reveal 0.7s var(--ease-out-smooth) both;
+}
+
+.spotlight-section--enter .spotlight-featured__head {
+  animation: home-rise 0.6s var(--ease-out-smooth) both;
+  animation-delay: 0.1s;
+}
+
+.spotlight-section--enter .featured-mii {
+  animation: home-rise 0.65s var(--ease-out-smooth) both;
+  animation-delay: 0.18s;
+}
+
+.spotlight-section--enter .spotlight-loved__head {
+  animation: home-rise 0.6s var(--ease-out-smooth) both;
+  animation-delay: 0.14s;
+}
+
+.spotlight-section--enter .mii-tile {
+  animation: tile-enter 0.5s var(--ease-out-smooth) both;
+  animation-delay: calc(0.22s + var(--stagger-index, 0) * 70ms);
+}
+
+.spotlight-grid {
+  display: grid;
+  grid-template-columns: minmax(var(--spotlight-featured-min-width, 500px), 46%) minmax(
+      0,
+      1fr
+    );
+  gap: var(--spacing-xl);
+  align-items: stretch;
+}
+
+.spotlight-featured {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.spotlight-loved {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.spotlight-featured__head,
+.spotlight-loved__head {
+  margin-bottom: var(--spacing-md);
+}
+
+.spotlight-featured__title,
+.spotlight-loved__title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.spotlight-featured__title .ui-icon {
+  color: var(--color-accent-gold);
+}
+
+.spotlight-loved__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.spotlight-loved__title .yeah-icon {
+  color: var(--color-coral);
+}
+
+.spotlight-loved__link {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.spotlight-loved__link:hover {
+  text-decoration: underline;
+}
+
+.spotlight-featured .featured-mii {
+  flex: 1 1 auto;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.spotlight-featured .featured-mii__media {
+  align-self: center;
+}
+
+.spotlight-featured .featured-mii__render-wrap {
+  width: var(--featured-mii-render-width-spotlight, 200px);
+}
+
+.spotlight-featured .featured-mii__body {
+  flex: 1;
+  min-width: 220px;
+}
+
+.spotlight-featured .featured-mii__name {
+  font-size: var(--font-size-xl);
+  line-height: 1.2;
+  word-break: normal;
+}
+
+.spotlight-featured .featured-mii__desc {
+  -webkit-line-clamp: 3;
+  margin-bottom: var(--spacing-md);
+  line-height: 1.55;
+}
+
+.spotlight-featured .featured-mii__stats {
+  flex-wrap: wrap;
+  gap: var(--spacing-md) var(--spacing-lg);
+}
+
+.spotlight-loved__row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-lg);
+  flex: 1 1 auto;
+  align-items: stretch;
+  min-height: 0;
+}
+
+.spotlight-loved__row.scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+.spotlight-loved__row .mii-tile--loved {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+@media (max-width: 1180px) {
+  .spotlight-grid {
+    grid-template-columns: minmax(440px, 48%) minmax(0, 1fr);
+  }
+
+  .spotlight-featured .featured-mii__body {
+    min-width: 180px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .spotlight-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-xl);
+  }
+
+}
+
+@media (max-width: 768px) {
+  .spotlight-featured .featured-mii {
+    flex-direction: column;
+  }
+
+  .spotlight-featured .featured-mii__media {
+    width: 100%;
+  }
+
+  .spotlight-featured .featured-mii__render-wrap {
+    width: 100%;
+  }
+
+  .spotlight-loved__row {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    padding-bottom: var(--spacing-sm);
+    gap: var(--spacing-lg);
+  }
+
+  .spotlight-loved__row .mii-tile--loved {
+    flex: 0 0 180px;
+    min-width: 180px;
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .spotlight-loved__row .mii-tile--loved {
+    flex: 0 0 168px;
+    min-width: 168px;
+  }
+}

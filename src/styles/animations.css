@@ -1,0 +1,271 @@
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.42s var(--ease-out-smooth) both;
+}
+
+.page-enter .detail-back {
+  animation: reveal-rise 0.48s var(--ease-out-smooth) both;
+}
+
+.page-enter .detail {
+  animation: reveal-rise 0.52s var(--ease-out-smooth) both;
+  animation-delay: 0.05s;
+}
+
+.page-enter .related-miis--panel {
+  animation: reveal-rise 0.5s var(--ease-out-smooth) both;
+  animation-delay: 0.1s;
+}
+
+.page-enter .comments-section {
+  animation: reveal-rise 0.5s var(--ease-out-smooth) both;
+  animation-delay: 0.14s;
+}
+
+.page-enter .browse-section--page .browse-section__head {
+  animation: reveal-rise 0.5s var(--ease-out-smooth) both;
+}
+
+.page-enter .browse-section--page .filter-panel {
+  animation: reveal-rise 0.5s var(--ease-out-smooth) both;
+  animation-delay: 0.06s;
+}
+
+.page-enter .browse-section--page .residents-main {
+  animation: reveal-fade 0.45s var(--ease-out-smooth) both;
+  animation-delay: 0.1s;
+}
+
+.page-enter .page-content--offset-top > section:not(.browse-section--page),
+.page-enter .profile-card,
+.page-enter .settings-page__card {
+  animation: reveal-rise 0.5s var(--ease-out-smooth) both;
+}
+
+.page-enter .settings-page__card:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.page-enter .page-empty,
+.page-enter .page-error {
+  animation: reveal-fade 0.4s var(--ease-out-smooth) both;
+}
+
+@keyframes home-rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes home-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes home-floater-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(var(--float-rotate, 0deg));
+  }
+  to {
+    opacity: var(--floater-opacity, 0.42);
+    transform: translate(-50%, -50%) scale(1) rotate(var(--float-rotate, 0deg));
+  }
+}
+
+@keyframes hero-floater-drift {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, 0) rotate(var(--float-rotate, 0deg));
+  }
+  50% {
+    transform: translate(-50%, -50%) translate(var(--tx1, 0px), var(--ty1, 0px))
+      rotate(calc(var(--float-rotate, 0deg) + 10deg));
+  }
+}
+
+@keyframes home-scale-rise {
+  from {
+    opacity: 0;
+    transform: translateY(28px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes polaroid-fan-left {
+  from {
+    opacity: 0;
+    transform: rotate(-4deg) translateY(36px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(-11deg) translateY(0) scale(1);
+  }
+}
+
+@keyframes polaroid-fan-center {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) rotate(14deg) translateY(44px) scale(0.84);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) rotate(6deg) translateY(0) scale(1);
+  }
+}
+
+@keyframes polaroid-fan-right {
+  from {
+    opacity: 0;
+    transform: rotate(26deg) translateY(36px) scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(18deg) translateY(0) scale(1);
+  }
+}
+
+@keyframes polaroid-hint-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes home-section-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-enter {
+    animation: none !important;
+  }
+
+  .page-enter .detail-back,
+  .page-enter .detail,
+  .page-enter .related-miis--panel,
+  .page-enter .comments-section,
+  .page-enter .browse-section--page .browse-section__head,
+  .page-enter .browse-section--page .filter-panel,
+  .page-enter .browse-section--page .residents-main,
+  .page-enter .page-content--offset-top > section,
+  .page-enter .profile-card,
+  .page-enter .settings-page__card,
+  .page-enter .page-empty,
+  .page-enter .page-error {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .home-page--ready .hero__title,
+  .home-page--ready .hero__subtitle,
+  .home-page--ready .hero__actions,
+  .home-page--ready .hero__works,
+  .home-page--ready .hero__floater,
+  .home-page--ready .hero__visual-slot,
+  .hero-polaroids--enter .hero-polaroids__card,
+  .hero-polaroids--enter .hero-polaroids__hint,
+  .spotlight-section--enter,
+  .spotlight-section--enter .spotlight-featured__head,
+  .spotlight-section--enter .featured-mii,
+  .spotlight-section--enter .spotlight-loved__head,
+  .spotlight-section--enter .mii-tile,
+  .home-page .browse-section--visible,
+  .home-page .browse-section--visible .browse-section__head,
+  .home-page .browse-section--visible .filter-panel,
+  .home-page .browse-section--visible .list-pager {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .home-page--instant.home-page--ready .hero,
+  .home-page--instant.home-page--ready .hero__title,
+  .home-page--instant.home-page--ready .hero__subtitle,
+  .home-page--instant.home-page--ready .hero__actions,
+  .home-page--instant.home-page--ready .hero__works,
+  .home-page--instant.home-page--ready .hero__floater,
+  .home-page--instant.home-page--ready .hero__visual-slot {
+    opacity: 1 !important;
+    animation: none !important;
+  }
+
+  .home-page--instant.home-page--ready .hero,
+  .home-page--instant.home-page--ready .hero__title,
+  .home-page--instant.home-page--ready .hero__subtitle,
+  .home-page--instant.home-page--ready .hero__actions,
+  .home-page--instant.home-page--ready .hero__works,
+  .home-page--instant.home-page--ready .hero__visual-slot {
+    transform: none !important;
+  }
+
+  .home-page--ready .hero__floater,
+  .home-page--instant.home-page--ready .hero__floater {
+    opacity: var(--floater-opacity, 0.42) !important;
+    transform: translate(-50%, -50%) rotate(var(--float-rotate, 0deg)) !important;
+  }
+}

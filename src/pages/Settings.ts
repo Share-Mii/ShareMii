@@ -1,0 +1,428 @@
+import './Settings.css';
+import './pages.css';
+import '@/components/shared.css';
+import { wrapPublicPage } from '@/layout/pageShell';
+import { getAuthSession, isLoggedIn, signOut } from '@/services/auth';
+import { openLoginModal } from '@/components/LoginModal/LoginModal';
+import {
+  cacheProfileUsername,
+  ensureProfile,
+  fetchProfileById,
+  updateNotificationPreferences,
+  updateProfile,
+  uploadProfileImage,
+} from '@/services/profile';
+import { isSupabaseConfigured, logProfileContentPolicyAttempt } from '@/services/supabase';
+import { validateGamertag } from '@/utils/gamertag';
+import { moderationFailReasonForUserText } from '@/utils/contentModeration';
+import { escapeAttr, escapeHtml } from '@/utils/escapeHtml';
+import type { Profile } from '@/types';
+
+function avatarInitial(profile: Profile): string {
+  const ch = profile.username?.trim()?.[0];
+  return ch ? ch.toUpperCase() : '?';
+}
+
+function buildAvatarRow(
+  profile: Profile,
+  onUpdate: (p: Profile) => void,
+): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'settings-row';
+
+  const preview = document.createElement('div');
+  preview.className = 'settings-row__preview settings-row__preview--avatar';
+
+  const renderPreview = (p: Profile): void => {
+    preview.replaceChildren();
+    if (p.avatar_url) {
+      const img = document.createElement('img');
+      img.src = p.avatar_url;
+      img.alt = '';
+      preview.appendChild(img);
+    } else {
+      const span = document.createElement('span');
+      span.textContent = avatarInitial(p);
+      preview.appendChild(span);
+    }
+  };
+  renderPreview(profile);
+
+  const body = document.createElement('div');
+  body.className = 'settings-row__body';
+  const label = document.createElement('span');
+  label.className = 'settings-row__label';
+  label.textContent = 'Profile picture';
+  const hint = document.createElement('p');
+  hint.className = 'settings-row__hint';
+  hint.textContent = 'A photo helps people recognize you on ShareMii.';
+  body.append(label, hint);
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp';
+  input.className = 'settings-page__hidden-input';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'pill-btn pill-btn--outline interactive';
+  btn.textContent = 'Change';
+  btn.addEventListener('click', () => input.click());
+
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    btn.setAttribute('disabled', 'true');
+    try {
+      const updated = await uploadProfileImage(profile.id, 'avatar', file);
+      onUpdate(updated);
+      renderPreview(updated);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      btn.removeAttribute('disabled');
+      input.value = '';
+    }
+  });
+
+  const action = document.createElement('div');
+  action.className = 'settings-row__action';
+  action.append(input, btn);
+
+  row.append(preview, body, action);
+  return row;
+}
+
+function buildBannerRow(
+  profile: Profile,
+  onUpdate: (p: Profile) => void,
+): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'settings-row';
+
+  const preview = document.createElement('div');
+  preview.className = 'settings-row__preview settings-row__preview--banner';
+
+  const renderPreview = (p: Profile): void => {
+    preview.replaceChildren();
+    if (p.banner_url) {
+      const img = document.createElement('img');
+      img.src = p.banner_url;
+      img.alt = '';
+      preview.appendChild(img);
+    }
+  };
+  renderPreview(profile);
+
+  const body = document.createElement('div');
+  body.className = 'settings-row__body';
+  const label = document.createElement('span');
+  label.className = 'settings-row__label';
+  label.textContent = 'Profile banner';
+  const hint = document.createElement('p');
+  hint.className = 'settings-row__hint';
+  hint.textContent = 'Shown at the top of your public profile.';
+  body.append(label, hint);
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/jpeg,image/png,image/webp';
+  input.className = 'settings-page__hidden-input';
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'pill-btn pill-btn--outline interactive';
+  btn.textContent = 'Change';
+  btn.addEventListener('click', () => input.click());
+
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+    btn.setAttribute('disabled', 'true');
+    try {
+      const updated = await uploadProfileImage(profile.id, 'banner', file);
+      onUpdate(updated);
+      renderPreview(updated);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      btn.removeAttribute('disabled');
+      input.value = '';
+    }
+  });
+
+  const action = document.createElement('div');
+  action.className = 'settings-row__action';
+  action.append(input, btn);
+
+  row.append(preview, body, action);
+  return row;
+}
+
+export function renderSettings(container: HTMLElement): () => void {
+  let abort = false;
+
+  const page = document.createElement('main');
+  page.className = 'settings-page page-content page-content--offset-top';
+  page.innerHTML = '<p class="page-loading">Loading settings…</p>';
+  container.replaceChildren(wrapPublicPage(page));
+
+  async function load(): Promise<void> {
+    if (!isSupabaseConfigured()) {
+      page.innerHTML = '<p class="page-error">Supabase is not configured.</p>';
+      return;
+    }
+
+    const session = await getAuthSession();
+    if (!isLoggedIn(session)) {
+      openLoginModal();
+      window.location.hash = '#/';
+      return;
+    }
+
+    const userId = session!.user.id;
+    const profile =
+      (await fetchProfileById(userId)) ?? (await ensureProfile(userId));
+    if (abort) return;
+
+    page.replaceChildren();
+    page.appendChild(buildSettingsPage(profile, userId));
+  }
+
+  load();
+
+  return () => {
+    abort = true;
+  };
+}
+
+function buildSettingsPage(profile: Profile, userId: string): HTMLElement {
+  let currentProfile = { ...profile };
+
+  const onProfileUpdate = (updated: Profile): void => {
+    currentProfile = updated;
+    cacheProfileUsername(userId, updated.username);
+    window.dispatchEvent(new CustomEvent('sharemii:profile-updated'));
+  };
+
+  const pageTitle = document.createElement('h1');
+  pageTitle.className = 'settings-page__title';
+  pageTitle.textContent = 'Settings';
+
+  const profileCard = document.createElement('section');
+  profileCard.className = 'settings-page__card';
+  profileCard.setAttribute('aria-labelledby', 'settings-profile-heading');
+
+  const profileHeading = document.createElement('h2');
+  profileHeading.id = 'settings-profile-heading';
+  profileHeading.className = 'settings-page__card-title';
+  profileHeading.textContent = 'Profile';
+
+  const profileLead = document.createElement('p');
+  profileLead.className = 'settings-page__card-lead';
+  profileLead.textContent =
+    'Manage how you appear on ShareMii. Changes to your gamertag and bio apply after you save.';
+
+  profileCard.append(
+    profileHeading,
+    profileLead,
+    buildAvatarRow(currentProfile, onProfileUpdate),
+    buildBannerRow(currentProfile, onProfileUpdate),
+  );
+
+  const usernameRow = document.createElement('div');
+  usernameRow.className = 'settings-row settings-row--stacked';
+  usernameRow.innerHTML =
+    '<label class="settings-row__label" for="settings-username">Gamertag</label>' +
+    `<input class="settings-row__input" id="settings-username" name="username" maxlength="15" autocomplete="username" value="${escapeAttr(currentProfile.username)}" />` +
+    '<p class="settings-row__hint" data-username-hint></p>';
+
+  const bioRow = document.createElement('div');
+  bioRow.className = 'settings-row settings-row--stacked';
+  bioRow.innerHTML =
+    '<label class="settings-row__label" for="settings-bio">Bio</label>' +
+    `<textarea class="settings-row__textarea" id="settings-bio" name="bio" maxlength="500" placeholder="Tell others about yourself…">${escapeHtml(currentProfile.bio)}</textarea>` +
+    '<p class="settings-row__hint settings-row__hint--error settings-row__hint--field-error" data-bio-error hidden></p>';
+
+  const formFooter = document.createElement('div');
+  formFooter.className = 'settings-page__form-footer';
+
+  const formError = document.createElement('p');
+  formError.className =
+    'settings-page__form-message settings-page__form-message--error';
+  formError.hidden = true;
+
+  const formSuccess = document.createElement('p');
+  formSuccess.className =
+    'settings-page__form-message settings-page__form-message--success';
+  formSuccess.hidden = true;
+
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.className = 'pill-btn pill-btn--filled interactive';
+  saveBtn.textContent = 'Save';
+
+  formFooter.append(formError, formSuccess, saveBtn);
+  profileCard.append(usernameRow, bioRow, formFooter);
+
+  const usernameInput =
+    usernameRow.querySelector<HTMLInputElement>('#settings-username')!;
+  const usernameHint = usernameRow.querySelector('[data-username-hint]')!;
+  const bioInput = bioRow.querySelector<HTMLTextAreaElement>('#settings-bio')!;
+  const bioError = bioRow.querySelector<HTMLElement>('[data-bio-error]')!;
+
+  function updateUsernameHint(): void {
+    const result = validateGamertag(usernameInput.value);
+    if (!usernameInput.value.trim()) {
+      usernameHint.textContent = '3–15 characters; letters, numbers, and underscores.';
+      usernameHint.classList.remove('settings-row__hint--error');
+      return;
+    }
+    usernameHint.textContent = result.ok
+      ? 'Valid gamertag'
+      : (result.error ?? '');
+    usernameHint.classList.toggle('settings-row__hint--error', !result.ok);
+  }
+  usernameInput.addEventListener('input', updateUsernameHint);
+  updateUsernameHint();
+
+  bioInput.addEventListener('input', () => {
+    bioError.hidden = true;
+    bioError.textContent = '';
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    formError.hidden = true;
+    formSuccess.hidden = true;
+    bioError.hidden = true;
+    bioError.textContent = '';
+    const validation = validateGamertag(usernameInput.value.trim());
+    if (!validation.ok) {
+      formError.textContent = validation.error ?? 'Invalid gamertag';
+      formError.hidden = false;
+      return;
+    }
+
+    const usernameTrim = usernameInput.value.trim();
+    const usernamePolicy = await moderationFailReasonForUserText(usernameTrim);
+    if (usernamePolicy) {
+      formError.textContent = usernamePolicy;
+      formError.hidden = false;
+      void logProfileContentPolicyAttempt('username', usernameTrim, usernamePolicy);
+      return;
+    }
+
+    const bioTrim = bioInput.value.trim();
+    const bioPolicy = await moderationFailReasonForUserText(bioTrim);
+    if (bioPolicy) {
+      bioError.textContent = bioPolicy;
+      bioError.hidden = false;
+      void logProfileContentPolicyAttempt('bio', bioTrim, bioPolicy);
+      return;
+    }
+
+    saveBtn.setAttribute('disabled', 'true');
+    try {
+      const updated = await updateProfile(userId, {
+        username: usernameTrim,
+        bio: bioTrim,
+      });
+      onProfileUpdate(updated);
+      formSuccess.textContent = 'Changes saved.';
+      formSuccess.hidden = false;
+    } catch (err) {
+      formError.textContent =
+        err instanceof Error ? err.message : 'Could not save profile.';
+      formError.hidden = false;
+    } finally {
+      saveBtn.removeAttribute('disabled');
+    }
+  });
+
+  const notifCard = document.createElement('section');
+  notifCard.className = 'settings-page__card';
+  notifCard.id = 'notification-settings';
+  notifCard.setAttribute('aria-labelledby', 'settings-notif-heading');
+
+  const notifHeading = document.createElement('h2');
+  notifHeading.id = 'settings-notif-heading';
+  notifHeading.className = 'settings-page__card-title';
+  notifHeading.textContent = 'Notifications';
+
+  const notifLead = document.createElement('p');
+  notifLead.className = 'settings-page__card-lead';
+  notifLead.textContent = 'Choose which activity you want to be notified about.';
+
+  const toggles = document.createElement('div');
+  toggles.className = 'settings-page__toggles';
+
+  const prefs = [
+    {
+      key: 'notify_comments' as const,
+      label: 'Comments on my Miis',
+      checked: currentProfile.notify_comments ?? true,
+    },
+    {
+      key: 'notify_yeahs' as const,
+      label: 'Yeahs on my Miis',
+      checked: currentProfile.notify_yeahs ?? true,
+    },
+    {
+      key: 'notify_favorites' as const,
+      label: 'Favorites on my Miis',
+      checked: currentProfile.notify_favorites ?? true,
+    },
+  ];
+
+  for (const pref of prefs) {
+    const label = document.createElement('label');
+    label.className = 'settings-page__toggle';
+
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = pref.checked;
+    input.addEventListener('change', async () => {
+      try {
+        const updated = await updateNotificationPreferences(userId, {
+          [pref.key]: input.checked,
+        });
+        onProfileUpdate(updated);
+      } catch (err) {
+        input.checked = !input.checked;
+        alert(err instanceof Error ? err.message : 'Could not update');
+      }
+    });
+
+    const span = document.createElement('span');
+    span.textContent = pref.label;
+    label.append(span, input);
+    toggles.appendChild(label);
+  }
+
+  notifCard.append(notifHeading, notifLead, toggles);
+
+  const accountSection = document.createElement('section');
+  accountSection.className = 'settings-page__account';
+  accountSection.setAttribute('aria-label', 'Account');
+
+  const signOutBtn = document.createElement('button');
+  signOutBtn.type = 'button';
+  signOutBtn.className = 'pill-btn pill-btn--outline interactive';
+  signOutBtn.textContent = 'Sign out';
+  signOutBtn.addEventListener('click', async () => {
+    const err = await signOut();
+    if (err) alert(err);
+    else window.location.hash = '#/';
+  });
+
+  const deleteLink = document.createElement('a');
+  deleteLink.href = '#/delete-account';
+  deleteLink.className = 'settings-page__delete-link interactive';
+  deleteLink.textContent = 'Account deletion info';
+
+  accountSection.append(signOutBtn, deleteLink);
+
+  const root = document.createElement('div');
+  root.append(pageTitle, profileCard, notifCard, accountSection);
+  return root;
+}

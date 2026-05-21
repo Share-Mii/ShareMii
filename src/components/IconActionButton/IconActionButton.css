@@ -1,0 +1,125 @@
+.icon-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  min-width: 2.5rem;
+  max-width: 2.5rem;
+  padding: 0;
+  overflow: visible;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--color-bg-frosted);
+  color: var(--color-text-muted);
+  box-shadow: var(--shadow-tile);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.icon-action .ui-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.icon-action:hover:not(:disabled),
+.icon-action:focus-visible:not(:disabled) {
+  background: color-mix(in srgb, var(--color-accent) 14%, var(--color-bg-frosted));
+  color: var(--color-text);
+  border-color: var(--color-accent);
+}
+
+.icon-action:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.icon-action--active {
+  background: var(--color-accent-tint);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+.icon-action--accent {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border-color: var(--color-accent);
+}
+
+.icon-action--accent:hover:not(:disabled),
+.icon-action--accent:focus-visible:not(:disabled) {
+  background: var(--color-accent-hover);
+  color: var(--color-on-accent);
+}
+
+.icon-action--danger:hover:not(:disabled),
+.icon-action--danger:focus-visible:not(:disabled) {
+  background: rgb(229 57 53 / 12%);
+  color: var(--color-coral);
+  border-color: var(--color-coral);
+}
+
+.icon-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.icon-action .chat-tooltip {
+  position: absolute;
+  top: calc(100% + 10px);
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%) translateY(-4px);
+  z-index: 20;
+  width: max-content;
+  max-width: min(280px, 70vw);
+  padding: 0.35rem 0.65rem;
+  border-radius: 10px;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-fg);
+  font-family: var(--font-family);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s;
+  box-shadow: var(--shadow-tile);
+}
+
+.icon-action .chat-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  top: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--tooltip-bg);
+}
+
+.icon-action:hover .chat-tooltip,
+.icon-action:focus-visible .chat-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+@media (hover: none) {
+  .icon-action .chat-tooltip {
+    display: none;
+  }
+}

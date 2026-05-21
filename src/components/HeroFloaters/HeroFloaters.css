@@ -1,0 +1,30 @@
+
+
+.hero__floaters {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+}
+
+.hero__floater {
+  position: absolute;
+  left: calc(var(--fx, 0.5) * 100%);
+  top: calc(var(--fy, 0.5) * 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--size, 24px);
+  line-height: 1;
+  opacity: var(--floater-opacity, 0.42);
+  color: var(--floater-color, var(--pastel-pink));
+  transform: translate(-50%, -50%) rotate(var(--float-rotate, 0deg));
+  will-change: transform;
+}
+
+.hero__floater-icon {
+  display: block;
+  font-size: 1em;
+  line-height: 1;
+}

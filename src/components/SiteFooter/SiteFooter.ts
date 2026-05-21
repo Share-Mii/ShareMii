@@ -1,0 +1,48 @@
+import './SiteFooter.css';
+import { logoMark } from '@/utils/logo';
+
+const LEGAL_LINKS = [
+  { href: '#/legal', label: 'Legal' },
+  { href: '#/privacy', label: 'Privacy Policy' },
+  { href: '#/terms', label: 'Terms of Service' },
+  { href: '#/child-safety', label: 'Child Safety' },
+  { href: '#/delete-account', label: 'Delete Account' },
+] as const;
+
+export function createSiteFooter(): HTMLElement {
+  const footer = document.createElement('footer');
+  footer.className = 'site-footer';
+
+  const inner = document.createElement('div');
+  inner.className = 'site-footer__inner';
+
+  const credits = document.createElement('p');
+  credits.className = 'site-footer__credits';
+  credits.innerHTML = `
+    <span class="site-footer__brand">${logoMark('site-footer__logo', { size: 'sm' })} ShareMii</span>
+    · Mii rendering by
+    <a href="https://mii-unsecure.ariankordi.net/" target="_blank" rel="noopener noreferrer">Arian Kordi Mii Renderer</a>
+    · Built with
+    <a href="https://github.com/Stewared/miijs" target="_blank" rel="noopener noreferrer">MiiJS</a>
+  `;
+
+  const nav = document.createElement('nav');
+  nav.className = 'site-footer__legal';
+  nav.setAttribute('aria-label', 'Legal');
+
+  for (const link of LEGAL_LINKS) {
+    const a = document.createElement('a');
+    a.href = link.href;
+    a.className = 'site-footer__legal-link interactive';
+    a.textContent = link.label;
+    nav.appendChild(a);
+  }
+
+  const disclaimer = document.createElement('p');
+  disclaimer.className = 'site-footer__disclaimer';
+  disclaimer.textContent = 'Not affiliated with Nintendo Co., Ltd.';
+
+  inner.append(credits, nav, disclaimer);
+  footer.appendChild(inner);
+  return footer;
+}

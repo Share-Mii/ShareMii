@@ -1,0 +1,62 @@
+.list-pager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  min-width: 0;
+}
+
+.list-pager__list {
+  min-width: 0;
+}
+
+.list-pager__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+  flex-shrink: 0;
+}
+
+.list-pager__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-panel);
+  color: var(--color-text);
+  cursor: pointer;
+  transform: scale(1);
+  transition:
+    border-color var(--transition-fast),
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.list-pager__btn:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.list-pager__btn:hover:not(:disabled) {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-accent-tint);
+}
+
+.list-pager__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.list-pager__label {
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  min-width: 7.5rem;
+  text-align: center;
+}
