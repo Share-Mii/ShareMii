@@ -1,6 +1,7 @@
 import { clearAnnouncement, setAnnouncement } from '@/services/admin';
 import type { Profile } from '@/types';
 import { wrapAdminPage } from '@/pages/admin/adminShell';
+import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 export async function renderAdminSettings(
   container: HTMLElement,
   profile: Profile,
@@ -30,13 +31,17 @@ export async function renderAdminSettings(
   const severityLabel = document.createElement('label');
   severityLabel.htmlFor = 'announce-severity';
   severityLabel.textContent = 'Severity';
-  const severitySelect = document.createElement('select');
-  severitySelect.id = 'announce-severity';
-  severitySelect.innerHTML = `
-    <option value="info">Info</option>
-    <option value="warning">Warning</option>
-  `;
-  severityField.append(severityLabel, severitySelect);
+  const severitySelect = createCustomSelect({
+    id: 'announce-severity',
+    ariaLabel: 'Announcement severity',
+    variant: 'default',
+    value: 'info',
+    options: [
+      { value: 'info', label: 'Info' },
+      { value: 'warning', label: 'Warning' },
+    ],
+  });
+  severityField.append(severityLabel, severitySelect.root);
 
   const actions = document.createElement('div');
   actions.className = 'admin-toolbar';
@@ -62,7 +67,7 @@ export async function renderAdminSettings(
     try {
       await setAnnouncement(
         messageInput.value.trim(),
-        severitySelect.value as 'info' | 'warning',
+        severitySelect.getValue() as 'info' | 'warning',
       );
       status.textContent = 'Announcement published.';
       status.hidden = false;

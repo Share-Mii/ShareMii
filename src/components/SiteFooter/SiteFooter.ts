@@ -1,4 +1,5 @@
 import './SiteFooter.css';
+import { getDiscordInviteUrl } from '@/config/community';
 import { logoMark } from '@/utils/logo';
 
 const LEGAL_LINKS = [
@@ -36,6 +37,17 @@ export function createSiteFooter(): HTMLElement {
     a.className = 'site-footer__legal-link interactive';
     a.textContent = link.label;
     nav.appendChild(a);
+  }
+
+  const discordUrl = getDiscordInviteUrl();
+  if (discordUrl) {
+    const discord = document.createElement('a');
+    discord.href = discordUrl;
+    discord.target = '_blank';
+    discord.rel = 'noopener noreferrer';
+    discord.className = 'site-footer__legal-link interactive site-footer__discord';
+    discord.textContent = 'Discord';
+    nav.appendChild(discord);
   }
 
   const disclaimer = document.createElement('p');

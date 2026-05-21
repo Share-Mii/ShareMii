@@ -49,6 +49,10 @@ function relativeTime(iso: string): string {
 }
 
 let panelEl: HTMLElement | null = null;
+
+export function isNotificationPanelOpen(): boolean {
+  return panelEl !== null;
+}
 let dismissBind: (() => void) | null = null;
 let pollTimer: number | null = null;
 

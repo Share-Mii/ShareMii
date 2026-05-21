@@ -54,7 +54,10 @@
   color: var(--color-text);
 }
 
-.report-modal__field select,
+.report-modal__field .custom-select {
+  width: 100%;
+}
+
 .report-modal__field textarea {
   padding: 0.5rem 0.65rem;
   border: 1px solid var(--color-border);
@@ -62,11 +65,6 @@
   background: var(--color-bg-section-alt);
   color: var(--color-text);
   font: inherit;
-}
-
-.report-modal__field select option {
-  background: var(--color-bg-panel);
-  color: var(--color-text);
 }
 
 .report-modal__error {

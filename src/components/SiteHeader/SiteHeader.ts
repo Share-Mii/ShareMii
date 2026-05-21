@@ -11,10 +11,12 @@ import {
 } from '@/components/UserMenu/UserMenu';
 import {
   closeNotificationPanel,
+  isNotificationPanelOpen,
   openNotificationPanel,
   refreshNotificationBadge,
   startNotificationPolling,
 } from '@/components/NotificationPanel/NotificationPanel';
+import { getDiscordInviteUrl } from '@/config/community';
 import {
   getAuthSession,
   getPrimedAuthSession,
@@ -84,6 +86,17 @@ function renderNav(nav: HTMLElement): void {
     if (active) a.setAttribute('aria-current', 'page');
     nav.appendChild(a);
   }
+
+  const discordUrl = getDiscordInviteUrl();
+  if (discordUrl) {
+    const discord = document.createElement('a');
+    discord.href = discordUrl;
+    discord.target = '_blank';
+    discord.rel = 'noopener noreferrer';
+    discord.className = 'app-tab interactive site-header__discord';
+    discord.textContent = 'Discord';
+    nav.appendChild(discord);
+  }
 }
 
 function createThemeToggle(): HTMLButtonElement {
@@ -131,19 +144,21 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
     {
       href: username ? `#/u/${encodeURIComponent(username)}` : '#/settings',
       label: 'View Profile',
+      icon: 'user',
     },
-    { href: '#/favorites', label: 'My Favorites' },
-    { href: '#/collections', label: 'My Collections' },
-    { href: '#/uploads', label: 'My Uploads' },
-    { href: '#/settings', label: 'User Settings' },
+    { href: '#/favorites', label: 'My Favorites', icon: 'bookmark' },
+    { href: '#/collections', label: 'My Collections', icon: 'folder' },
+    { href: '#/uploads', label: 'My Uploads', icon: 'cloud-arrow-up' },
+    { href: '#/settings', label: 'User Settings', icon: 'gear' },
   ];
 
   if (isStaff(profile)) {
-    items.push({ href: '#/admin', label: 'Admin' });
+    items.push({ href: '#/admin', label: 'Admin', icon: 'shield-halved' });
   }
 
   items.push({
     label: 'Log out',
+    icon: 'right-from-bracket',
     action: async () => {
       const err = await signOut();
       if (err) alert(err);
@@ -199,6 +214,10 @@ function renderHeaderActions(
 
     notifBtn.addEventListener('click', (e) => {
       e.stopPropagation();
+      if (isNotificationPanelOpen()) {
+        closeNotificationPanel();
+        return;
+      }
       openNotificationPanel(notifBtn, refreshBadge);
     });
 

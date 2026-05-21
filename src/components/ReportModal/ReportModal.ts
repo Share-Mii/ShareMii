@@ -1,5 +1,6 @@
 import './ReportModal.css';
 import '@/components/shared.css';
+import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { openLoginModal } from '@/components/LoginModal/LoginModal';
 import { getAuthSession, isLoggedIn } from '@/services/auth';
 import { REPORT_REASONS, submitContentReport } from '@/services/reports';
@@ -68,15 +69,15 @@ export function openReportModal(options: OpenReportModalOptions): () => void {
     const reasonLabel = document.createElement('label');
     reasonLabel.htmlFor = 'report-reason';
     reasonLabel.textContent = 'Reason';
-    const reasonSelect = document.createElement('select');
-    reasonSelect.id = 'report-reason';
-    reasonSelect.required = true;
-    for (const r of REPORT_REASONS) {
-      const opt = document.createElement('option');
-      opt.value = r.value;
-      opt.textContent = r.label;
-      reasonSelect.appendChild(opt);
-    }
+    const reasonSelect = createCustomSelect({
+      id: 'report-reason',
+      ariaLabel: 'Report reason',
+      variant: 'default',
+      options: REPORT_REASONS.map((r) => ({
+        value: r.value,
+        label: r.label,
+      })),
+    });
 
     const detailsGroup = document.createElement('div');
     detailsGroup.className = 'report-modal__field';
@@ -105,7 +106,7 @@ export function openReportModal(options: OpenReportModalOptions): () => void {
     submitBtn.className = 'pill-btn pill-btn--filled interactive';
     submitBtn.textContent = 'Submit report';
 
-    reasonGroup.append(reasonLabel, reasonSelect);
+    reasonGroup.append(reasonLabel, reasonSelect.root);
     detailsGroup.append(detailsLabel, detailsArea);
     actions.append(cancelBtn, submitBtn);
     form.append(reasonGroup, detailsGroup, errorEl, actions);
@@ -119,7 +120,7 @@ export function openReportModal(options: OpenReportModalOptions): () => void {
         await submitContentReport(
           options.targetType,
           options.targetId,
-          reasonSelect.value as ReportReason,
+          reasonSelect.getValue() as ReportReason,
           detailsArea.value,
         );
         renderSuccess();

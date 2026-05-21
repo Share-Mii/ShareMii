@@ -48,11 +48,29 @@
 }
 
 .user-menu__item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
   padding: 0.55rem 0.75rem;
   border-radius: 0.5rem;
   color: inherit;
   text-decoration: none;
+}
+
+.user-menu__item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  flex-shrink: 0;
+  opacity: 0.75;
+  font-size: 0.9rem;
+}
+
+.user-menu__item-label {
+  flex: 1;
+  min-width: 0;
 }
 
 .user-menu__item:hover {

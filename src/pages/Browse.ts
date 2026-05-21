@@ -5,6 +5,7 @@ import { createPaginatedList } from '@/components/ListPager/ListPager';
 import { createMiiTile } from '@/components/MiiTile/MiiTile';
 import { fetchMiis, isSupabaseConfigured } from '@/services/supabase';
 import { createTagFilter } from '@/components/TagFilter/TagFilter';
+import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { icon } from '@/utils/icon';
 import { bindFilterDrawer } from '@/utils/filterDrawer';
 import { createEmptyState } from '@/utils/emptyState';
@@ -61,21 +62,25 @@ export function renderBrowse(container: HTMLElement): () => void {
       </div>
       <label class="browse-section__sort">
         Sort by:
-        <select data-sort aria-label="Sort residents"></select>
+        <span class="browse-section__sort-control" data-sort></span>
       </label>
     </div>
   `;
 
   const resultsMeta = browseHead.querySelector<HTMLElement>('[data-results]')!;
   const searchInput = browseHead.querySelector<HTMLInputElement>('[data-search]')!;
-  const sortSelect = browseHead.querySelector<HTMLSelectElement>('[data-sort]')!;
-
-  for (const s of SORTS) {
-    const opt = document.createElement('option');
-    opt.value = s.value;
-    opt.textContent = s.label;
-    sortSelect.appendChild(opt);
-  }
+  const sortHost = browseHead.querySelector<HTMLElement>('[data-sort]')!;
+  const sortSelect = createCustomSelect({
+    options: SORTS.map((s) => ({ value: s.value, label: s.label })),
+    value: sort,
+    ariaLabel: 'Sort residents',
+    variant: 'pill',
+    onChange: (v) => {
+      sort = v as SortOption;
+      loadMiis();
+    },
+  });
+  sortHost.appendChild(sortSelect.root);
 
   const layout = document.createElement('div');
   layout.className = 'residents-layout';
@@ -235,11 +240,6 @@ export function renderBrowse(container: HTMLElement): () => void {
     }, 300);
   });
 
-  sortSelect.addEventListener('change', () => {
-    sort = sortSelect.value as SortOption;
-    loadMiis();
-  });
-
   renderGenderButtons();
   renderPlatformButtons();
   container.replaceChildren(wrapPublicPage(content));
@@ -249,6 +249,7 @@ export function renderBrowse(container: HTMLElement): () => void {
     abort = true;
     window.clearTimeout(searchTimer);
     tagFilter.dispose();
+    sortSelect.destroy();
     unbindFilterDrawer();
   };
 }

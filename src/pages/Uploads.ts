@@ -12,7 +12,7 @@ import { openLoginModal } from '@/components/LoginModal/LoginModal';
 import { fetchMiisByUserId, isSupabaseConfigured } from '@/services/supabase';
 import { navigateToMiiMakerEdit } from '@/services/miiMakerNavigate';
 import { confirmDeleteMii } from '@/utils/miiDeleteConfirm';
-import { createMiiTileCornerActions } from '@/components/ShareActions/ShareActions';
+import { createMiiTileCornerOverflowOnly } from '@/components/ShareActions/ShareActions';
 import type { Mii } from '@/types';
 
 export function renderUploads(container: HTMLElement): () => void {
@@ -76,7 +76,7 @@ export function renderUploads(container: HTMLElement): () => void {
       'Mii options',
     );
 
-    wrap.append(tile, createMiiTileCornerActions(mii, menu));
+    wrap.append(tile, createMiiTileCornerOverflowOnly(menu));
     return wrap;
   }
 

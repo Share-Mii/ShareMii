@@ -18,3 +18,11 @@ export function yeahIconSpan(spanClass = 'btn-icon'): string {
 export function iconSpan(name: string, spanClass = 'btn-icon'): string {
   return `<span class="${spanClass}" aria-hidden="true">${icon(name, '')}</span>`;
 }
+
+export function discordIcon(extraClass = 'ui-icon'): string {
+  return `<svg class="${extraClass} discord-icon" viewBox="0 0 20 19" aria-hidden="true"><use href="/icons.svg#discord-icon"></use></svg>`;
+}
+
+export function discordIconSpan(spanClass = 'btn-icon'): string {
+  return `<span class="${spanClass}" aria-hidden="true">${discordIcon('')}</span>`;
+}

@@ -5,6 +5,7 @@ import { iconSpan } from '@/utils/icon';
 export interface UserMenuItem {
   href?: string;
   label: string;
+  icon?: string;
   action?: () => void | Promise<void>;
 }
 
@@ -63,7 +64,11 @@ export function createUserMenuDropdown(
       btn.type = 'button';
       btn.className = 'user-menu__item interactive user-menu__item--action';
       btn.setAttribute('role', 'menuitem');
-      btn.textContent = item.label;
+      if (item.icon) {
+        btn.innerHTML = `<span class="user-menu__item-icon" aria-hidden="true">${iconSpan(item.icon, '')}</span><span class="user-menu__item-label">${item.label}</span>`;
+      } else {
+        btn.textContent = item.label;
+      }
       btn.addEventListener('click', () => {
         onClose();
         void Promise.resolve(item.action!());
@@ -76,7 +81,11 @@ export function createUserMenuDropdown(
     a.href = item.href ?? '#';
     a.className = 'user-menu__item interactive';
     a.setAttribute('role', 'menuitem');
-    a.textContent = item.label;
+    if (item.icon) {
+      a.innerHTML = `<span class="user-menu__item-icon" aria-hidden="true">${iconSpan(item.icon, '')}</span><span class="user-menu__item-label">${item.label}</span>`;
+    } else {
+      a.textContent = item.label;
+    }
     a.addEventListener('click', () => onClose());
     menu.appendChild(a);
   }

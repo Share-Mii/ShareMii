@@ -6,6 +6,7 @@ import {
   wrapAdminPage,
 } from '@/pages/admin/adminShell';
 import { escapeHtml } from '@/utils/escapeHtml';
+import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 
 export async function renderAdminReports(
   container: HTMLElement,
@@ -16,14 +17,19 @@ export async function renderAdminReports(
   const toolbar = document.createElement('div');
   toolbar.className = 'admin-toolbar';
 
-  const statusFilter = document.createElement('select');
-  statusFilter.innerHTML = `
-    <option value="">All statuses</option>
-    <option value="open">Open</option>
-    <option value="in_review">In review</option>
-    <option value="resolved">Resolved</option>
-    <option value="dismissed">Dismissed</option>
-  `;
+  const statusFilter = createCustomSelect({
+    ariaLabel: 'Filter by status',
+    variant: 'default',
+    value: '',
+    options: [
+      { value: '', label: 'All statuses' },
+      { value: 'open', label: 'Open' },
+      { value: 'in_review', label: 'In review' },
+      { value: 'resolved', label: 'Resolved' },
+      { value: 'dismissed', label: 'Dismissed' },
+    ],
+    onChange: () => void load(),
+  });
 
   const refreshBtn = document.createElement('button');
   refreshBtn.type = 'button';
@@ -35,7 +41,7 @@ export async function renderAdminReports(
   bulkDismissBtn.className = 'pill-btn pill-btn--outline interactive';
   bulkDismissBtn.textContent = 'Dismiss all open';
 
-  toolbar.append(statusFilter, refreshBtn, bulkDismissBtn);
+  toolbar.append(statusFilter.root, refreshBtn, bulkDismissBtn);
   content.appendChild(toolbar);
 
   const tableHost = document.createElement('div');
@@ -43,7 +49,7 @@ export async function renderAdminReports(
 
   async function load(): Promise<void> {
     tableHost.replaceChildren();
-    const status = statusFilter.value as ReportStatus | '';
+    const status = statusFilter.getValue() as ReportStatus | '';
     try {
       const reports = await listReports(status || null);
       tableHost.appendChild(renderTable(reports));
@@ -52,7 +58,6 @@ export async function renderAdminReports(
     }
   }
 
-  statusFilter.addEventListener('change', () => void load());
   refreshBtn.addEventListener('click', () => void load());
   bulkDismissBtn.addEventListener('click', () => {
     void (async () => {

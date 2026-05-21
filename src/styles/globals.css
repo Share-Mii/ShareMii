@@ -124,6 +124,11 @@ html::-webkit-scrollbar-track {
   font-weight: 700;
 }
 
+::selection {
+  background: var(--selection-bg);
+  color: inherit;
+}
+
 body {
   font-family: var(--font-family);
   font-size: var(--font-size-body);

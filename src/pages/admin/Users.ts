@@ -8,6 +8,7 @@ import {
 import type { AdminUserSummary, Profile, RestrictionType, UserRole } from '@/types';
 import { wrapAdminPage } from '@/pages/admin/adminShell';
 import { escapeHtml } from '@/utils/escapeHtml';
+import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { isAdmin, roleLabel } from '@/utils/permissions';
 
 export async function renderAdminUsers(
@@ -97,49 +98,53 @@ function renderUserCard(user: AdminUserSummary, staff: Profile): HTMLElement {
   actions.className = 'admin-toolbar';
 
   if (isAdmin(staff)) {
-    const roleSelect = document.createElement('select');
-    for (const r of ['user', 'moderator', 'admin'] as UserRole[]) {
-      const opt = document.createElement('option');
-      opt.value = r;
-      opt.textContent = roleLabel(r);
-      if (r === user.role) opt.selected = true;
-      roleSelect.appendChild(opt);
-    }
+    const roleSelect = createCustomSelect({
+      ariaLabel: 'User role',
+      variant: 'default',
+      value: user.role,
+      options: (['user', 'moderator', 'admin'] as UserRole[]).map((r) => ({
+        value: r,
+        label: roleLabel(r),
+      })),
+    });
     const roleBtn = document.createElement('button');
     roleBtn.type = 'button';
     roleBtn.className = 'pill-btn pill-btn--outline interactive';
     roleBtn.textContent = 'Set role';
     roleBtn.addEventListener('click', () => {
-      void setUserRole(user.id, roleSelect.value as UserRole)
+      void setUserRole(user.id, roleSelect.getValue() as UserRole)
         .then(() => window.location.reload())
         .catch((e) => alert(e instanceof Error ? e.message : 'Failed'));
     });
-    actions.append(roleSelect, roleBtn);
+    actions.append(roleSelect.root, roleBtn);
   }
 
-  const restrictSelect = document.createElement('select');
-  for (const t of [
-    'upload_ban',
-    'comment_ban',
-    'shadow',
-    'full_suspend',
-  ] as RestrictionType[]) {
-    const opt = document.createElement('option');
-    opt.value = t;
-    opt.textContent = t.replace('_', ' ');
-    restrictSelect.appendChild(opt);
-  }
+  const restrictSelect = createCustomSelect({
+    ariaLabel: 'Restriction type',
+    variant: 'default',
+    options: (
+      ['upload_ban', 'comment_ban', 'shadow', 'full_suspend'] as RestrictionType[]
+    ).map((t) => ({
+      value: t,
+      label: t.replace('_', ' '),
+    })),
+  });
   const restrictBtn = document.createElement('button');
   restrictBtn.type = 'button';
   restrictBtn.className = 'pill-btn pill-btn--outline interactive';
   restrictBtn.textContent = 'Apply restriction';
   restrictBtn.addEventListener('click', () => {
     const reason = prompt('Reason for restriction?') ?? '';
-    void applyRestriction(user.id, restrictSelect.value as RestrictionType, null, reason)
+    void applyRestriction(
+      user.id,
+      restrictSelect.getValue() as RestrictionType,
+      null,
+      reason,
+    )
       .then(() => window.location.reload())
       .catch((e) => alert(e instanceof Error ? e.message : 'Failed'));
   });
-  actions.append(restrictSelect, restrictBtn);
+  actions.append(restrictSelect.root, restrictBtn);
 
   if (isAdmin(staff)) {
     const trustedBtn = document.createElement('button');

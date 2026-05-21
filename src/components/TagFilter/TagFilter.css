@@ -79,8 +79,8 @@
 
 .tag-filter__search:focus {
   outline: none;
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 25%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 50%, var(--color-border));
+  box-shadow: var(--focus-ring);
 }
 
 .tag-filter__suggestions {
@@ -118,6 +118,11 @@
 
 .tag-filter__suggestion:hover,
 .tag-filter__suggestion:focus-visible {
+  background: color-mix(in srgb, var(--color-accent) 8%, var(--color-bg-panel));
+  color: var(--color-text);
+}
+
+.tag-filter__suggestion[aria-selected='true'] {
   background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-panel));
   color: var(--color-accent);
 }

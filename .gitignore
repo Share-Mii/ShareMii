@@ -16,6 +16,8 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+supabase/.env
+supabase/functions/.env
 
 # Supabase local link cache (project ref only — no secrets)
 .supabase

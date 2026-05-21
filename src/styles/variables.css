@@ -113,7 +113,8 @@
 
   --page-content-top: var(--spacing-xl);
 
-  --focus-ring: 0 0 0 3px rgba(0, 136, 255, 0.35);
+  --focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 22%, transparent);
+  --selection-bg: color-mix(in srgb, var(--color-accent) 16%, transparent);
 
   --bp-sm: 640px;
   --bp-md: 768px;
@@ -173,7 +174,8 @@
   --shadow-tile-hover: var(--shadow-3);
   --shadow-modal: var(--shadow-4);
 
-  --focus-ring: 0 0 0 3px rgba(10, 185, 240, 0.4);
+  --focus-ring: 0 0 0 2px color-mix(in srgb, var(--color-accent) 24%, transparent);
+  --selection-bg: color-mix(in srgb, var(--color-accent) 18%, transparent);
 
   --tooltip-bg: #e8e8ee;
   --tooltip-fg: #121214;

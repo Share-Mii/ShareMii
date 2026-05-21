@@ -301,6 +301,11 @@
   background: color-mix(in srgb, var(--color-bg-panel) 92%, var(--color-skeleton));
 }
 
+.login-modal__oauth-btn--discord:hover {
+  border-color: #5865f2;
+  background: color-mix(in srgb, var(--color-bg-panel) 88%, #5865f2);
+}
+
 .login-modal__oauth-icon {
   width: 20px;
   height: 20px;
@@ -313,6 +318,26 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   font-weight: 600;
+}
+
+.login-modal__discord {
+  margin: var(--spacing-md) 0 0;
+  text-align: center;
+}
+
+.login-modal__discord-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.login-modal__discord-link:hover {
+  text-decoration: underline;
 }
 
 .login-modal__footer-link {

@@ -747,10 +747,8 @@
   resize: vertical;
 }
 
-.admin-input--select {
-  width: auto;
+.admin-toolbar .custom-select {
   min-width: 9rem;
-  max-width: 100%;
 }
 
 .admin-staff-banner {

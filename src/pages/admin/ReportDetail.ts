@@ -12,6 +12,7 @@ import type { ContentReport, Profile, ReportPriority } from '@/types';
 import type { AdminPageOptions } from '@/pages/admin/adminShell';
 import { wrapAdminPage } from '@/pages/admin/adminShell';
 import { escapeHtml } from '@/utils/escapeHtml';
+import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 
 export async function renderAdminReportDetail(
   container: HTMLElement,
@@ -122,24 +123,22 @@ export async function renderAdminReportDetail(
       '<h3 class="admin-actions-group__title">Priority</h3>';
     const priorityRow = document.createElement('div');
     priorityRow.className = 'admin-actions-row';
-    const prioritySelect = document.createElement('select');
-    prioritySelect.className = 'admin-input admin-input--select';
-    prioritySelect.setAttribute('aria-label', 'Report priority');
-    for (const p of ['low', 'normal', 'high', 'urgent'] as ReportPriority[]) {
-      const opt = document.createElement('option');
-      opt.value = p;
-      opt.textContent = p;
-      if (p === report.priority) opt.selected = true;
-      prioritySelect.appendChild(opt);
-    }
+    const prioritySelect = createCustomSelect({
+      ariaLabel: 'Report priority',
+      variant: 'default',
+      value: report.priority,
+      options: (['low', 'normal', 'high', 'urgent'] as ReportPriority[]).map(
+        (p) => ({ value: p, label: p }),
+      ),
+    });
     const priorityBtn = btn('Save priority', async () => {
       await setReportPriority(
         reportId,
-        prioritySelect.value as ReportPriority,
+        prioritySelect.getValue() as ReportPriority,
       );
       await reload();
     });
-    priorityRow.append(prioritySelect, priorityBtn);
+    priorityRow.append(prioritySelect.root, priorityBtn);
     priorityGroup.appendChild(priorityRow);
 
     const resolutionGroup = document.createElement('div');

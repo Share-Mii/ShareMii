@@ -56,3 +56,9 @@
   width: 0.9em;
   height: 0.9em;
 }
+
+.discord-icon {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+}

@@ -47,7 +47,7 @@ When adding a route:
 | File | Notes |
 | ---- | ----- |
 | `services/supabase.ts` | Client singleton, queries, Mii fetch |
-| `services/auth.ts` | Session lifecycle, `initAuth()` |
+| `services/auth.ts` | Session lifecycle, `initAuth()`, OAuth (`signInWithProvider`) — setup: [OAUTH_SETUP.md](./OAUTH_SETUP.md) |
 | `services/profile.ts` | Profiles, usernames |
 | `services/profileGate.ts` | Blocks create flows until profile rules satisfied |
 | `services/staffGate.ts` | Staff/admin checks for `/admin` |

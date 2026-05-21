@@ -144,8 +144,10 @@ export async function resetPassword(email: string): Promise<string | null> {
   return error?.message ?? null;
 }
 
+export type OAuthProvider = 'google' | 'github' | 'discord';
+
 export async function signInWithProvider(
-  provider: 'google' | 'github',
+  provider: OAuthProvider,
 ): Promise<string | null> {
   const { error } = await getSupabaseClient().auth.signInWithOAuth({
     provider,

@@ -15,6 +15,8 @@ import { scrollToTop, scrollToTopIfAtTop } from '@/utils/scroll';
 import { bindFilterDrawer } from '@/utils/filterDrawer';
 import { createEmptyState } from '@/utils/emptyState';
 import { createTagFilter } from '@/components/TagFilter/TagFilter';
+import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
+import { getDiscordInviteUrl } from '@/config/community';
 import type { Gender, SortOption, SourceFilter } from '@/types';
 
 const SORTS: { value: SortOption; label: string }[] = [
@@ -99,6 +101,16 @@ export function renderHome(container: HTMLElement): () => void {
   heroPolaroidSlot.className = 'hero__visual-slot';
   heroVisual.append(createHeroFloaters(), heroPolaroidSlot);
   const heroActions = heroSection.querySelector<HTMLElement>('[data-hero-actions]')!;
+  const discordUrl = getDiscordInviteUrl();
+  if (discordUrl) {
+    const discordLink = document.createElement('a');
+    discordLink.href = discordUrl;
+    discordLink.target = '_blank';
+    discordLink.rel = 'noopener noreferrer';
+    discordLink.className = 'pill-btn pill-btn--outline pill-btn--lg interactive';
+    discordLink.textContent = 'Join Discord';
+    heroActions.appendChild(discordLink);
+  }
   let heroScanLink: HTMLAnchorElement | null = null;
   const playEntrance = consumePageEntrance('home');
 
@@ -177,20 +189,24 @@ export function renderHome(container: HTMLElement): () => void {
       </div>
       <label class="browse-section__sort">
         Sort by:
-        <select data-sort aria-label="Sort residents"></select>
+        <span class="browse-section__sort-control" data-sort></span>
       </label>
     </div>
   `;
 
   const searchInput = browseHead.querySelector<HTMLInputElement>('[data-search]')!;
-  const sortSelect = browseHead.querySelector<HTMLSelectElement>('[data-sort]')!;
-
-  for (const s of SORTS) {
-    const opt = document.createElement('option');
-    opt.value = s.value;
-    opt.textContent = s.label;
-    sortSelect.appendChild(opt);
-  }
+  const sortHost = browseHead.querySelector<HTMLElement>('[data-sort]')!;
+  const sortSelect = createCustomSelect({
+    options: SORTS.map((s) => ({ value: s.value, label: s.label })),
+    value: sort,
+    ariaLabel: 'Sort residents',
+    variant: 'pill',
+    onChange: (v) => {
+      sort = v as SortOption;
+      loadGrid();
+    },
+  });
+  sortHost.appendChild(sortSelect.root);
 
   const layout = document.createElement('div');
   layout.className = 'residents-layout';
@@ -383,11 +399,6 @@ export function renderHome(container: HTMLElement): () => void {
     }, 300);
   });
 
-  sortSelect.addEventListener('change', () => {
-    sort = sortSelect.value as SortOption;
-    loadGrid();
-  });
-
   renderGenderButtons();
   renderSourceButtons();
   showHeroPlaceholder();
@@ -416,6 +427,7 @@ export function renderHome(container: HTMLElement): () => void {
     window.clearTimeout(browseRevealTimer);
     unsubHeroAuth();
     window.clearTimeout(searchTimer);
+    sortSelect.destroy();
     tagFilter.dispose();
     unbindFilterDrawer();
   };

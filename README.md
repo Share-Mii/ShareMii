@@ -24,6 +24,8 @@ A modern Mii sharing community website with a Wii-inspired design. Browse, yeah,
    VITE_SUPABASE_ANON_KEY=your-anon-key
    ```
 
+   **Social login (Google, GitHub, Discord):** see [library/OAUTH_SETUP.md](library/OAUTH_SETUP.md) for Supabase and provider console setup.
+
    Optional analytics:
 
    ```
