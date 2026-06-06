@@ -3,11 +3,11 @@ import { getDiscordInviteUrl } from '@/config/community';
 import { logoMark } from '@/utils/logo';
 
 const LEGAL_LINKS = [
-  { href: '#/legal', label: 'Legal' },
-  { href: '#/privacy', label: 'Privacy Policy' },
-  { href: '#/terms', label: 'Terms of Service' },
-  { href: '#/child-safety', label: 'Child Safety' },
-  { href: '#/delete-account', label: 'Delete Account' },
+  { href: '/legal', label: 'Legal' },
+  { href: '/privacy', label: 'Privacy Policy' },
+  { href: '/terms', label: 'Terms of Service' },
+  { href: '/child-safety', label: 'Child Safety' },
+  { href: '/delete-account', label: 'Delete Account' },
 ] as const;
 
 let bugReportOpener: (() => void) | null = null;
@@ -39,7 +39,7 @@ export function createSiteFooter(): HTMLElement {
   compactNav.className = 'site-footer__compact';
   compactNav.setAttribute('aria-label', 'Footer links');
   const legalHub = document.createElement('a');
-  legalHub.href = '#/legal';
+  legalHub.href = '/legal';
   legalHub.className = 'site-footer__compact-link interactive';
   legalHub.textContent = 'Legal';
   compactNav.appendChild(legalHub);

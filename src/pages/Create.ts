@@ -238,7 +238,7 @@ export function renderCreate(
         wrapPublicPage(
           Object.assign(document.createElement('main'), {
             className: 'page-content page-content--offset-top',
-            innerHTML: `<p class="page-error">${err instanceof Error ? escapeHtml(err.message) : 'Could not load this Mii for editing.'} <a href="#/uploads">Back to uploads</a></p>`,
+            innerHTML: `<p class="page-error">${err instanceof Error ? escapeHtml(err.message) : 'Could not load this Mii for editing.'} <a href="/uploads">Back to uploads</a></p>`,
           }),
         ),
       );

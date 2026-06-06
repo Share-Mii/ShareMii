@@ -25,7 +25,7 @@ export function createSpotlightSection(featured: Mii, loved: Mii[]): HTMLElement
   lovedHead.className = 'spotlight-loved__head';
   lovedHead.innerHTML = `
     <h2 class="spotlight-loved__title section-title">${yeahIcon()} Most Yeah'd this week</h2>
-    <a href="#/browse" class="spotlight-loved__link interactive">View all →</a>
+    <a href="/browse" class="spotlight-loved__link interactive">View all →</a>
   `;
 
   const row = document.createElement('div');

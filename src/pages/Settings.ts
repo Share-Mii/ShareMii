@@ -1,4 +1,5 @@
 import './Settings.css';
+import { navigateTo } from '@/utils/navigation';
 import './pages.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
@@ -183,7 +184,7 @@ export function renderSettings(container: HTMLElement): () => void {
     const session = await getAuthSession();
     if (!isLoggedIn(session)) {
       openLoginModal();
-      window.location.hash = '#/';
+      navigateTo('/');
       return;
     }
 
@@ -544,9 +545,9 @@ function buildSettingsPage(profile: Profile, userId: string): HTMLElement {
     '<p class="settings-row__hint">Privacy Policy, Terms, and how we handle your information.</p>' +
     '</div>' +
     '<div class="settings-row__action settings-row__action--links">' +
-    '<a href="#/privacy" class="settings-page__inline-link interactive">Privacy</a>' +
-    '<a href="#/terms" class="settings-page__inline-link interactive">Terms</a>' +
-    '<a href="#/delete-account" class="settings-page__inline-link interactive">Deletion info</a>' +
+    '<a href="/privacy" class="settings-page__inline-link interactive">Privacy</a>' +
+    '<a href="/terms" class="settings-page__inline-link interactive">Terms</a>' +
+    '<a href="/delete-account" class="settings-page__inline-link interactive">Deletion info</a>' +
     '</div>';
 
   const deleteRow = document.createElement('div');
@@ -595,7 +596,7 @@ function buildSettingsPage(profile: Profile, userId: string): HTMLElement {
     try {
       await deleteAccount(confirm);
       await signOut();
-      window.location.hash = '#/';
+      navigateTo('/');
       window.location.reload();
     } catch (err) {
       deleteError.textContent =
@@ -619,7 +620,7 @@ function buildSettingsPage(profile: Profile, userId: string): HTMLElement {
   signOutBtn.addEventListener('click', async () => {
     const err = await signOut();
     if (err) alert(err);
-    else window.location.hash = '#/';
+    else navigateTo('/');
   });
 
   accountSection.append(signOutBtn);

@@ -1,4 +1,5 @@
 import './SubmitModal.css';
+import { navigateTo } from '@/utils/navigation';
 import '@/components/shared.css';
 import { createMiiRenderer } from '@/components/MiiRenderer/MiiRenderer';
 import { openUsernameSetupModal } from '@/components/UsernameSetupModal/UsernameSetupModal';
@@ -504,7 +505,7 @@ function buildModal(
 
         dismiss();
         callbacks.onSuccess?.(mii.id);
-        window.location.hash = `#/mii/${mii.id}`;
+        navigateTo(`/mii/${mii.id}`);
       } else {
         const mii = await insertMii({
           name,

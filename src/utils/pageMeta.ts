@@ -43,7 +43,7 @@ export function setPageMeta(opts: PageMetaOptions): void {
   document.title = title;
 
   const description = opts.description?.trim() || DEFAULT_DESCRIPTION;
-  const url = opts.url ?? `${getSiteOrigin()}${window.location.pathname}${window.location.hash}`;
+  const url = opts.url ?? `${getSiteOrigin()}${window.location.pathname}`;
 
   upsertMeta('name', 'description', description);
   upsertMeta('property', 'og:title', title);

@@ -32,7 +32,7 @@ export function renderTagBrowse(
   setPageMeta({
     title: `${label} Miis`,
     description: `Browse ShareMii residents tagged ${label}.`,
-    url: `${window.location.origin}/#/tag/${slug}`,
+    url: `${window.location.origin}/tag/${slug}`,
   });
 
   async function load(): Promise<void> {

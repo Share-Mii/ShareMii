@@ -1,4 +1,5 @@
 import { closeSubmitModal } from '@/components/SubmitModal/SubmitModal';
+import { navigateTo } from '@/utils/navigation';
 
 type ScanCleanup = () => void;
 
@@ -12,5 +13,5 @@ export function navigateToUploadedMii(miiId: string): void {
   closeSubmitModal();
   scanAndSubmitCleanup?.();
   scanAndSubmitCleanup = null;
-  window.location.hash = `#/mii/${encodeURIComponent(miiId)}`;
+  navigateTo(`/mii/${encodeURIComponent(miiId)}`);
 }

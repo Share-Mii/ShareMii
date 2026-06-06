@@ -1,4 +1,5 @@
 import './pages.css';
+import { navigateTo } from '@/utils/navigation';
 import './Uploads.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
@@ -103,7 +104,7 @@ export function renderUploads(container: HTMLElement): () => void {
     const session = await getAuthSession();
     if (!isLoggedIn(session)) {
       openLoginModal();
-      window.location.hash = '#/';
+      navigateTo('/');
       return;
     }
 
@@ -114,7 +115,7 @@ export function renderUploads(container: HTMLElement): () => void {
     } catch {
       if (abort) return;
       page.innerHTML =
-        '<p class="page-error">Could not load uploads. <a href="#/">Go home</a></p>';
+        '<p class="page-error">Could not load uploads. <a href="/">Go home</a></p>';
       return;
     }
 
@@ -185,7 +186,7 @@ export function renderUploads(container: HTMLElement): () => void {
       const empty = document.createElement('p');
       empty.className = 'uploads-page__empty';
       empty.innerHTML =
-        'No uploads yet. <a href="#/create" class="interactive">Create a Mii</a> or <a href="#" data-scan-submit class="interactive">scan a QR code</a>.';
+        'No uploads yet. <a href="/create" class="interactive">Create a Mii</a> or <a href="#" data-scan-submit class="interactive">scan a QR code</a>.';
       page.appendChild(empty);
       paginated = null;
       return;

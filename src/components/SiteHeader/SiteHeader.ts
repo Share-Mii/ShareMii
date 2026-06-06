@@ -31,6 +31,7 @@ import { fetchActiveAnnouncement } from '@/services/admin';
 import { isStaff } from '@/utils/permissions';
 import { openBugReportModal } from '@/components/BugReportModal/BugReportModal';
 import { icon, iconSpan } from '@/utils/icon';
+import { getRoutePath, navigateTo, ROUTE_CHANGE_EVENT } from '@/utils/navigation';
 
 interface NavLink {
   href: string;
@@ -39,14 +40,14 @@ interface NavLink {
 }
 
 const NAV_LINKS: NavLink[] = [
-  { href: '#/', label: 'Home', match: /^#\/$/ },
-  { href: '#/feed', label: 'Feed', match: /^#\/feed$/ },
-  { href: '#/browse', label: 'Browse', match: /^#\/browse/ },
-  { href: '#/create', label: 'Mii Creator', match: /^#\/create/ },
+  { href: '/', label: 'Home', match: /^\/$/ },
+  { href: '/feed', label: 'Feed', match: /^\/feed$/ },
+  { href: '/browse', label: 'Browse', match: /^\/browse/ },
+  { href: '/create', label: 'Mii Creator', match: /^\/create/ },
 ];
 
-function currentHash(): string {
-  return window.location.hash || '#/';
+function currentPath(): string {
+  return getRoutePath();
 }
 
 let headerHashListenerBound = false;
@@ -56,7 +57,7 @@ let stopPolling: (() => void) | null = null;
 function bindHeaderHashListener(): void {
   if (headerHashListenerBound) return;
   headerHashListenerBound = true;
-  window.addEventListener('hashchange', () => {
+  window.addEventListener(ROUTE_CHANGE_EVENT, () => {
     const nav = document.querySelector<HTMLElement>('.site-header__nav');
     if (nav) renderNav(nav);
     closeUserMenu();
@@ -76,7 +77,7 @@ async function reloadProfileForHeader(): Promise<void> {
 }
 
 function renderNav(nav: HTMLElement): void {
-  const hash = currentHash();
+  const hash = currentPath();
   nav.replaceChildren();
 
   for (const link of NAV_LINKS) {
@@ -143,8 +144,8 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
 
   const username = profile.username.trim();
   const profileHref = username
-    ? `#/u/${encodeURIComponent(username)}`
-    : '#/settings';
+    ? `/u/${encodeURIComponent(username)}`
+    : '/settings';
 
   const discordUrl = getDiscordInviteUrl();
 
@@ -156,12 +157,12 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
       profile,
     },
     { kind: 'section', label: 'Library' },
-    { href: '#/favorites', label: 'Favorites', icon: 'bookmark' },
-    { href: '#/collections', label: 'Collections', icon: 'folder' },
-    { href: '#/uploads', label: 'Uploads', icon: 'cloud-arrow-up' },
-    { href: '#/dashboard', label: 'Dashboard', icon: 'chart-line' },
+    { href: '/favorites', label: 'Favorites', icon: 'bookmark' },
+    { href: '/collections', label: 'Collections', icon: 'folder' },
+    { href: '/uploads', label: 'Uploads', icon: 'cloud-arrow-up' },
+    { href: '/dashboard', label: 'Dashboard', icon: 'chart-line' },
     { kind: 'section', label: 'App' },
-    { href: '#/settings', label: 'Settings', icon: 'gear' },
+    { href: '/settings', label: 'Settings', icon: 'gear' },
     {
       label: 'Scan QR',
       icon: 'camera',
@@ -190,13 +191,13 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
 
   items.push(
     { kind: 'section', label: 'Legal' },
-    { href: '#/legal', label: 'Legal & support', icon: 'scale-balanced' },
+    { href: '/legal', label: 'Legal & support', icon: 'scale-balanced' },
   );
 
   if (isStaff(profile)) {
     items.push(
       { kind: 'separator' },
-      { href: '#/admin', label: 'Admin', icon: 'shield-halved' },
+      { href: '/admin', label: 'Admin', icon: 'shield-halved' },
     );
   }
 
@@ -209,7 +210,7 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
       action: async () => {
         const err = await signOut();
         if (err) alert(err);
-        window.location.hash = '#/';
+        navigateTo('/');
       },
     },
   );
@@ -349,7 +350,7 @@ export function createSiteHeader(): HTMLElement {
 
   const brand = document.createElement('a');
   brand.className = 'site-header__brand interactive';
-  brand.href = '#/';
+  brand.href = '/';
   brand.innerHTML = `
     <span class="site-header__logo" aria-hidden="true">${logoMark()}</span>
     <span class="site-header__brand-text">ShareMii</span>

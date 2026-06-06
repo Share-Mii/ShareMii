@@ -7,7 +7,7 @@ import type { Mii } from '@/types';
 export function createFeaturedMiiCard(mii: Mii): HTMLElement {
   const link = document.createElement('a');
   link.className = 'featured-mii interactive';
-  link.href = `#/mii/${mii.id}`;
+  link.href = `/mii/${mii.id}`;
 
   const media = document.createElement('div');
   media.className = 'featured-mii__media';

@@ -23,7 +23,7 @@ export function createMiiTile(
 
   const link = document.createElement('a');
   link.className = `mii-tile interactive mii-tile--${variant}`;
-  link.href = `#/mii/${mii.id}`;
+  link.href = `/mii/${mii.id}`;
   link.style.setProperty('--stagger-index', String(staggerIndex));
 
   const renderArea = document.createElement('div');

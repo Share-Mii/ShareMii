@@ -2,7 +2,7 @@ import { getSiteOrigin } from '@/utils/pageMeta';
 
 export function buildShareUrl(routePath: string): string {
   const clean = routePath.replace(/^#\/?/, '').replace(/^\//, '');
-  return `${getSiteOrigin()}/#/${clean}`;
+  return `${getSiteOrigin()}/${clean}`;
 }
 
 export function buildMiiShareUrl(miiId: string): string {

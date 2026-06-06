@@ -1,4 +1,5 @@
 import '@/components/SocialPillBar/SocialPillBar.css';
+import { navigateTo } from '@/utils/navigation';
 import '@/components/IconActionButton/IconActionButton.css';
 import '@/components/TileOverflowMenu/TileOverflowMenu.css';
 import { createSocialPillBar } from '@/components/SocialPillBar/SocialPillBar';
@@ -64,7 +65,7 @@ function buildDetailOverflowItems(
         onSelect: () => {
           confirmDeleteMii(mii, () => {
             callbacks.onDeleted?.();
-            window.location.hash = '#/uploads';
+            navigateTo('/uploads');
           });
         },
       },
@@ -146,7 +147,7 @@ export function createDetailSocialPillBar(
         onClick: () => {
           confirmDeleteMii(mii, () => {
             callbacks.onDeleted?.();
-            window.location.hash = '#/uploads';
+            navigateTo('/uploads');
           });
         },
       },

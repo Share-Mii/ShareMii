@@ -114,7 +114,7 @@ function renderTable(reports: ContentReport[]): HTMLElement {
     if (r.priority === 'urgent') tr.classList.add('admin-table__row--urgent');
 
     const link = document.createElement('a');
-    link.href = `#/admin/reports/${r.id}`;
+    link.href = `/admin/reports/${r.id}`;
     link.textContent = `${r.target_type} · ${r.id.slice(0, 8)}…`;
 
     tr.innerHTML = `

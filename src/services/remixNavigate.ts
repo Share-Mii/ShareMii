@@ -1,4 +1,5 @@
 import type { Mii } from '@/types';
+import { navigateTo } from '@/utils/navigation';
 
 export function miiDataForEditor(
   mii: Pick<Mii, 'mii_data' | 'mii_data_download'>,
@@ -11,5 +12,5 @@ export function miiDataForEditor(
 }
 
 export function navigateToRemix(mii: Mii): void {
-  window.location.hash = `#/create/remix/${mii.id}`;
+  navigateTo(`/create/remix/${mii.id}`);
 }

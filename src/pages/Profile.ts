@@ -1,4 +1,5 @@
 import './Profile.css';
+import { navigateTo } from '@/utils/navigation';
 import './Collections.css';
 import './pages.css';
 import '@/components/shared.css';
@@ -80,7 +81,7 @@ export function renderProfile(
       const session = await getAuthSession();
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
 
@@ -90,16 +91,16 @@ export function renderProfile(
       if (abort) return;
 
       if (hasCompletedProfile(profile)) {
-        window.location.hash = `#/u/${encodeURIComponent(profile.username)}`;
+        navigateTo(`/u/${encodeURIComponent(profile.username)}`);
       } else {
-        window.location.hash = '#/settings';
+        navigateTo('/settings');
       }
       return;
     }
 
     const username = options.username?.trim();
     if (!username) {
-      window.location.hash = '#/';
+      navigateTo('/');
       return;
     }
 
@@ -112,7 +113,7 @@ export function renderProfile(
           Object.assign(document.createElement('main'), {
             className: 'page-content page-content--offset-top',
             innerHTML:
-              '<p class="page-error">Profile not found. <a href="#/">Go home</a></p>',
+              '<p class="page-error">Profile not found. <a href="/">Go home</a></p>',
           }),
         ),
       );
@@ -130,7 +131,7 @@ export function renderProfile(
       title: profile.username,
       description: profile.bio || `Miis shared by ${profile.username} on ShareMii`,
       type: 'profile',
-      url: `${window.location.origin}/#/u/${encodeURIComponent(profile.username)}`,
+      url: `${window.location.origin}/u/${encodeURIComponent(profile.username)}`,
     });
 
     container.replaceChildren(wrapPublicPage(page));
@@ -433,7 +434,7 @@ async function buildMiiSections(
     const empty = document.createElement('p');
     empty.className = 'profile-miis__empty';
     empty.innerHTML = isOwner
-      ? 'No Miis yet. <a href="#/create" class="interactive">Create one in the Mii Maker</a> or <a href="#" data-scan-submit class="interactive">scan a QR code</a>.'
+      ? 'No Miis yet. <a href="/create" class="interactive">Create one in the Mii Maker</a> or <a href="#" data-scan-submit class="interactive">scan a QR code</a>.'
       : 'No Miis yet.';
     section.appendChild(empty);
     container.appendChild(section);
@@ -507,7 +508,7 @@ async function buildPublicPage(
     menuItems.push({
       label: 'Edit profile',
       onSelect: () => {
-        window.location.hash = '#/settings';
+        navigateTo('/settings');
       },
     });
   } else if (viewerId) {
@@ -561,7 +562,7 @@ async function buildPublicPage(
           }
           try {
             await blockUser(profile.id);
-            window.location.hash = '#/';
+            navigateTo('/');
           } catch (err) {
             alert(err instanceof Error ? err.message : 'Could not block');
           }
@@ -705,7 +706,7 @@ async function buildCollectionsSection(
 
   if (isOwner) {
     const manage = document.createElement('a');
-    manage.href = '#/collections';
+    manage.href = '/collections';
     manage.className = 'pill-btn pill-btn--outline interactive';
     manage.textContent = 'Manage all';
     head.appendChild(manage);
@@ -721,7 +722,7 @@ async function buildCollectionsSection(
     if (!isOwner && !c.is_public) continue;
     const card = document.createElement('a');
     card.className = 'profile-collections__card interactive';
-    card.href = `#/collection/${c.id}`;
+    card.href = `/collection/${c.id}`;
 
     const iconEl = document.createElement('span');
     iconEl.className = 'profile-collections__card-icon';
@@ -745,7 +746,7 @@ async function buildCollectionsSection(
   if (publicCards.length > 2) {
     grid.classList.add('profile-collections__grid--preview');
     const viewAll = document.createElement('a');
-    viewAll.href = isOwner ? '#/collections' : `#/u/${encodeURIComponent(profile.username)}`;
+    viewAll.href = isOwner ? '/collections' : `/u/${encodeURIComponent(profile.username)}`;
     viewAll.className =
       'profile-collections__view-all pill-btn pill-btn--outline interactive';
     viewAll.textContent = 'View all collections';

@@ -53,7 +53,7 @@ export function renderCollectionsDiscover(container: HTMLElement): () => void {
 
     for (const col of collections) {
       const card = document.createElement('a');
-      card.href = `#/collection/${col.id}`;
+      card.href = `/collection/${col.id}`;
       card.className = 'collections-card interactive';
 
       const previews = document.createElement('div');

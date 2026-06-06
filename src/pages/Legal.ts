@@ -257,7 +257,7 @@ function buildLegalPage(id: LegalPageId): HTMLElement {
   page.className = 'page-content page-content--offset-top legal-page';
 
   const back = document.createElement('a');
-  back.href = '#/';
+  back.href = '/';
   back.className = 'legal-page__back interactive';
   back.textContent = '← Back to plaza';
 
@@ -309,7 +309,7 @@ function buildLegalPage(id: LegalPageId): HTMLElement {
     for (const [pageId, pageConfig] of Object.entries(PAGES)) {
       if (pageId === 'legal') continue;
       const a = document.createElement('a');
-      a.href = `#/${pageId}`;
+      a.href = `/${pageId}`;
       a.className = 'legal-page__link interactive';
       a.textContent = pageConfig.title;
       links.appendChild(a);

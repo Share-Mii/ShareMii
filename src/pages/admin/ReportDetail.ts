@@ -1,3 +1,4 @@
+import { navigateTo } from '@/utils/navigation';
 import {
   assignReport,
   deleteComment,
@@ -30,7 +31,7 @@ export async function renderAdminReportDetail(
     pageOptions.subtitle = `${report.target_type} target · ref ${report.id.slice(0, 8)}…`;
 
     const back = document.createElement('a');
-    back.href = '#/admin/reports';
+    back.href = '/admin/reports';
     back.className = 'admin-back-link interactive';
     back.textContent = '← Back to report queue';
 
@@ -149,11 +150,11 @@ export async function renderAdminReportDetail(
     resolutionRow.className = 'admin-actions-row';
     const dismissBtn = btn('Dismiss report', async () => {
       await resolveReport(reportId, 'dismissed', noteInput.value);
-      window.location.hash = '#/admin/reports';
+      navigateTo('/admin/reports');
     });
     const resolveBtn = btnPrimary('Mark resolved', async () => {
       await resolveReport(reportId, 'resolved', noteInput.value);
-      window.location.hash = '#/admin/reports';
+      navigateTo('/admin/reports');
     });
     resolutionRow.append(dismissBtn, resolveBtn);
     resolutionGroup.appendChild(resolutionRow);

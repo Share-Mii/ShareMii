@@ -47,19 +47,19 @@ function miiLabel(name: string | null): string {
 function feedHref(item: ActivityFeedItem): string {
   switch (item.event_type) {
     case 'remix':
-      if (item.related_mii_id) return `#/mii/${item.related_mii_id}`;
+      if (item.related_mii_id) return `/mii/${item.related_mii_id}`;
       break;
     case 'collection_add':
       if (item.target_collection_id) {
-        return `#/collection/${item.target_collection_id}`;
+        return `/collection/${item.target_collection_id}`;
       }
       break;
     default:
       break;
   }
-  if (item.target_mii_id) return `#/mii/${item.target_mii_id}`;
-  if (item.related_mii_id) return `#/mii/${item.related_mii_id}`;
-  return '#/feed';
+  if (item.target_mii_id) return `/mii/${item.target_mii_id}`;
+  if (item.related_mii_id) return `/mii/${item.related_mii_id}`;
+  return '/feed';
 }
 
 function feedMessage(item: ActivityFeedItem): string {

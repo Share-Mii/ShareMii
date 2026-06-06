@@ -1,4 +1,5 @@
 import './pages.css';
+import { navigateTo } from '@/utils/navigation';
 import './Feed.css';
 import '@/components/shared.css';
 import '@/components/FeedItem/FeedItem.css';
@@ -277,7 +278,7 @@ export function renderFeed(container: HTMLElement): () => void {
           'users',
           'No uploads from follows yet',
           'Follow creators to see their latest Miis here.',
-          '<p><a href="#/browse" class="interactive">Browse residents</a></p>',
+          '<p><a href="/browse" class="interactive">Browse residents</a></p>',
         ),
       );
       return;
@@ -299,7 +300,7 @@ export function renderFeed(container: HTMLElement): () => void {
           'users',
           'Follow creators to fill your feed',
           'When you follow residents, their yeahs, uploads, and collection updates show up here.',
-          '<p><a href="#/browse" class="interactive">Browse residents</a></p>',
+          '<p><a href="/browse" class="interactive">Browse residents</a></p>',
         ),
       );
     } else {
@@ -308,7 +309,7 @@ export function renderFeed(container: HTMLElement): () => void {
           'rss',
           'Nothing new yet',
           'Activity from people you follow will show up here.',
-          '<p><a href="#/browse" class="interactive">Browse the plaza</a></p>',
+          '<p><a href="/browse" class="interactive">Browse the plaza</a></p>',
         ),
       );
     }
@@ -385,7 +386,7 @@ export function renderFeed(container: HTMLElement): () => void {
       row.className = 'feed-page__suggest-row';
       for (const s of suggestions) {
         const a = document.createElement('a');
-        a.href = `#/u/${encodeURIComponent(s.username)}`;
+        a.href = `/u/${encodeURIComponent(s.username)}`;
         a.className = 'feed-page__suggest-card interactive';
         a.textContent = s.username;
         a.title = s.reason;
@@ -432,7 +433,7 @@ export function renderFeed(container: HTMLElement): () => void {
     const session = await getAuthSession();
     if (!isLoggedIn(session)) {
       openLoginModal();
-      window.location.hash = '#/';
+      navigateTo('/');
       return;
     }
 

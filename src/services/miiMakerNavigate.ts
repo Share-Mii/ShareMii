@@ -1,4 +1,5 @@
+import { navigateTo } from '@/utils/navigation';
 
 export function navigateToMiiMakerEdit(miiId: string): void {
-  window.location.hash = `#/edit/${miiId}`;
+  navigateTo(`/edit/${miiId}`);
 }

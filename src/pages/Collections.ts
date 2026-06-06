@@ -1,4 +1,5 @@
 import './pages.css';
+import { navigateTo } from '@/utils/navigation';
 import './Collections.css';
 import './Favorites.css';
 import '@/components/shared.css';
@@ -30,7 +31,7 @@ export function renderCollections(container: HTMLElement): () => void {
     const session = await getAuthSession();
     if (!isLoggedIn(session)) {
       openLoginModal();
-      window.location.hash = '#/';
+      navigateTo('/');
       return;
     }
 
@@ -40,7 +41,7 @@ export function renderCollections(container: HTMLElement): () => void {
     } catch {
       if (abort) return;
       page.innerHTML =
-        '<p class="page-error">Could not load collections. <a href="#/">Go home</a></p>';
+        '<p class="page-error">Could not load collections. <a href="/">Go home</a></p>';
       return;
     }
 
@@ -68,7 +69,7 @@ export function renderCollections(container: HTMLElement): () => void {
       'Curated lists of Miis you can keep private or share publicly.';
 
     const discoverLink = document.createElement('a');
-    discoverLink.href = '#/collections/browse';
+    discoverLink.href = '/collections/browse';
     discoverLink.className = 'pill-btn pill-btn--outline interactive';
     discoverLink.textContent = 'Browse public collections';
 
@@ -132,7 +133,7 @@ function renderCollectionCard(
 
   const link = document.createElement('a');
   link.className = 'collections-card__link interactive';
-  link.href = `#/collection/${c.id}`;
+  link.href = `/collection/${c.id}`;
 
   const iconEl = document.createElement('span');
   iconEl.className = 'collections-card__icon';

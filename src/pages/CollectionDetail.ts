@@ -1,4 +1,5 @@
 import './pages.css';
+import { navigateTo } from '@/utils/navigation';
 import './Collections.css';
 import './Favorites.css';
 import '@/components/shared.css';
@@ -52,7 +53,7 @@ export function renderCollectionDetail(
     } catch {
       if (abort) return;
       page.innerHTML =
-        '<p class="page-error">Could not load collection. <a href="#/">Go home</a></p>';
+        '<p class="page-error">Could not load collection. <a href="/">Go home</a></p>';
       return;
     }
 
@@ -60,7 +61,7 @@ export function renderCollectionDetail(
 
     if (!collection) {
       page.innerHTML =
-        '<p class="page-error">Collection not found. <a href="#/">Go home</a></p>';
+        '<p class="page-error">Collection not found. <a href="/">Go home</a></p>';
       return;
     }
 
@@ -70,7 +71,7 @@ export function renderCollectionDetail(
 
     if (!collection.is_public && !isOwner) {
       page.innerHTML =
-        '<p class="page-error">This collection is private. <a href="#/">Go home</a></p>';
+        '<p class="page-error">This collection is private. <a href="/">Go home</a></p>';
       return;
     }
 
@@ -117,13 +118,13 @@ export function renderCollectionDetail(
     const back = document.createElement('a');
     back.className = 'detail-back interactive';
     if (isOwner) {
-      back.href = '#/collections';
+      back.href = '/collections';
       back.textContent = '← My collections';
     } else if (ownerUsername) {
-      back.href = `#/u/${encodeURIComponent(ownerUsername)}`;
+      back.href = `/u/${encodeURIComponent(ownerUsername)}`;
       back.textContent = `← ${ownerUsername}`;
     } else {
-      back.href = '#/';
+      back.href = '/';
       back.textContent = '← Home';
     }
 
@@ -145,7 +146,7 @@ export function renderCollectionDetail(
     if (ownerUsername && !isOwner) {
       const owner = document.createElement('p');
       owner.className = 'collection-detail__owner';
-      owner.innerHTML = `Curated by <a href="#/u/${encodeURIComponent(ownerUsername)}" class="interactive">${escapeHtml(ownerUsername)}</a>`;
+      owner.innerHTML = `Curated by <a href="/u/${encodeURIComponent(ownerUsername)}" class="interactive">${escapeHtml(ownerUsername)}</a>`;
       titleBlock.append(title, owner);
     } else {
       titleBlock.appendChild(title);
@@ -204,7 +205,7 @@ export function renderCollectionDetail(
           onConfirm: async () => {
             await deleteCollection(collection.id);
             showShareToast('Collection deleted');
-            window.location.hash = '#/collections';
+            navigateTo('/collections');
           },
         });
       });

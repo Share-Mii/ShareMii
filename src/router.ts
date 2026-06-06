@@ -42,25 +42,23 @@ import { renderTagBrowse } from '@/pages/TagBrowse';
 import { renderCollectionsDiscover } from '@/pages/CollectionsDiscover';
 import { renderCreatorDashboard } from '@/pages/CreatorDashboard';
 import { requireAdminProfile, requireStaffProfile } from '@/services/staffGate';
+import {
+  getRoutePath,
+  navigateTo,
+  normalizeRoutePath,
+  ROUTE_CHANGE_EVENT,
+} from '@/utils/navigation';
 
 type Cleanup = () => void;
 
 let currentCleanup: Cleanup | undefined;
 
-let lastRoute = '#/';
+let lastRoute = '/';
 
 function getPageTransitionTarget(root: Element | null): Element | null {
   if (!root) return null;
   const content = root.querySelector('.page-shell__content');
   return content ?? root;
-}
-
-function getHash(): string {
-  const hash = window.location.hash;
-  if (hash.startsWith('#/')) return hash;
-  const path = window.location.pathname;
-  if (path && path !== '/') return `#${path}`;
-  return '#/';
 }
 
 function runWithPageTransition(render: () => Cleanup | void): void {
@@ -87,15 +85,11 @@ function navigate(): void {
   const app = document.getElementById('app');
   if (!app) return;
 
-  const hash = getHash();
+  const path = getRoutePath();
 
-  if (hash.startsWith('#/submit')) {
+  if (path === '/submit' || path.startsWith('/submit/')) {
     const returnTo = lastRoute;
-    window.history.replaceState(
-      null,
-      '',
-      `${window.location.pathname}${window.location.search}${returnTo}`,
-    );
+    navigateTo(returnTo, true);
     void openScanAndSubmit();
     if (!app.firstElementChild) {
       navigate();
@@ -103,41 +97,41 @@ function navigate(): void {
     return;
   }
 
-  lastRoute = hash;
+  lastRoute = path;
   resetPageMeta();
 
-  if (hash === '#/' || hash === '#') {
+  if (path === '/') {
     runWithPageTransition(() => renderHome(app));
     return;
   }
 
-  const miiMatch = hash.match(/^#\/mii\/([^/]+)$/);
+  const miiMatch = path.match(/^\/mii\/([^/]+)$/);
   if (miiMatch) {
     runWithPageTransition(() => renderDetail(app, miiMatch[1]!));
     return;
   }
 
-  const remixMatch = hash.match(/^#\/create\/remix\/([^/]+)$/);
+  const remixMatch = path.match(/^\/create\/remix\/([^/]+)$/);
   if (remixMatch) {
     const remixId = remixMatch[1]!;
     void getAuthSession().then(async (session) => {
-      if (getHash() !== `#/create/remix/${remixId}`) return;
+      if (getRoutePath() !== `/create/remix/${remixId}`) return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       const ready = await requireGamertag();
-      if (getHash() !== `#/create/remix/${remixId}`) return;
+      if (getRoutePath() !== `/create/remix/${remixId}`) return;
       if (!ready) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
 
       const mii = await fetchMiiById(remixId);
-      if (getHash() !== `#/create/remix/${remixId}`) return;
+      if (getRoutePath() !== `/create/remix/${remixId}`) return;
       if (!mii) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
 
@@ -146,18 +140,18 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/create') {
+  if (path === '/create') {
     void getAuthSession().then(async (session) => {
-      if (getHash() !== '#/create') return;
+      if (getRoutePath() !== '/create') return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       const ready = await requireGamertag();
-      if (getHash() !== '#/create') return;
+      if (getRoutePath() !== '/create') return;
       if (!ready) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => renderCreate(app));
@@ -165,33 +159,33 @@ function navigate(): void {
     return;
   }
 
-  const editMatch = hash.match(/^#\/edit\/([^/]+)$/);
+  const editMatch = path.match(/^\/edit\/([^/]+)$/);
   if (editMatch) {
     const editId = editMatch[1]!;
     void getAuthSession().then(async (session) => {
-      if (getHash() !== `#/edit/${editId}`) return;
+      if (getRoutePath() !== `/edit/${editId}`) return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       const ready = await requireGamertag();
-      if (getHash() !== `#/edit/${editId}`) return;
+      if (getRoutePath() !== `/edit/${editId}`) return;
       if (!ready) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
 
       const mii = await fetchMiiById(editId);
-      if (getHash() !== `#/edit/${editId}`) return;
+      if (getRoutePath() !== `/edit/${editId}`) return;
 
       if (!mii) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
 
       if (!mii.user_id || mii.user_id !== session!.user.id) {
-        window.location.hash = `#/mii/${mii.id}`;
+        navigateTo(`/mii/${mii.id}`);
         return;
       }
 
@@ -200,39 +194,39 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/profile') {
+  if (path === '/profile') {
     void getAuthSession().then(async (session) => {
-      if (getHash() !== '#/profile') return;
+      if (getRoutePath() !== '/profile') return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       const profile =
         (await fetchProfileById(session!.user.id)) ??
         (await ensureProfile(session!.user.id));
       if (hasCompletedProfile(profile)) {
-        window.location.hash = `#/u/${encodeURIComponent(profile.username)}`;
+        navigateTo(`/u/${encodeURIComponent(profile.username)}`);
       } else {
-        window.location.hash = '#/settings';
+        navigateTo('/settings');
       }
     });
     return;
   }
 
-  const collectionMatch = hash.match(/^#\/collection\/([^/]+)$/);
+  const collectionMatch = path.match(/^\/collection\/([^/]+)$/);
   if (collectionMatch) {
     const collectionId = collectionMatch[1]!;
     runWithPageTransition(() => renderCollectionDetail(app, collectionId));
     return;
   }
 
-  if (hash === '#/collections') {
+  if (path === '/collections') {
     void getAuthSession().then((session) => {
-      if (getHash() !== '#/collections') return;
+      if (getRoutePath() !== '/collections') return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => renderCollections(app));
@@ -240,12 +234,12 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/feed') {
+  if (path === '/feed') {
     void getAuthSession().then((session) => {
-      if (getHash() !== '#/feed') return;
+      if (getRoutePath() !== '/feed') return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => renderFeed(app));
@@ -253,12 +247,12 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/favorites') {
+  if (path === '/favorites') {
     void getAuthSession().then((session) => {
-      if (getHash() !== '#/favorites') return;
+      if (getRoutePath() !== '/favorites') return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => renderFavorites(app));
@@ -266,12 +260,12 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/uploads') {
+  if (path === '/uploads') {
     void getAuthSession().then((session) => {
-      if (getHash() !== '#/uploads') return;
+      if (getRoutePath() !== '/uploads') return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => renderUploads(app));
@@ -279,12 +273,12 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/settings' || hash.startsWith('#/settings#')) {
+  if (path === '/settings' || path.startsWith('/settings/')) {
     void getAuthSession().then((session) => {
-      if (!getHash().startsWith('#/settings')) return;
+      if (!getRoutePath().startsWith('/settings')) return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => renderSettings(app));
@@ -292,11 +286,11 @@ function navigate(): void {
     return;
   }
 
-  const userMatch = hash.match(/^#\/u\/([^/]+)$/);
+  const userMatch = path.match(/^\/u\/([^/]+)$/);
   if (userMatch) {
     const username = decodeURIComponent(userMatch[1]!);
     if (!validateGamertag(username).ok) {
-      window.location.hash = '#/';
+      navigateTo('/');
       return;
     }
     runWithPageTransition(() =>
@@ -308,29 +302,29 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/browse') {
+  if (path === '/browse') {
     runWithPageTransition(() => renderBrowse(app));
     return;
   }
 
-  const tagMatch = hash.match(/^#\/tag\/([^/]+)$/);
+  const tagMatch = path.match(/^\/tag\/([^/]+)$/);
   if (tagMatch) {
     const slug = decodeURIComponent(tagMatch[1]!);
     runWithPageTransition(() => renderTagBrowse(app, slug));
     return;
   }
 
-  if (hash === '#/collections/browse') {
+  if (path === '/collections/browse') {
     runWithPageTransition(() => renderCollectionsDiscover(app));
     return;
   }
 
-  if (hash === '#/dashboard') {
+  if (path === '/dashboard') {
     void getAuthSession().then((session) => {
-      if (getHash() !== '#/dashboard') return;
+      if (getRoutePath() !== '/dashboard') return;
       if (!isLoggedIn(session)) {
         openLoginModal();
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => renderCreatorDashboard(app));
@@ -338,11 +332,11 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/admin') {
+  if (path === '/admin') {
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== '#/admin') return;
+      if (getRoutePath() !== '/admin') return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -352,11 +346,11 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/admin/bugs') {
+  if (path === '/admin/bugs') {
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== '#/admin/bugs') return;
+      if (getRoutePath() !== '/admin/bugs') return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -366,13 +360,13 @@ function navigate(): void {
     return;
   }
 
-  const adminBugMatch = hash.match(/^#\/admin\/bugs\/([^/]+)$/);
+  const adminBugMatch = path.match(/^\/admin\/bugs\/([^/]+)$/);
   if (adminBugMatch) {
     const bugId = adminBugMatch[1]!;
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== `#/admin/bugs/${bugId}`) return;
+      if (getRoutePath() !== `/admin/bugs/${bugId}`) return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -382,11 +376,11 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/admin/appeals') {
+  if (path === '/admin/appeals') {
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== '#/admin/appeals') return;
+      if (getRoutePath() !== '/admin/appeals') return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -396,11 +390,11 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/admin/reports') {
+  if (path === '/admin/reports') {
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== '#/admin/reports') return;
+      if (getRoutePath() !== '/admin/reports') return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -410,11 +404,11 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/admin/auto-flags') {
+  if (path === '/admin/auto-flags') {
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== '#/admin/auto-flags') return;
+      if (getRoutePath() !== '/admin/auto-flags') return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -424,13 +418,13 @@ function navigate(): void {
     return;
   }
 
-  const adminReportMatch = hash.match(/^#\/admin\/reports\/([^/]+)$/);
+  const adminReportMatch = path.match(/^\/admin\/reports\/([^/]+)$/);
   if (adminReportMatch) {
     const reportId = adminReportMatch[1]!;
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== `#/admin/reports/${reportId}`) return;
+      if (getRoutePath() !== `/admin/reports/${reportId}`) return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -440,11 +434,11 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/admin/users') {
+  if (path === '/admin/users') {
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== '#/admin/users') return;
+      if (getRoutePath() !== '/admin/users') return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -454,11 +448,11 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/admin/audit') {
+  if (path === '/admin/audit') {
     void requireStaffProfile().then((profile) => {
-      if (getHash() !== '#/admin/audit') return;
+      if (getRoutePath() !== '/admin/audit') return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -468,11 +462,11 @@ function navigate(): void {
     return;
   }
 
-  if (hash === '#/admin/settings') {
+  if (path === '/admin/settings') {
     void requireAdminProfile().then((profile) => {
-      if (getHash() !== '#/admin/settings') return;
+      if (getRoutePath() !== '/admin/settings') return;
       if (!profile) {
-        window.location.hash = '#/';
+        navigateTo('/');
         return;
       }
       runWithPageTransition(() => {
@@ -482,7 +476,7 @@ function navigate(): void {
     return;
   }
 
-  const legalMatch = hash.match(/^#\/(legal|privacy|terms|child-safety|delete-account)$/);
+  const legalMatch = path.match(/^\/(legal|privacy|terms|child-safety|delete-account)$/);
   if (legalMatch && isLegalPageId(legalMatch[1]!)) {
     const pageId = legalMatch[1]!;
     runWithPageTransition(() => {
@@ -491,15 +485,41 @@ function navigate(): void {
     return;
   }
 
-  window.location.hash = '#/';
+  navigateTo('/');
 }
 
-function normalizeFragmentHash(): void {
+function normalizeLegacyHash(): void {
   const hash = window.location.hash;
   if (hash === '#residents' || hash.startsWith('#residents')) {
-    const base = `${window.location.pathname}${window.location.search}`;
-    window.history.replaceState(null, '', `${base}#/`);
+    window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}`);
+    window.location.hash = '';
   }
+}
+
+function bindSpaLinkClicks(): void {
+  document.addEventListener('click', (e) => {
+    if (e.defaultPrevented || e.button !== 0) return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+
+    const anchor = (e.target as Element).closest('a');
+    if (!anchor) return;
+    if (anchor.target === '_blank' || anchor.hasAttribute('download')) return;
+
+    const href = anchor.getAttribute('href');
+    if (!href || !href.startsWith('/')) return;
+
+    const url = new URL(href, window.location.origin);
+    if (url.origin !== window.location.origin) return;
+
+    e.preventDefault();
+    const next = normalizeRoutePath(url.pathname);
+    const current = getRoutePath();
+    if (next !== current) {
+      navigateTo(next);
+    } else {
+      navigate();
+    }
+  });
 }
 
 export function initRouter(): void {
@@ -508,16 +528,14 @@ export function initRouter(): void {
   }
 
   initScanSubmitTriggers();
-  normalizeFragmentHash();
+  normalizeLegacyHash();
+  bindSpaLinkClicks();
 
-  if (!window.location.hash) {
-    window.location.hash = '#/';
-  }
   const onRoute = (): void => {
-    normalizeFragmentHash();
+    normalizeLegacyHash();
     navigate();
   };
-  window.addEventListener('hashchange', onRoute);
+  window.addEventListener(ROUTE_CHANGE_EVENT, onRoute);
   window.addEventListener('popstate', onRoute);
   navigate();
 }

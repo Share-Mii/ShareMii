@@ -21,6 +21,7 @@ import { createTagFilter } from '@/components/TagFilter/TagFilter';
 import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { getDiscordInviteUrl } from '@/config/community';
 import type { Gender, SortOption, SourceFilter } from '@/types';
+import { setPageMeta } from '@/utils/pageMeta';
 
 const HOME_MOBILE_PREVIEW_COUNT = 8;
 const MOBILE_HOME_MQ = '(max-width: 768px)';
@@ -68,6 +69,13 @@ function createHeroPolaroidPlaceholder(): HTMLElement {
 }
 
 export function renderHome(container: HTMLElement): () => void {
+  setPageMeta({
+    title: 'ShareMii — Browse, Share & Scan Mii QR Codes',
+    description:
+      'Browse, share, and scan Mii QR codes from 3DS, Wii U, and Tomodachi Life. Free online Mii Maker and community gallery.',
+    url: `${window.location.origin}/`,
+  });
+
   let sort: SortOption = 'newest';
   let gender: Gender | null = null;
   let source: SourceFilter = 'all';
@@ -93,7 +101,7 @@ export function renderHome(container: HTMLElement): () => void {
         Browse Mii characters shared by the community, or scan a QR code from your 3DS, Wii U, or Tomodachi Life to share them with everyone.
       </p>
       <div class="hero__actions" data-hero-actions>
-        <a href="#/" class="pill-btn pill-btn--filled pill-btn--lg interactive" data-browse-residents>${iconSpan('magnifying-glass')} Browse Residents</a>
+        <a href="/" class="pill-btn pill-btn--filled pill-btn--lg interactive" data-browse-residents>${iconSpan('magnifying-glass')} Browse Residents</a>
       </div>
       <div class="hero__works">
         <span class="hero__works-label">Works with</span>
@@ -202,7 +210,7 @@ export function renderHome(container: HTMLElement): () => void {
       title.className = 'section-title';
       title.textContent = 'From creators you follow';
       const seeAll = document.createElement('a');
-      seeAll.href = '#/feed';
+      seeAll.href = '/feed';
       seeAll.className = 'home-following__see-all interactive';
       seeAll.textContent = 'See all activity';
       head.append(title, seeAll);
@@ -316,7 +324,7 @@ export function renderHome(container: HTMLElement): () => void {
 
   const mobileCta = document.createElement('div');
   mobileCta.className = 'browse-section__mobile-cta';
-  mobileCta.innerHTML = `<a href="#/browse" class="pill-btn pill-btn--filled pill-btn--lg interactive">${iconSpan('magnifying-glass')} See all in Browse</a>`;
+  mobileCta.innerHTML = `<a href="/browse" class="pill-btn pill-btn--filled pill-btn--lg interactive">${iconSpan('magnifying-glass')} See all in Browse</a>`;
 
   const browseTitle = browseHead.querySelector('.browse-section__title')!;
 
@@ -333,7 +341,7 @@ export function renderHome(container: HTMLElement): () => void {
       'browse-section--mobile-preview',
       mobilePreview,
     );
-    browseResidentsBtn.href = mobilePreview ? '#/browse' : '#/';
+    browseResidentsBtn.href = mobilePreview ? '/browse' : '/';
     if (mobilePreview) {
       browseTitle.innerHTML = `${icon('fire')} Trending residents`;
       browseResidentsBtn.innerHTML = `${iconSpan('magnifying-glass')} Browse Residents`;
@@ -351,7 +359,7 @@ export function renderHome(container: HTMLElement): () => void {
   );
   if (mobilePreview) {
     browseTitle.innerHTML = `${icon('fire')} Trending residents`;
-    browseResidentsBtn.href = '#/browse';
+    browseResidentsBtn.href = '/browse';
   }
 
   const mobileMq = window.matchMedia(MOBILE_HOME_MQ);

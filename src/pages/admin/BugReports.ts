@@ -94,7 +94,7 @@ function renderTable(reports: BugReport[]): HTMLElement {
     tr.className = reportAgeClass(report.created_at);
 
     const link = document.createElement('a');
-    link.href = `#/admin/bugs/${report.id}`;
+    link.href = `/admin/bugs/${report.id}`;
     link.className = 'admin-table__link interactive';
     link.textContent = report.title;
 

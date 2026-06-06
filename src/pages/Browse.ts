@@ -12,6 +12,7 @@ import { icon } from '@/utils/icon';
 import { bindFilterDrawer } from '@/utils/filterDrawer';
 import { createEmptyState } from '@/utils/emptyState';
 import type { Gender, Mii, Platform, SortOption } from '@/types';
+import { setPageMeta } from '@/utils/pageMeta';
 
 const SORTS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Newest' },
@@ -37,6 +38,13 @@ const PLATFORMS: { value: Platform | null; label: string }[] = [
 ];
 
 export function renderBrowse(container: HTMLElement): () => void {
+  setPageMeta({
+    title: 'Browse Mii QR Codes & Community Miis',
+    description:
+      'Search and browse Nintendo Mii characters shared by the community. Filter by platform, tags, and trending.',
+    url: `${window.location.origin}/browse`,
+  });
+
   let sort: SortOption = 'newest';
   let gender: Gender | null = null;
   let platform: Platform | null = null;
@@ -223,7 +231,7 @@ export function renderBrowse(container: HTMLElement): () => void {
       row.className = 'browse-creators__row';
       for (const p of profiles) {
         const a = document.createElement('a');
-        a.href = `#/u/${encodeURIComponent(p.username)}`;
+        a.href = `/u/${encodeURIComponent(p.username)}`;
         a.className = 'browse-creators__card interactive';
         a.innerHTML = `<strong>${escapeHtml(p.username)}</strong>${p.trusted_creator ? ' <span class="browse-creators__trusted">Trusted</span>' : ''}`;
         row.appendChild(a);

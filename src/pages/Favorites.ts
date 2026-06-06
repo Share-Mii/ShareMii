@@ -1,4 +1,5 @@
 import './pages.css';
+import { navigateTo } from '@/utils/navigation';
 import './Favorites.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
@@ -29,7 +30,7 @@ export function renderFavorites(container: HTMLElement): () => void {
     const session = await getAuthSession();
     if (!isLoggedIn(session)) {
       openLoginModal();
-      window.location.hash = '#/';
+      navigateTo('/');
       return;
     }
 
@@ -39,7 +40,7 @@ export function renderFavorites(container: HTMLElement): () => void {
     } catch {
       if (abort) return;
       page.innerHTML =
-        '<p class="page-error">Could not load favorites. <a href="#/">Go home</a></p>';
+        '<p class="page-error">Could not load favorites. <a href="/">Go home</a></p>';
       return;
     }
 
@@ -61,7 +62,7 @@ export function renderFavorites(container: HTMLElement): () => void {
       const empty = document.createElement('p');
       empty.className = 'favorites-page__empty';
       empty.innerHTML =
-        'No saved Miis yet. Browse the <a href="#/browse" class="interactive">plaza</a> and star ones you like.';
+        'No saved Miis yet. Browse the <a href="/browse" class="interactive">plaza</a> and star ones you like.';
       page.appendChild(empty);
       return;
     }

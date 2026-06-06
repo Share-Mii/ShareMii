@@ -95,7 +95,7 @@ function renderTable(rows: ModerationAutoFlag[]): HTMLElement {
     const fragments: string[] = [];
     if (r.mii_id) {
       fragments.push(
-        `<a class="interactive" href="#/mii/${escapeHtml(r.mii_id)}">Mii</a>`,
+        `<a class="interactive" href="/mii/${escapeHtml(r.mii_id)}">Mii</a>`,
       );
     }
     if (r.comment_id) {

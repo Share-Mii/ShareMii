@@ -102,7 +102,7 @@ export function openNotificationPanel(
   headerActions.className = 'notification-panel__header-actions';
 
   const settingsLink = document.createElement('a');
-  settingsLink.href = '#/settings#notification-settings';
+  settingsLink.href = '/settings#notification-settings';
   settingsLink.className = 'notification-panel__settings interactive';
   settingsLink.setAttribute('aria-label', 'Notification settings');
   settingsLink.innerHTML = icon('gear');
@@ -173,7 +173,7 @@ export function openNotificationPanel(
 
       for (const n of items) {
         const row = document.createElement('a');
-        row.href = `#/mii/${n.mii_id}`;
+        row.href = `/mii/${n.mii_id}`;
         row.className = `notification-panel__item interactive${n.read_at ? '' : ' notification-panel__item--unread'}`;
         row.innerHTML = `
           <span class="notification-panel__icon">${typeIcon(n.type)}</span>

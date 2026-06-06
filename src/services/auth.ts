@@ -42,13 +42,13 @@ export const AUTH_REDIRECT_ORIGINS = [
 ] as const;
 
 export function getAuthRedirectUrl(): string {
-  const { origin, pathname, search, hash } = window.location;
+  const { origin, pathname, search } = window.location;
   const base = AUTH_REDIRECT_ORIGINS.includes(
     origin as (typeof AUTH_REDIRECT_ORIGINS)[number],
   )
     ? origin
     : 'https://sharemii.net';
-  return `${base}${pathname || '/'}${search}${hash || '#/'}`;
+  return `${base}${pathname || '/'}${search}`;
 }
 
 function notify(session: Session | null): void {

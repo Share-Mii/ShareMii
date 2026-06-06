@@ -10,9 +10,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "generate:tl-names": "node scripts/generate-tl-item-names.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "pages:dev": "npm run build && wrangler pages dev dist",
+    "pages:deploy": "npm run build && wrangler pages deploy dist --project-name=sharemii"
   },
   "devDependencies": {
+    "wrangler": "^4.54.0",
     "@types/linkify-it": "^5.0.0",
     "jsdom": "^26.1.0",
     "typescript": "~6.0.2",

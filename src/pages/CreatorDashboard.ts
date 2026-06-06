@@ -1,4 +1,5 @@
 import './pages.css';
+import { navigateTo } from '@/utils/navigation';
 import './CreatorDashboard.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
@@ -27,7 +28,7 @@ export function renderCreatorDashboard(container: HTMLElement): () => void {
     const session = await getAuthSession();
     if (!isLoggedIn(session)) {
       openLoginModal();
-      window.location.hash = '#/';
+      navigateTo('/');
       return;
     }
 
@@ -74,7 +75,7 @@ export function renderCreatorDashboard(container: HTMLElement): () => void {
     const links = document.createElement('p');
     links.className = 'creator-dashboard__links';
     links.innerHTML =
-      '<a href="#/uploads" class="interactive">Manage uploads</a> · <a href="#/collections" class="interactive">Collections</a>';
+      '<a href="/uploads" class="interactive">Manage uploads</a> · <a href="/collections" class="interactive">Collections</a>';
 
     page.append(heading, grid, links);
   }

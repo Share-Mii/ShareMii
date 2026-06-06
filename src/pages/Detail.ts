@@ -89,7 +89,7 @@ export function renderDetail(
           Object.assign(document.createElement('main'), {
             className: 'page-content page-content--offset-top',
             innerHTML:
-              '<p class="page-error">This content is unavailable. <a href="#/">Go home</a></p>',
+              '<p class="page-error">This content is unavailable. <a href="/">Go home</a></p>',
           }),
         ),
       );
@@ -104,7 +104,7 @@ export function renderDetail(
             Object.assign(document.createElement('main'), {
               className: 'page-content page-content--offset-top',
               innerHTML:
-                '<p class="page-error">This Mii is unavailable. <a href="#/">Go home</a></p>',
+                '<p class="page-error">This Mii is unavailable. <a href="/">Go home</a></p>',
             }),
           ),
         );
@@ -116,7 +116,7 @@ export function renderDetail(
     page.className = 'detail-page';
 
     const back = document.createElement('a');
-    back.href = '#/';
+    back.href = '/';
     back.className = 'detail-back interactive';
     back.innerHTML = `${icon('arrow-left')} Back to plaza`;
 
@@ -156,7 +156,7 @@ export function renderDetail(
         mii.description ||
         `${mii.name} — shared on ShareMii by ${mii.creator_name || 'the community'}`,
       image: buildRenderUrl(mii.mii_data, { type: 'face', width: 512 }),
-      url: `${window.location.origin}/#/mii/${mii.id}`,
+      url: `${window.location.origin}/mii/${mii.id}`,
     });
 
     page.append(back, detail);

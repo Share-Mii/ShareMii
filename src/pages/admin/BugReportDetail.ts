@@ -29,7 +29,7 @@ export async function renderAdminBugReportDetail(
     pageOptions.subtitle = `Bug · ref ${report.id.slice(0, 8)}…`;
 
     const back = document.createElement('a');
-    back.href = '#/admin/bugs';
+    back.href = '/admin/bugs';
     back.className = 'admin-back-link interactive';
     back.textContent = '← Back to bug reports';
 

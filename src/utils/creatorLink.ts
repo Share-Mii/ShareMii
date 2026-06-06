@@ -1,7 +1,7 @@
 import type { Mii } from '@/types';
 
 export function profileUrlForUsername(username: string): string {
-  return `#/u/${encodeURIComponent(username)}`;
+  return `/u/${encodeURIComponent(username)}`;
 }
 
 export interface CreatorAttributionOptions {

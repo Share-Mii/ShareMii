@@ -5,6 +5,7 @@ import { getAuthSession, isLoggedIn, subscribeAuth } from '@/services/auth';
 import { openLoginModal } from '@/components/LoginModal/LoginModal';
 import { fetchProfileById } from '@/services/profile';
 import type { Profile } from '@/types';
+import { getRoutePath, ROUTE_CHANGE_EVENT } from '@/utils/navigation';
 
 interface TabItem {
   href: string;
@@ -15,49 +16,45 @@ interface TabItem {
 }
 
 const TABS: TabItem[] = [
-  { href: '#/', label: 'Home', icon: 'house', match: /^#\/$/ },
+  { href: '/', label: 'Home', icon: 'house', match: /^\/$/ },
   {
-    href: '#/feed',
+    href: '/feed',
     label: 'Feed',
     icon: 'rss',
-    match: /^#\/feed/,
+    match: /^\/feed/,
     requiresAuth: true,
   },
-  { href: '#/browse', label: 'Browse', icon: 'bars', match: /^#\/browse/ },
-  { href: '#/create', label: 'Create', icon: 'wand-magic-sparkles', match: /^#\/create/ },
+  { href: '/browse', label: 'Browse', icon: 'bars', match: /^\/browse/ },
+  { href: '/create', label: 'Create', icon: 'wand-magic-sparkles', match: /^\/create/ },
   {
-    href: '#/settings',
+    href: '/settings',
     label: 'Profile',
     icon: 'user',
     match:
-      /^#\/(u\/|settings|favorites|uploads|collections|dashboard|collection\/)/,
+      /^\/(u\/|settings|favorites|uploads|collections|dashboard|collection\/)/,
   },
 ];
 
-function currentHash(): string {
-  return window.location.hash || '#/';
-}
-
-let profileHref = '#/settings';
+let profileHref = '/settings';
 let loggedIn = false;
 
 async function resolveProfileHref(): Promise<string> {
   const session = await getAuthSession();
-  if (!isLoggedIn(session)) return '#/settings';
+  if (!isLoggedIn(session)) return '/settings';
   const profile: Profile | null = await fetchProfileById(session!.user.id);
   const username = profile?.username?.trim();
-  return username ? `#/u/${encodeURIComponent(username)}` : '#/settings';
+  return username ? `/u/${encodeURIComponent(username)}` : '/settings';
 }
 
 function renderTabs(nav: HTMLElement): void {
-  const hash = currentHash();
+  const path = getRoutePath();
   nav.replaceChildren();
 
   for (const tab of TABS) {
     const href = tab.label === 'Profile' ? profileHref : tab.href;
     const a = document.createElement('a');
     a.href = href;
-    const active = tab.match.test(hash);
+    const active = tab.match.test(path);
     const locked = Boolean(tab.requiresAuth && !loggedIn);
     a.className = `bottom-bar__tab interactive${active ? ' bottom-bar__tab--active' : ''}${locked ? ' bottom-bar__tab--locked' : ''}`;
     if (active) a.setAttribute('aria-current', 'page');
@@ -76,7 +73,7 @@ function renderTabs(nav: HTMLElement): void {
   }
 }
 
-let hashListenerBound = false;
+let routeListenerBound = false;
 
 export function createBottomBar(): HTMLElement {
   const bar = document.createElement('nav');
@@ -96,9 +93,9 @@ export function createBottomBar(): HTMLElement {
     renderTabs(nav);
   }
 
-  if (!hashListenerBound) {
-    hashListenerBound = true;
-    window.addEventListener('hashchange', () => {
+  if (!routeListenerBound) {
+    routeListenerBound = true;
+    window.addEventListener(ROUTE_CHANGE_EVENT, () => {
       const tabs = document.querySelector<HTMLElement>('.bottom-bar__tabs');
       if (tabs) renderTabs(tabs);
     });

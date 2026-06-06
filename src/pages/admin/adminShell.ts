@@ -7,6 +7,7 @@ import { isAdmin, roleLabel } from '@/utils/permissions';
 import { escapeHtml } from '@/utils/escapeHtml';
 import { icon } from '@/utils/icon';
 import { logoMark } from '@/utils/logo';
+import { getRoutePath } from '@/utils/navigation';
 
 export interface AdminNavItem {
   href: string;
@@ -16,14 +17,14 @@ export interface AdminNavItem {
 }
 
 const NAV: AdminNavItem[] = [
-  { href: '#/admin', label: 'Dashboard', icon: 'chart-line' },
-  { href: '#/admin/reports', label: 'Reports', icon: 'flag' },
-  { href: '#/admin/appeals', label: 'Appeals', icon: 'scale-balanced' },
-  { href: '#/admin/bugs', label: 'Bug reports', icon: 'bug' },
-  { href: '#/admin/auto-flags', label: 'Auto-mod', icon: 'filter' },
-  { href: '#/admin/users', label: 'Users', icon: 'users' },
-  { href: '#/admin/audit', label: 'Audit log', icon: 'clock-rotate-left' },
-  { href: '#/admin/settings', label: 'Settings', icon: 'gear', adminOnly: true },
+  { href: '/admin', label: 'Dashboard', icon: 'chart-line' },
+  { href: '/admin/reports', label: 'Reports', icon: 'flag' },
+  { href: '/admin/appeals', label: 'Appeals', icon: 'scale-balanced' },
+  { href: '/admin/bugs', label: 'Bug reports', icon: 'bug' },
+  { href: '/admin/auto-flags', label: 'Auto-mod', icon: 'filter' },
+  { href: '/admin/users', label: 'Users', icon: 'users' },
+  { href: '/admin/audit', label: 'Audit log', icon: 'clock-rotate-left' },
+  { href: '/admin/settings', label: 'Settings', icon: 'gear', adminOnly: true },
 ];
 
 export interface AdminPageOptions {
@@ -56,7 +57,7 @@ export function wrapAdminPage(
   nav.className = 'admin-nav';
   nav.setAttribute('aria-label', 'Admin');
 
-  const hash = window.location.hash || '#/admin';
+  const path = getRoutePath() || '/admin';
 
   for (const item of NAV) {
     if (item.adminOnly && !isAdmin(profile)) continue;
@@ -64,16 +65,16 @@ export function wrapAdminPage(
     a.href = item.href;
     a.className = 'admin-nav__link interactive';
     const active =
-      item.href === '#/admin'
-        ? hash === '#/admin'
-        : item.href === '#/admin/reports'
-          ? hash === '#/admin/reports' ||
-            hash.startsWith('#/admin/reports/')
-          : item.href === '#/admin/bugs'
-            ? hash === '#/admin/bugs' || hash.startsWith('#/admin/bugs/')
-            : item.href === '#/admin/appeals'
-              ? hash === '#/admin/appeals'
-              : hash.startsWith(item.href);
+      item.href === '/admin'
+        ? path === '/admin'
+        : item.href === '/admin/reports'
+          ? path === '/admin/reports' ||
+            path.startsWith('/admin/reports/')
+          : item.href === '/admin/bugs'
+            ? path === '/admin/bugs' || path.startsWith('/admin/bugs/')
+            : item.href === '/admin/appeals'
+              ? path === '/admin/appeals'
+              : path.startsWith(item.href);
     if (active) a.classList.add('admin-nav__link--active');
     a.innerHTML = `${icon(item.icon, 'admin-nav__icon')}${item.label}`;
     nav.appendChild(a);
