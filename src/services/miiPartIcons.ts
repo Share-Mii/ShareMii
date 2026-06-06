@@ -8,6 +8,7 @@ import {
   MII_HAIR_SWATCHES,
   MII_MOUTH_LIP_BOTTOM,
   MII_MOUTH_LIP_TOP,
+  MII_SKIN_COLOR_DISPLAY_ORDER,
   MII_SKIN_SWATCHES,
 } from '@/services/miiColorPalettes';
 
@@ -101,10 +102,29 @@ export function getPartIconSvg(
   return list[partIndex] ?? null;
 }
 
+function reorderByDisplayTable<T extends { value: number | string | boolean }>(
+  options: T[],
+  displayOrder: readonly number[],
+): T[] {
+  const byValue = new Map(options.map((o) => [o.value, o]));
+  const ordered: T[] = [];
+  for (const value of displayOrder) {
+    const opt = byValue.get(value);
+    if (opt) ordered.push(opt);
+  }
+  for (const opt of options) {
+    if (!ordered.includes(opt)) ordered.push(opt);
+  }
+  return ordered;
+}
+
 export function reorderOptionsForDisplay<T extends { value: number | string | boolean }>(
   path: string,
   options: T[],
 ): T[] {
+  if (path === 'face.color') {
+    return reorderByDisplayTable(options, MII_SKIN_COLOR_DISPLAY_ORDER);
+  }
   if (path !== 'hair.type') return options;
 
   const byValue = new Map(options.map((o) => [o.value, o]));

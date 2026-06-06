@@ -60,15 +60,7 @@ BEGIN
       SELECT to_jsonb(p.*) FROM public.profiles p WHERE p.id = uid
     ),
     'profile_private', (
-      SELECT jsonb_build_object(
-        'notify_comments', pp.notify_comments,
-        'notify_yeahs', pp.notify_yeahs,
-        'notify_favorites', pp.notify_favorites,
-        'role', pp.role,
-        'created_at', pp.created_at,
-        'updated_at', pp.updated_at
-      )
-      FROM public.profile_private pp WHERE pp.user_id = uid
+      SELECT to_jsonb(pp.*) FROM public.profile_private pp WHERE pp.user_id = uid
     ),
     'miis', COALESCE((
       SELECT jsonb_agg(to_jsonb(m.*) ORDER BY m.created_at DESC)

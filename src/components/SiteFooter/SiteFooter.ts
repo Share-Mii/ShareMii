@@ -23,6 +23,8 @@ export function createSiteFooter(): HTMLElement {
   const inner = document.createElement('div');
   inner.className = 'site-footer__inner';
 
+  const discordUrl = getDiscordInviteUrl();
+
   const credits = document.createElement('p');
   credits.className = 'site-footer__credits';
   credits.innerHTML = `
@@ -32,6 +34,31 @@ export function createSiteFooter(): HTMLElement {
     · Built with
     <a href="https://github.com/Stewared/miijs" target="_blank" rel="noopener noreferrer">MiiJS</a>
   `;
+
+  const compactNav = document.createElement('nav');
+  compactNav.className = 'site-footer__compact';
+  compactNav.setAttribute('aria-label', 'Footer links');
+  const legalHub = document.createElement('a');
+  legalHub.href = '#/legal';
+  legalHub.className = 'site-footer__compact-link interactive';
+  legalHub.textContent = 'Legal';
+  compactNav.appendChild(legalHub);
+  if (discordUrl) {
+    const discordCompact = document.createElement('a');
+    discordCompact.href = discordUrl;
+    discordCompact.target = '_blank';
+    discordCompact.rel = 'noopener noreferrer';
+    discordCompact.className = 'site-footer__compact-link interactive';
+    discordCompact.textContent = 'Discord';
+    compactNav.appendChild(discordCompact);
+  }
+  const bugCompact = document.createElement('button');
+  bugCompact.type = 'button';
+  bugCompact.className =
+    'site-footer__compact-link interactive site-footer__bug-btn';
+  bugCompact.textContent = 'Bug report';
+  bugCompact.addEventListener('click', () => bugReportOpener?.());
+  compactNav.appendChild(bugCompact);
 
   const nav = document.createElement('nav');
   nav.className = 'site-footer__legal';
@@ -52,7 +79,6 @@ export function createSiteFooter(): HTMLElement {
   bugBtn.addEventListener('click', () => bugReportOpener?.());
   nav.appendChild(bugBtn);
 
-  const discordUrl = getDiscordInviteUrl();
   if (discordUrl) {
     const discord = document.createElement('a');
     discord.href = discordUrl;
@@ -67,7 +93,7 @@ export function createSiteFooter(): HTMLElement {
   disclaimer.className = 'site-footer__disclaimer';
   disclaimer.textContent = 'Not affiliated with Nintendo Co., Ltd.';
 
-  inner.append(credits, nav, disclaimer);
+  inner.append(credits, compactNav, nav, disclaimer);
   footer.appendChild(inner);
   return footer;
 }

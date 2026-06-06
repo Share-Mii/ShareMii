@@ -1,0 +1,20 @@
+.remix-section {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+}
+
+.remix-section__title {
+  margin: 0 0 1rem;
+  font-size: 1.1rem;
+}
+
+.remix-section__label {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted, #666);
+}
+
+.remix-section__group + .remix-section__group {
+  margin-top: 1rem;
+}

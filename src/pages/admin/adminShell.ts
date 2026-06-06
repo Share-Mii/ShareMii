@@ -18,6 +18,7 @@ export interface AdminNavItem {
 const NAV: AdminNavItem[] = [
   { href: '#/admin', label: 'Dashboard', icon: 'chart-line' },
   { href: '#/admin/reports', label: 'Reports', icon: 'flag' },
+  { href: '#/admin/appeals', label: 'Appeals', icon: 'scale-balanced' },
   { href: '#/admin/bugs', label: 'Bug reports', icon: 'bug' },
   { href: '#/admin/auto-flags', label: 'Auto-mod', icon: 'filter' },
   { href: '#/admin/users', label: 'Users', icon: 'users' },
@@ -70,7 +71,9 @@ export function wrapAdminPage(
             hash.startsWith('#/admin/reports/')
           : item.href === '#/admin/bugs'
             ? hash === '#/admin/bugs' || hash.startsWith('#/admin/bugs/')
-            : hash.startsWith(item.href);
+            : item.href === '#/admin/appeals'
+              ? hash === '#/admin/appeals'
+              : hash.startsWith(item.href);
     if (active) a.classList.add('admin-nav__link--active');
     a.innerHTML = `${icon(item.icon, 'admin-nav__icon')}${item.label}`;
     nav.appendChild(a);
@@ -107,7 +110,7 @@ export function wrapAdminPage(
 
   main.append(head, pageBody);
   layout.append(sidebar, main);
-  return wrapPublicPage(layout);
+  return wrapPublicPage(layout, { admin: true });
 }
 
 export function reportAgeClass(createdAt: string): string {

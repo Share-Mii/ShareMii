@@ -10,6 +10,7 @@ export type MiiTileVariant = 'default' | 'compact' | 'loved' | 'grid';
 export interface MiiTileOptions {
   compact?: boolean;
   variant?: MiiTileVariant;
+  trustedCreator?: boolean;
 }
 
 export function createMiiTile(
@@ -58,6 +59,14 @@ export function createMiiTile(
     prefix: withBy ? 'by ' : '',
     unknownLabel: withBy ? 'Unknown' : 'Unknown creator',
   });
+
+  if (options.trustedCreator) {
+    const badge = document.createElement('span');
+    badge.className = 'mii-tile__trusted';
+    badge.textContent = 'Verified';
+    badge.title = 'Trusted creator';
+    creator.appendChild(badge);
+  }
 
   const stats = document.createElement('div');
   stats.className = 'mii-tile__stats';

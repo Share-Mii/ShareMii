@@ -10,7 +10,7 @@ SET search_path = public
 AS $$
 DECLARE
   v_secret text;
-  v_url text := 'https://bejtwsdmmvgpjcolnqdx.supabase.co/functions/v1/discord-bug-notify';
+  v_url text := 'https://pkxxgclpibmogbusnusi.supabase.co/functions/v1/discord-bug-notify';
 BEGIN
   BEGIN
     SELECT decrypted_secret INTO v_secret

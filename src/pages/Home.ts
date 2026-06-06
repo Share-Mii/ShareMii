@@ -8,7 +8,10 @@ import { createPaginatedList } from '@/components/ListPager/ListPager';
 import { createMiiTile } from '@/components/MiiTile/MiiTile';
 import { getAuthSession, isLoggedIn, subscribeAuth } from '@/services/auth';
 import { fetchMiis, isSupabaseConfigured } from '@/services/supabase';
-import { fetchFollowingFeedMiis } from '@/services/social';
+import {
+  fetchHomeFollowingMiis,
+  HOME_FOLLOWING_SLOTS,
+} from '@/services/social';
 import { icon, iconSpan } from '@/utils/icon';
 import { consumePageEntrance } from '@/utils/motion';
 import { scrollToTop, scrollToTopIfAtTop } from '@/utils/scroll';
@@ -19,8 +22,12 @@ import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { getDiscordInviteUrl } from '@/config/community';
 import type { Gender, SortOption, SourceFilter } from '@/types';
 
+const HOME_MOBILE_PREVIEW_COUNT = 8;
+const MOBILE_HOME_MQ = '(max-width: 768px)';
+
 const SORTS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Newest' },
+  { value: 'trending', label: 'Trending' },
   { value: 'favorites', label: "Most Yeah'd" },
   { value: 'downloads', label: 'Most Downloaded' },
 ];
@@ -68,13 +75,17 @@ export function renderHome(container: HTMLElement): () => void {
   let search = '';
   let searchTimer = 0;
   let abort = false;
+  let mobilePreview = window.matchMedia(MOBILE_HOME_MQ).matches;
   const content = document.createElement('main');
   content.className = 'page-content home-page';
 
   const heroSection = document.createElement('section');
   heroSection.className = 'hero';
-  heroSection.innerHTML = `
-    <div class="hero__content">
+  heroSection.appendChild(createHeroFloaters());
+
+  const heroContent = document.createElement('div');
+  heroContent.className = 'hero__content';
+  heroContent.innerHTML = `
       <h1 class="hero__title">
         Browse, share, & collect <span class="hero__title-accent">Mii's</span>.
       </h1>
@@ -92,24 +103,43 @@ export function renderHome(container: HTMLElement): () => void {
           <span class="hero__works-badge">Tomodachi Life</span>
         </div>
       </div>
-    </div>
-    <div class="hero__visual" data-hero-visual></div>
   `;
 
-  const heroVisual = heroSection.querySelector('[data-hero-visual]')!;
+  const heroVisual = document.createElement('div');
+  heroVisual.className = 'hero__visual';
+  heroVisual.dataset.heroVisual = '';
+
+  heroSection.append(heroContent, heroVisual);
+
   const heroPolaroidSlot = document.createElement('div');
   heroPolaroidSlot.className = 'hero__visual-slot';
-  heroVisual.append(createHeroFloaters(), heroPolaroidSlot);
+  heroVisual.append(heroPolaroidSlot);
   const heroActions = heroSection.querySelector<HTMLElement>('[data-hero-actions]')!;
+  const browseResidentsBtn =
+    heroActions.querySelector<HTMLAnchorElement>('[data-browse-residents]')!;
+
+  const heroOverflow = document.createElement('div');
+  heroOverflow.className = 'hero__actions-overflow';
+  heroActions.after(heroOverflow);
+
   const discordUrl = getDiscordInviteUrl();
   if (discordUrl) {
     const discordLink = document.createElement('a');
     discordLink.href = discordUrl;
     discordLink.target = '_blank';
     discordLink.rel = 'noopener noreferrer';
-    discordLink.className = 'pill-btn pill-btn--outline pill-btn--lg interactive';
+    discordLink.className =
+      'pill-btn pill-btn--outline pill-btn--lg interactive hero__actions-secondary';
     discordLink.textContent = 'Join Discord';
     heroActions.appendChild(discordLink);
+    const discordIcon = document.createElement('a');
+    discordIcon.href = discordUrl;
+    discordIcon.target = '_blank';
+    discordIcon.rel = 'noopener noreferrer';
+    discordIcon.className = 'pill-btn pill-btn--outline interactive';
+    discordIcon.setAttribute('aria-label', 'Join Discord');
+    discordIcon.innerHTML = iconSpan('comments');
+    heroOverflow.appendChild(discordIcon);
   }
   let heroScanLink: HTMLAnchorElement | null = null;
   const playEntrance = consumePageEntrance('home');
@@ -122,14 +152,28 @@ export function renderHome(container: HTMLElement): () => void {
         heroScanLink = document.createElement('a');
         heroScanLink.href = '#';
         heroScanLink.setAttribute('data-scan-submit', '');
-        heroScanLink.className = `pill-btn pill-btn--outline pill-btn--lg interactive${playEntrance ? ' pill-btn--enter' : ''}`;
+        heroScanLink.className = `pill-btn pill-btn--outline pill-btn--lg interactive hero__actions-secondary${playEntrance ? ' pill-btn--enter' : ''}`;
         heroScanLink.innerHTML = `${iconSpan('camera')} Scan &amp; Submit`;
         heroActions.appendChild(heroScanLink);
+        let scanIcon = heroOverflow.querySelector<HTMLAnchorElement>(
+          '[data-hero-scan-icon]',
+        );
+        if (!scanIcon) {
+          scanIcon = document.createElement('a');
+          scanIcon.href = '#';
+          scanIcon.setAttribute('data-scan-submit', '');
+          scanIcon.setAttribute('data-hero-scan-icon', '');
+          scanIcon.className = 'pill-btn pill-btn--outline interactive';
+          scanIcon.setAttribute('aria-label', 'Scan and submit');
+          scanIcon.innerHTML = iconSpan('camera');
+          heroOverflow.appendChild(scanIcon);
+        }
       }
       return;
     }
     heroScanLink?.remove();
     heroScanLink = null;
+    heroOverflow.querySelector('[data-hero-scan-icon]')?.remove();
   }
 
   const unsubHeroAuth = subscribeAuth(updateHeroSubmit);
@@ -146,18 +190,28 @@ export function renderHome(container: HTMLElement): () => void {
     const session = await getAuthSession();
     if (!isLoggedIn(session) || abort) return;
     try {
-      const feed = await fetchFollowingFeedMiis(session!.user.id, 12);
+      const feed = await fetchHomeFollowingMiis(
+        session!.user.id,
+        HOME_FOLLOWING_SLOTS,
+      );
       if (abort || !feed.length) return;
       followingSection.hidden = false;
+      const head = document.createElement('div');
+      head.className = 'home-following__head';
       const title = document.createElement('h2');
       title.className = 'section-title';
       title.textContent = 'From creators you follow';
+      const seeAll = document.createElement('a');
+      seeAll.href = '#/feed';
+      seeAll.className = 'home-following__see-all interactive';
+      seeAll.textContent = 'See all activity';
+      head.append(title, seeAll);
       const grid = document.createElement('div');
-      grid.className = 'mii-grid mii-grid--home';
+      grid.className = 'home-following__row scrollbar-hidden';
       for (let i = 0; i < feed.length; i++) {
-        grid.appendChild(createMiiTile(feed[i]!, i, { variant: 'grid' }));
+        grid.appendChild(createMiiTile(feed[i]!, i, { variant: 'loved' }));
       }
-      followingSection.append(title, grid);
+      followingSection.append(head, grid);
     } catch {
       /* optional */
     }
@@ -167,13 +221,14 @@ export function renderHome(container: HTMLElement): () => void {
   residentsSection.id = 'residents';
   residentsSection.className = 'plaza-section browse-section';
 
-  heroSection
-    .querySelector<HTMLAnchorElement>('[data-browse-residents]')
-    ?.addEventListener('click', (e) => {
-      e.preventDefault();
-      residentsSection.classList.add('browse-section--visible');
-      residentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+  browseResidentsBtn.addEventListener('click', (e) => {
+    if (mobilePreview) {
+      return;
+    }
+    e.preventDefault();
+    residentsSection.classList.add('browse-section--visible');
+    residentsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   const browseHead = document.createElement('div');
   browseHead.className = 'browse-section__head';
@@ -259,9 +314,48 @@ export function renderHome(container: HTMLElement): () => void {
     renderItem: (mii, i) => createMiiTile(mii, i, { variant: 'grid' }),
   });
 
+  const mobileCta = document.createElement('div');
+  mobileCta.className = 'browse-section__mobile-cta';
+  mobileCta.innerHTML = `<a href="#/browse" class="pill-btn pill-btn--filled pill-btn--lg interactive">${iconSpan('magnifying-glass')} See all in Browse</a>`;
+
+  const browseTitle = browseHead.querySelector('.browse-section__title')!;
+
   layout.append(filterPanel, residentsMain);
   residentsMain.appendChild(paginated.root);
-  residentsSection.append(browseHead, layout);
+  residentsSection.append(browseHead, layout, mobileCta);
+
+  function syncMobileHomeLayout(): void {
+    const next = window.matchMedia(MOBILE_HOME_MQ).matches;
+    if (next === mobilePreview) return;
+    mobilePreview = next;
+    heroSection.classList.toggle('hero--mobile-compact', mobilePreview);
+    residentsSection.classList.toggle(
+      'browse-section--mobile-preview',
+      mobilePreview,
+    );
+    browseResidentsBtn.href = mobilePreview ? '#/browse' : '#/';
+    if (mobilePreview) {
+      browseTitle.innerHTML = `${icon('fire')} Trending residents`;
+      browseResidentsBtn.innerHTML = `${iconSpan('magnifying-glass')} Browse Residents`;
+    } else {
+      browseTitle.innerHTML = `${icon('users')} Browse all residents`;
+      browseResidentsBtn.innerHTML = `${iconSpan('magnifying-glass')} Browse Residents`;
+    }
+    void loadGrid();
+  }
+
+  heroSection.classList.toggle('hero--mobile-compact', mobilePreview);
+  residentsSection.classList.toggle(
+    'browse-section--mobile-preview',
+    mobilePreview,
+  );
+  if (mobilePreview) {
+    browseTitle.innerHTML = `${icon('fire')} Trending residents`;
+    browseResidentsBtn.href = '#/browse';
+  }
+
+  const mobileMq = window.matchMedia(MOBILE_HOME_MQ);
+  mobileMq.addEventListener('change', syncMobileHomeLayout);
 
   const unbindFilterDrawer = bindFilterDrawer(
     layout,
@@ -380,7 +474,10 @@ export function renderHome(container: HTMLElement): () => void {
         return;
       }
 
-      paginated.setItems(miis);
+      const display = mobilePreview
+        ? miis.slice(0, HOME_MOBILE_PREVIEW_COUNT)
+        : miis;
+      paginated.setItems(display);
       scrollToTopIfAtTop();
     } catch {
       if (!abort) {
@@ -430,5 +527,6 @@ export function renderHome(container: HTMLElement): () => void {
     sortSelect.destroy();
     tagFilter.dispose();
     unbindFilterDrawer();
+    mobileMq.removeEventListener('change', syncMobileHomeLayout);
   };
 }

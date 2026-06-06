@@ -67,7 +67,12 @@ export function renderCollections(container: HTMLElement): () => void {
     lead.textContent =
       'Curated lists of Miis you can keep private or share publicly.';
 
-    intro.append(heading, lead);
+    const discoverLink = document.createElement('a');
+    discoverLink.href = '#/collections/browse';
+    discoverLink.className = 'pill-btn pill-btn--outline interactive';
+    discoverLink.textContent = 'Browse public collections';
+
+    intro.append(heading, lead, discoverLink);
 
     const newBtn = document.createElement('button');
     newBtn.type = 'button';

@@ -5,6 +5,7 @@ import { renderCreate } from '@/pages/Create';
 import { fetchMiiById } from '@/services/supabase';
 import { renderProfile } from '@/pages/Profile';
 import { renderFavorites } from '@/pages/Favorites';
+import { renderFeed } from '@/pages/Feed';
 import { renderCollections } from '@/pages/Collections';
 import { renderCollectionDetail } from '@/pages/CollectionDetail';
 import { renderUploads } from '@/pages/Uploads';
@@ -36,6 +37,10 @@ import { renderAdminAudit } from '@/pages/admin/Audit';
 import { renderAdminSettings } from '@/pages/admin/AdminSettings';
 import { renderAdminBugReports } from '@/pages/admin/BugReports';
 import { renderAdminBugReportDetail } from '@/pages/admin/BugReportDetail';
+import { renderAdminAppeals } from '@/pages/admin/Appeals';
+import { renderTagBrowse } from '@/pages/TagBrowse';
+import { renderCollectionsDiscover } from '@/pages/CollectionsDiscover';
+import { renderCreatorDashboard } from '@/pages/CreatorDashboard';
 import { requireAdminProfile, requireStaffProfile } from '@/services/staffGate';
 
 type Cleanup = () => void;
@@ -235,6 +240,19 @@ function navigate(): void {
     return;
   }
 
+  if (hash === '#/feed') {
+    void getAuthSession().then((session) => {
+      if (getHash() !== '#/feed') return;
+      if (!isLoggedIn(session)) {
+        openLoginModal();
+        window.location.hash = '#/';
+        return;
+      }
+      runWithPageTransition(() => renderFeed(app));
+    });
+    return;
+  }
+
   if (hash === '#/favorites') {
     void getAuthSession().then((session) => {
       if (getHash() !== '#/favorites') return;
@@ -295,6 +313,31 @@ function navigate(): void {
     return;
   }
 
+  const tagMatch = hash.match(/^#\/tag\/([^/]+)$/);
+  if (tagMatch) {
+    const slug = decodeURIComponent(tagMatch[1]!);
+    runWithPageTransition(() => renderTagBrowse(app, slug));
+    return;
+  }
+
+  if (hash === '#/collections/browse') {
+    runWithPageTransition(() => renderCollectionsDiscover(app));
+    return;
+  }
+
+  if (hash === '#/dashboard') {
+    void getAuthSession().then((session) => {
+      if (getHash() !== '#/dashboard') return;
+      if (!isLoggedIn(session)) {
+        openLoginModal();
+        window.location.hash = '#/';
+        return;
+      }
+      runWithPageTransition(() => renderCreatorDashboard(app));
+    });
+    return;
+  }
+
   if (hash === '#/admin') {
     void requireStaffProfile().then((profile) => {
       if (getHash() !== '#/admin') return;
@@ -334,6 +377,20 @@ function navigate(): void {
       }
       runWithPageTransition(() => {
         void renderAdminBugReportDetail(app, profile, bugId);
+      });
+    });
+    return;
+  }
+
+  if (hash === '#/admin/appeals') {
+    void requireStaffProfile().then((profile) => {
+      if (getHash() !== '#/admin/appeals') return;
+      if (!profile) {
+        window.location.hash = '#/';
+        return;
+      }
+      runWithPageTransition(() => {
+        void renderAdminAppeals(app, profile);
       });
     });
     return;

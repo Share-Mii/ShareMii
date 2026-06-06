@@ -9,8 +9,13 @@ import {
 import { wrapPublicPage } from '@/layout/pageShell';
 import { createCommentSection } from '@/components/CommentSection/CommentSection';
 import { openLoginModal } from '@/components/LoginModal/LoginModal';
-import { openMiiEditModal } from '@/components/MiiEditModal/MiiEditModal';
-import { createTileOverflowMenu } from '@/components/TileOverflowMenu/TileOverflowMenu';
+import {
+  createDetailOverflowMenu,
+  createDetailSocialPillBar,
+} from '@/pages/detailSocialPillBar';
+import '@/components/TileOverflowMenu/TileOverflowMenu.css';
+import { createSocialPillBar } from '@/components/SocialPillBar/SocialPillBar';
+import '@/components/SocialPillBar/SocialPillBar.css';
 import {
   addUserFavorite,
   fetchMiiById,
@@ -34,17 +39,14 @@ import { renderTomodachiClothingList } from '@/utils/tlClothingDisplay';
 import { isYeahedLocally, setYeahedLocally } from '@/utils/yeahCache';
 import { buildRenderUrl } from '@/services/miiApi';
 import { setPageMeta } from '@/utils/pageMeta';
-import { createMiiShareActionCluster } from '@/components/ShareActions/ShareActions';
-import { navigateToRemix } from '@/services/remixNavigate';
 import { createRelatedMiisSection } from '@/components/RelatedMiis/RelatedMiis';
-import { requireGamertag } from '@/services/profileGate';
+import { createRemixSection } from '@/components/RemixSection/RemixSection';
+import { openAppealModal } from '@/components/AppealModal/AppealModal';
 import { openAddToCollectionModal } from '@/components/AddToCollectionModal/AddToCollectionModal';
 import type { Mii, MiiStat } from '@/types';
 import { createCreatorAttribution } from '@/utils/creatorLink';
-import { navigateToMiiMakerEdit } from '@/services/miiMakerNavigate';
-import { confirmDeleteMii } from '@/utils/miiDeleteConfirm';
-import { openReportModal } from '@/components/ReportModal/ReportModal';
 import { isStaff } from '@/utils/permissions';
+import { ensureRateLimitAllowed } from '@/utils/rateLimit';
 import { loadStaffProfile } from '@/services/staffGate';
 import {
   hasRecordedQrDownload,
@@ -60,16 +62,6 @@ const DETAIL_EXPRESSIONS = [
 
 function expressionForApi(id: string): string | undefined {
   return id === 'normal' ? undefined : id;
-}
-
-function createDetailShareActions(mii: Mii): HTMLElement {
-  const bar = document.createElement('div');
-  bar.className = 'detail__actions-share';
-  const embedImage = buildRenderUrl(mii.mii_data, { type: 'face', width: 512 });
-  bar.appendChild(
-    createMiiShareActionCluster(mii.id, mii.name, embedImage, undefined, 'horizontal'),
-  );
-  return bar;
 }
 
 export function renderDetail(
@@ -152,6 +144,9 @@ export function renderDetail(
     const discuss = await createCommentSection(mii.id);
     if (abort) return;
 
+    const remix = await createRemixSection(mii);
+    if (abort) return;
+
     const related = await createRelatedMiisSection(mii);
     if (abort) return;
 
@@ -165,6 +160,26 @@ export function renderDetail(
     });
 
     page.append(back, detail);
+
+    if (isOwner && mii.visibility !== 'public') {
+      const appealBar = document.createElement('div');
+      appealBar.className = 'detail-appeal-bar';
+      const appealBtn = document.createElement('button');
+      appealBtn.type = 'button';
+      appealBtn.className = 'pill-btn pill-btn--outline interactive';
+      appealBtn.textContent = 'Appeal moderation';
+      appealBtn.addEventListener('click', () => {
+        openAppealModal({
+          targetType: 'mii',
+          targetId: mii.id,
+          targetLabel: mii.name,
+        });
+      });
+      appealBar.appendChild(appealBtn);
+      page.appendChild(appealBar);
+    }
+
+    if (remix) page.appendChild(remix);
     if (related) page.appendChild(related);
     page.appendChild(discuss);
     container.replaceChildren(wrapPublicPage(page));
@@ -208,65 +223,42 @@ function buildDetailContent(
   });
   renderSlot.appendChild(heroLive.root);
 
-  const exprPill = document.createElement('div');
-  exprPill.className = 'detail__expr-pill';
-
-  const exprToggle = document.createElement('button');
-  exprToggle.type = 'button';
-  exprToggle.className = 'detail__expr-pill-toggle interactive';
-  exprToggle.setAttribute('aria-label', 'Expressions');
-  exprToggle.setAttribute('aria-expanded', 'false');
-  exprToggle.setAttribute('aria-controls', 'detail-expr-menu');
-  exprToggle.innerHTML = icon('face-smile');
-
-  const exprMenu = document.createElement('div');
-  exprMenu.id = 'detail-expr-menu';
-  exprMenu.className = 'detail__expr-pill-menu';
-  exprMenu.setAttribute('aria-hidden', 'true');
-
   let activeExpression = 'normal';
-  const exprButtons: HTMLButtonElement[] = [];
 
-  for (const expr of DETAIL_EXPRESSIONS) {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'detail__expr-pill-btn interactive';
-    btn.setAttribute('aria-label', expr.label);
-    btn.innerHTML = icon(expr.icon);
-    if (expr.id === activeExpression) {
-      btn.classList.add('detail__expr-pill-btn--active');
-      btn.setAttribute('aria-pressed', 'true');
-    }
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      activeExpression = expr.id;
-      heroLive.setExpression(expressionForApi(expr.id));
-      exprToggle.innerHTML = icon(expr.icon);
-      for (const b of exprButtons) {
-        const on = b === btn;
-        b.classList.toggle('detail__expr-pill-btn--active', on);
-        b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      }
-    });
-    exprButtons.push(btn);
-    exprMenu.appendChild(btn);
-  }
-
-  function setExprPillOpen(open: boolean): void {
-    exprPill.classList.toggle('detail__expr-pill--open', open);
-    exprToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    exprMenu.setAttribute('aria-hidden', open ? 'false' : 'true');
-  }
-
-  exprToggle.addEventListener('click', (e) => {
-    e.stopPropagation();
-    setExprPillOpen(!exprPill.classList.contains('detail__expr-pill--open'));
+  const exprPill = createSocialPillBar({
+    className: 'detail__expr-pill',
+    orientation: 'vertical',
+    toggleLabel: 'Expressions',
+    toggleIcon: 'face-smile',
+    bubblePlacement: 'left',
+    items: DETAIL_EXPRESSIONS.map((expr) => ({
+      iconName: expr.icon,
+      label: expr.label,
+      active: expr.id === activeExpression,
+      onClick: (e) => {
+        e.stopPropagation();
+        activeExpression = expr.id;
+        heroLive.setExpression(expressionForApi(expr.id));
+        const toggle = exprPill.querySelector<HTMLButtonElement>(
+          '.social-pill-bar__toggle',
+        );
+        if (toggle) {
+          toggle.dataset.closedIcon = expr.icon;
+          if (!exprPill.classList.contains('social-pill-bar--open')) {
+            toggle.innerHTML = icon(expr.icon);
+          }
+        }
+        for (const btn of exprPill.querySelectorAll<HTMLButtonElement>(
+          '.social-pill-bar__expand .icon-action',
+        )) {
+          const on = btn.getAttribute('aria-label') === expr.label;
+          btn.classList.toggle('icon-action--active', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        }
+      },
+    })),
   });
 
-  const onDocClick = (): void => setExprPillOpen(false);
-  document.addEventListener('click', onDocClick);
-
-  exprPill.append(exprMenu, exprToggle);
   renderChrome.append(renderSlot, exprPill);
 
   const renderControls = document.createElement('div');
@@ -328,71 +320,15 @@ function buildDetailContent(
   const headActions = document.createElement('div');
   headActions.className = 'detail__head-actions';
 
-  const overflowItems: Parameters<typeof createTileOverflowMenu>[0] = [];
+  const detailCallbacks = {
+    onMiiUpdated: (updated: Mii) => {
+      name.textContent = updated.name;
+      badge.textContent = updated.platform;
+      desc.textContent = updated.description || 'No description.';
+    },
+  };
 
-  if (isOwner) {
-    overflowItems.push(
-      {
-        label: 'Edit Mii',
-        onSelect: () => {
-          navigateToMiiMakerEdit(mii.id);
-        },
-      },
-      {
-        label: 'Edit details',
-        onSelect: () => {
-          openMiiEditModal(mii, {
-            onSaved: (updated) => {
-              Object.assign(mii, updated);
-              name.textContent = updated.name;
-              badge.textContent = updated.platform;
-              desc.textContent = updated.description || 'No description.';
-            },
-          });
-        },
-      },
-      {
-        label: 'Delete',
-        danger: true,
-        onSelect: () => {
-          confirmDeleteMii(mii, () => {
-            window.location.hash = '#/uploads';
-          });
-        },
-      },
-    );
-  } else {
-    overflowItems.push(
-      {
-        label: 'Remix in Mii Maker',
-        onSelect: () => {
-          void (async () => {
-            if (!isLoggedIn(await getAuthSession())) {
-              openLoginModal();
-              return;
-            }
-            if (!(await requireGamertag())) return;
-            navigateToRemix(mii);
-          })();
-        },
-      },
-      {
-        label: 'Report',
-        onSelect: () => {
-          openReportModal({
-            targetType: 'mii',
-            targetId: mii.id,
-            targetLabel: mii.name,
-          });
-        },
-      },
-    );
-  }
-
-  if (overflowItems.length) {
-    headActions.appendChild(createTileOverflowMenu(overflowItems, 'Mii options'));
-  }
-  headActions.appendChild(createDetailShareActions(mii));
+  headActions.appendChild(createDetailSocialPillBar(mii, isOwner, detailCallbacks));
 
   headRow.appendChild(headActions);
   head.appendChild(headRow);
@@ -500,14 +436,18 @@ function buildDetailContent(
 
   const collectionBtn = document.createElement('button');
   collectionBtn.type = 'button';
-  collectionBtn.className = 'pill-btn pill-btn--outline interactive';
+  collectionBtn.className =
+    'pill-btn pill-btn--outline interactive detail__action-overflow';
   collectionBtn.innerHTML = `${iconSpan('folder-plus')} Add to collection`;
-  collectionBtn.addEventListener('click', async () => {
+  const openCollection = async (): Promise<void> => {
     if (!isLoggedIn(await getAuthSession())) {
       openLoginModal();
       return;
     }
     openAddToCollectionModal({ miiId: mii.id });
+  };
+  collectionBtn.addEventListener('click', () => {
+    void openCollection();
   });
 
   saveBtn.addEventListener('click', async () => {
@@ -573,6 +513,7 @@ function buildDetailContent(
     setStatCount('favorites', previousCount + 1);
 
     try {
+      await ensureRateLimitAllowed('yeah');
       const result = await incrementStat(mii.id, 'favorites');
       if (!result.recorded) {
         setYeahActive(false);
@@ -589,10 +530,11 @@ function buildDetailContent(
 
   const qrBtn = document.createElement('button');
   qrBtn.type = 'button';
-  qrBtn.className = 'pill-btn pill-btn--filled interactive';
+  qrBtn.className =
+    'pill-btn pill-btn--filled interactive detail__action-overflow';
   qrBtn.innerHTML = `${iconSpan('qrcode')} Show QR Code`;
 
-  qrBtn.addEventListener('click', () => {
+  const showQr = (): void => {
     if (!hasRecordedQrDownload(mii.id)) {
       markQrDownloadRecorded(mii.id);
       void recordQrDownload(mii.id).then((result) => {
@@ -606,7 +548,21 @@ function buildDetailContent(
       });
     }
     openQRDisplayModal(mii);
-  });
+  };
+
+  qrBtn.addEventListener('click', showQr);
+
+  headActions.appendChild(
+    createDetailOverflowMenu(mii, isOwner, detailCallbacks, [
+      {
+        label: 'Add to collection',
+        onSelect: () => {
+          void openCollection();
+        },
+      },
+      { label: 'Show QR code', onSelect: showQr },
+    ]),
+  );
 
   const onStatUpdated = (e: Event): void => {
     const detail = (e as CustomEvent<{ miiId: string; stat: MiiStat }>).detail;
@@ -631,7 +587,6 @@ function buildDetailContent(
     setStatCount,
     cleanup: () => {
       document.removeEventListener('sharemii:stat-updated', onStatUpdated);
-      document.removeEventListener('click', onDocClick);
     },
   };
 }

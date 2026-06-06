@@ -3,7 +3,7 @@
   flex-direction: column;
   border-radius: var(--radius-tile);
   background: var(--color-bg-panel);
-  border: none;
+  border: 1px solid var(--color-border);
   box-shadow: var(--shadow-tile);
   overflow: hidden;
   text-decoration: none;
@@ -16,7 +16,7 @@
 }
 
 .mii-tile:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
   box-shadow: var(--shadow-tile-hover);
 }
 
@@ -77,7 +77,7 @@
   aspect-ratio: 4 / 3;
   border-radius: var(--mii-preview-radius, 12px);
   overflow: hidden;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-1);
 }
 
 .mii-tile__render-frame .mii-renderer {
@@ -189,4 +189,11 @@
   .mii-tile {
     animation: none !important;
   }
+}
+
+.mii-tile__trusted {
+  margin-left: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent, #0088ff);
 }

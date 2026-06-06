@@ -17,7 +17,8 @@
   overflow-y: auto;
   background: var(--color-bg-panel);
   border-radius: 20px;
-  box-shadow: 0 24px 64px rgba(26, 26, 46, 0.18);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-modal);
   padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
 }
 

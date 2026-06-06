@@ -179,7 +179,7 @@
   height: 1.2rem;
   border-radius: 50%;
   background: var(--color-bg-panel);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-1);
   transition: transform var(--transition-fast);
 }
 

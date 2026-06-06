@@ -24,6 +24,10 @@ const adminMigrationFiles = [
   join(root, 'supabase', 'migrations', '024_revoke_public_execute_definer_rpc.sql'),
   join(root, 'supabase', 'migrations', '026_user_privacy_and_bug_reports.sql'),
   join(root, 'supabase', 'migrations', '027_discord_bug_notifications.sql'),
+  join(root, 'supabase', 'migrations', '028_fix_export_user_data.sql'),
+  join(root, 'supabase', 'migrations', '029_activity_feed.sql'),
+  join(root, 'supabase', 'migrations', '030_roadmap_features.sql'),
+  join(root, 'supabase', 'migrations', '031_fix_comment_mentions.sql'),
 ];
 const envLocal = join(root, '.env.local');
 

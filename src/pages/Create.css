@@ -8,3 +8,18 @@
 .create-page .mii-maker__studio {
   margin: 0;
 }
+
+@media (max-width: 768px) {
+  .create-page {
+    padding-bottom: calc(var(--bottom-bar-total-height) + var(--spacing-xl));
+  }
+
+  .create-page .mii-maker__toolbar {
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+  }
+
+  .create-page .mii-maker__toolbar-actions {
+    flex-wrap: wrap;
+  }
+}

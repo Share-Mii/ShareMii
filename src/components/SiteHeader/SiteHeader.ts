@@ -40,6 +40,7 @@ interface NavLink {
 
 const NAV_LINKS: NavLink[] = [
   { href: '#/', label: 'Home', match: /^#\/$/ },
+  { href: '#/feed', label: 'Feed', match: /^#\/feed$/ },
   { href: '#/browse', label: 'Browse', match: /^#\/browse/ },
   { href: '#/create', label: 'Mii Creator', match: /^#\/create/ },
 ];
@@ -141,16 +142,35 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
   if (!wrap) return;
 
   const username = profile.username.trim();
+  const profileHref = username
+    ? `#/u/${encodeURIComponent(username)}`
+    : '#/settings';
+
+  const discordUrl = getDiscordInviteUrl();
+
   const items: UserMenuItem[] = [
     {
-      href: username ? `#/u/${encodeURIComponent(username)}` : '#/settings',
-      label: 'View Profile',
-      icon: 'user',
+      kind: 'header',
+      href: profileHref,
+      username: username || 'resident',
+      profile,
     },
-    { href: '#/favorites', label: 'My Favorites', icon: 'bookmark' },
-    { href: '#/collections', label: 'My Collections', icon: 'folder' },
-    { href: '#/uploads', label: 'My Uploads', icon: 'cloud-arrow-up' },
-    { href: '#/settings', label: 'User Settings', icon: 'gear' },
+    { kind: 'section', label: 'Library' },
+    { href: '#/favorites', label: 'Favorites', icon: 'bookmark' },
+    { href: '#/collections', label: 'Collections', icon: 'folder' },
+    { href: '#/uploads', label: 'Uploads', icon: 'cloud-arrow-up' },
+    { href: '#/dashboard', label: 'Dashboard', icon: 'chart-line' },
+    { kind: 'section', label: 'App' },
+    { href: '#/settings', label: 'Settings', icon: 'gear' },
+    {
+      label: 'Scan QR',
+      icon: 'camera',
+      action: () => {
+        document
+          .querySelector<HTMLElement>('[data-scan-submit]')
+          ?.click();
+      },
+    },
     {
       label: 'Report a bug',
       icon: 'bug',
@@ -160,22 +180,46 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
     },
   ];
 
-  if (isStaff(profile)) {
-    items.push({ href: '#/admin', label: 'Admin', icon: 'shield-halved' });
+  if (discordUrl) {
+    items.push({
+      href: discordUrl,
+      label: 'Discord',
+      icon: 'comments',
+    });
   }
 
-  items.push({
-    label: 'Log out',
-    icon: 'right-from-bracket',
-    action: async () => {
-      const err = await signOut();
-      if (err) alert(err);
-      window.location.hash = '#/';
+  items.push(
+    { kind: 'section', label: 'Legal' },
+    { href: '#/legal', label: 'Legal & support', icon: 'scale-balanced' },
+  );
+
+  if (isStaff(profile)) {
+    items.push(
+      { kind: 'separator' },
+      { href: '#/admin', label: 'Admin', icon: 'shield-halved' },
+    );
+  }
+
+  items.push(
+    { kind: 'separator' },
+    {
+      label: 'Log out',
+      icon: 'right-from-bracket',
+      variant: 'danger',
+      action: async () => {
+        const err = await signOut();
+        if (err) alert(err);
+        window.location.hash = '#/';
+      },
     },
-  });
+  );
 
   menuDropdown = createUserMenuDropdown(items, closeUserMenu);
-  wrap.appendChild(menuDropdown);
+  if (menuDropdown.classList.contains('user-menu__sheet-shell')) {
+    document.body.appendChild(menuDropdown);
+  } else {
+    wrap.appendChild(menuDropdown);
+  }
   menuTrigger = trigger;
   trigger.setAttribute('aria-expanded', 'true');
   menuDismiss = bindUserMenuDismiss(trigger, menuDropdown, closeUserMenu);
@@ -197,7 +241,8 @@ function renderHeaderActions(
     const submit = document.createElement('button');
     submit.type = 'button';
     submit.setAttribute('data-scan-submit', '');
-    submit.className = 'pill-btn pill-btn--outline interactive';
+    submit.className =
+      'pill-btn pill-btn--outline interactive site-header__scan';
     submit.innerHTML = `${iconSpan('camera')} Scan QR`;
 
     const notifWrap = document.createElement('div');
@@ -307,7 +352,7 @@ export function createSiteHeader(): HTMLElement {
   brand.href = '#/';
   brand.innerHTML = `
     <span class="site-header__logo" aria-hidden="true">${logoMark()}</span>
-    <span>ShareMii</span>
+    <span class="site-header__brand-text">ShareMii</span>
   `;
 
   const nav = document.createElement('nav');

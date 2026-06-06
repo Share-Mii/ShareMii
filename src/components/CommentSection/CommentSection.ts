@@ -15,11 +15,17 @@ import { pastelCssVarFromId } from '@/styles/pastelColors';
 import { icon, iconSpan } from '@/utils/icon';
 import { openReportModal } from '@/components/ReportModal/ReportModal';
 import { evaluateCommentForClientHold } from '@/utils/contentModeration';
+import { ensureRateLimitAllowed } from '@/utils/rateLimit';
+import { appendCommentBody } from '@/utils/commentMentions';
 
 export async function createCommentSection(miiId: string): Promise<HTMLElement> {
   const section = document.createElement('section');
   section.className = 'comments-section';
   section.setAttribute('aria-label', 'Comments');
+
+  let replyingTo: Comment | null = null;
+  const replyHost = document.createElement('div');
+  replyHost.className = 'comments-section__reply-host';
 
   const header = document.createElement('header');
   header.className = 'comments-section__head';
@@ -38,7 +44,8 @@ export async function createCommentSection(miiId: string): Promise<HTMLElement> 
 
   const subtitle = document.createElement('p');
   subtitle.className = 'comments-section__subtitle';
-  subtitle.textContent = 'Share your thoughts about this resident.';
+  subtitle.textContent =
+    'Share your thoughts. Use @gamertag to mention someone.';
 
   titleWrap.append(title, subtitle);
   header.appendChild(titleWrap);
@@ -49,7 +56,7 @@ export async function createCommentSection(miiId: string): Promise<HTMLElement> 
   const list = document.createElement('div');
   list.className = 'comments-section__list';
 
-  section.append(header, composerHost, list);
+  section.append(header, composerHost, replyHost, list);
 
   function updateCount(comments: Comment[]): void {
     countBadge.textContent = String(comments.length);
@@ -80,6 +87,7 @@ export async function createCommentSection(miiId: string): Promise<HTMLElement> 
             topLevel[i]!,
             miiId,
             repliesByParent.get(topLevel[i]!.id) ?? [],
+            onReply,
           );
           card.style.setProperty('--stagger-index', String(i));
           list.appendChild(card);
@@ -90,6 +98,107 @@ export async function createCommentSection(miiId: string): Promise<HTMLElement> 
       err.className = 'comments-section__empty comments-section__empty--error';
       err.textContent = 'Could not load comments.';
       list.appendChild(err);
+    }
+  }
+
+  function onReply(comment: Comment): void {
+    replyingTo = comment;
+    renderReplyComposer();
+    replyHost.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function renderReplyComposer(): void {
+    replyHost.replaceChildren();
+    if (!replyingTo) return;
+
+    const bar = document.createElement('div');
+    bar.className = 'comments-reply-bar';
+
+    const head = document.createElement('div');
+    head.className = 'comments-reply-bar__head';
+
+    const label = document.createElement('span');
+    label.className = 'comments-reply-bar__label';
+    label.innerHTML = `Replying to <strong>${escapeText(replyingTo.author_name)}</strong>`;
+
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'comments-reply-bar__cancel interactive';
+    cancel.textContent = 'Cancel';
+    cancel.addEventListener('click', () => {
+      replyingTo = null;
+      replyHost.replaceChildren();
+    });
+
+    head.append(label, cancel);
+
+    const form = document.createElement('form');
+    form.className = 'comments-composer comments-composer--reply';
+
+    const field = document.createElement('div');
+    field.className = 'comments-composer__field';
+
+    const textarea = document.createElement('textarea');
+    textarea.className = 'comments-composer__input';
+    textarea.placeholder = 'Write a reply…';
+    textarea.required = true;
+    textarea.maxLength = 500;
+    textarea.rows = 2;
+    const mentionTarget = replyingTo.author_name.trim();
+    if (mentionTarget) {
+      textarea.value = `@${mentionTarget} `;
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'comments-composer__actions';
+
+    const hint = document.createElement('span');
+    hint.className = 'comments-composer__hint';
+    hint.textContent = 'Max 500 characters';
+
+    const submit = document.createElement('button');
+    submit.type = 'submit';
+    submit.className = 'pill-btn pill-btn--filled interactive';
+    submit.textContent = 'Post reply';
+
+    actions.append(hint, submit);
+    field.append(textarea, actions);
+    form.appendChild(field);
+    bar.append(head, form);
+    replyHost.appendChild(bar);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const body = textarea.value.trim();
+      if (!body || !replyingTo) return;
+      void postComment(body, replyingTo.id, form, submit);
+    });
+
+    textarea.focus();
+  }
+
+  async function postComment(
+    body: string,
+    parentId: string | null,
+    form: HTMLFormElement,
+    submit: HTMLButtonElement,
+  ): Promise<void> {
+    submit.disabled = true;
+    try {
+      await ensureRateLimitAllowed('comment');
+      const id = await insertComment(miiId, body, parentId);
+      const hold = await evaluateCommentForClientHold(body);
+      if (hold.needsHold) {
+        await shadowCommentClientPolicy(id, hold.detail);
+      }
+      form.reset();
+      replyingTo = null;
+      replyHost.replaceChildren();
+      await loadComments();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Failed to post comment.');
+    } finally {
+      submit.disabled = false;
     }
   }
 
@@ -121,7 +230,7 @@ export async function createCommentSection(miiId: string): Promise<HTMLElement> 
     const textarea = document.createElement('textarea');
     textarea.className = 'comments-composer__input';
     textarea.name = 'body';
-    textarea.placeholder = 'Write a comment…';
+    textarea.placeholder = 'Write a comment… (@username to mention)';
     textarea.required = true;
     textarea.maxLength = 500;
     textarea.rows = 2;
@@ -146,24 +255,7 @@ export async function createCommentSection(miiId: string): Promise<HTMLElement> 
       e.preventDefault();
       const body = String(new FormData(form).get('body') ?? '').trim();
       if (!body) return;
-
-      submit.setAttribute('disabled', 'true');
-
-      try {
-        const id = await insertComment(miiId, body);
-        const hold = await evaluateCommentForClientHold(body);
-        if (hold.needsHold) {
-          await shadowCommentClientPolicy(id, hold.detail);
-        }
-        form.reset();
-        await loadComments();
-      } catch (err) {
-        alert(
-          err instanceof Error ? err.message : 'Failed to post comment.',
-        );
-      } finally {
-        submit.removeAttribute('disabled');
-      }
+      await postComment(body, null, form, submit);
     });
 
     composerHost.appendChild(form);
@@ -179,6 +271,7 @@ function renderComment(
   c: Comment,
   miiId: string,
   replies: Comment[] = [],
+  onReply?: (c: Comment) => void,
 ): HTMLElement {
   const card = document.createElement('article');
   card.className = 'comment-card';
@@ -222,40 +315,23 @@ function renderComment(
 
   const body = document.createElement('p');
   body.className = 'comment-card__text';
-  body.textContent = c.body;
+  appendCommentBody(body, c.body);
 
-  const replyBtn = createIconActionButton({
-    iconName: 'reply',
-    label: 'Reply',
-    className: 'comment-card__reply',
-    onClick: () => {
-    const text = window.prompt('Write a reply (max 500 characters):');
-    if (!text?.trim()) return;
-    void (async () => {
-      const session = await getAuthSession();
-      if (!isLoggedIn(session)) {
-        openLoginModal();
-        return;
-      }
-      try {
-        const id = await insertComment(
-          miiId,
-          text.trim().slice(0, 500),
-          c.id,
-        );
-        const hold = await evaluateCommentForClientHold(text.trim());
-        if (hold.needsHold) {
-          await shadowCommentClientPolicy(id, hold.detail);
-        }
-        window.location.reload();
-      } catch (err) {
-        alert(err instanceof Error ? err.message : 'Could not post reply.');
-      }
-    })();
-    },
-  });
+  const actions = document.createElement('div');
+  actions.className = 'comment-card__actions';
 
-  main.append(meta, body, replyBtn);
+  if (onReply) {
+    actions.appendChild(
+      createIconActionButton({
+        iconName: 'reply',
+        label: 'Reply',
+        className: 'comment-card__reply',
+        onClick: () => onReply(c),
+      }),
+    );
+  }
+
+  main.append(meta, body, actions);
 
   if (replies.length) {
     const repliesWrap = document.createElement('div');
@@ -268,6 +344,10 @@ function renderComment(
 
   card.append(avatar, main);
   return card;
+}
+
+function escapeText(s: string): string {
+  return s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 function getInitials(name: string): string {

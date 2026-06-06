@@ -117,8 +117,21 @@
     transform: translate(-50%, -50%) scale(0.4) rotate(var(--float-rotate, 0deg));
   }
   to {
-    opacity: var(--floater-opacity, 0.42);
+    opacity: var(--floater-opacity, 0.35);
     transform: translate(-50%, -50%) scale(1) rotate(var(--float-rotate, 0deg));
+  }
+}
+
+@keyframes home-floater-enter-diamond {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4)
+      rotate(calc(var(--float-rotate, 0deg) + 45deg));
+  }
+  to {
+    opacity: var(--floater-opacity, 0.35);
+    transform: translate(-50%, -50%) scale(1)
+      rotate(calc(var(--float-rotate, 0deg) + 45deg));
   }
 }
 
@@ -127,9 +140,29 @@
   100% {
     transform: translate(-50%, -50%) translate(0, 0) rotate(var(--float-rotate, 0deg));
   }
-  50% {
+  33% {
     transform: translate(-50%, -50%) translate(var(--tx1, 0px), var(--ty1, 0px))
-      rotate(calc(var(--float-rotate, 0deg) + 10deg));
+      rotate(calc(var(--float-rotate, 0deg) + var(--rot2, 6deg)));
+  }
+  66% {
+    transform: translate(-50%, -50%) translate(var(--tx2, 0px), var(--ty2, 0px))
+      rotate(calc(var(--float-rotate, 0deg) - var(--rot2, 6deg)));
+  }
+}
+
+@keyframes hero-floater-drift-diamond {
+  0%,
+  100% {
+    transform: translate(-50%, -50%) translate(0, 0)
+      rotate(calc(var(--float-rotate, 0deg) + 45deg));
+  }
+  33% {
+    transform: translate(-50%, -50%) translate(var(--tx1, 0px), var(--ty1, 0px))
+      rotate(calc(var(--float-rotate, 0deg) + 45deg + var(--rot2, 6deg)));
+  }
+  66% {
+    transform: translate(-50%, -50%) translate(var(--tx2, 0px), var(--ty2, 0px))
+      rotate(calc(var(--float-rotate, 0deg) + 45deg - var(--rot2, 6deg)));
   }
 }
 

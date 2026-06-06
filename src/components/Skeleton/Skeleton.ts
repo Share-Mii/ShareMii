@@ -30,6 +30,41 @@ export function createMiiTileSkeleton(): HTMLElement {
   return tile;
 }
 
+export function createFeedItemSkeleton(): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'feed-item-skeleton';
+  row.setAttribute('aria-hidden', 'true');
+
+  const icon = skeletonBlock('feed-item-skeleton__icon skeleton--circle');
+  const body = document.createElement('div');
+  body.className = 'feed-item-skeleton__body';
+  body.append(
+    skeletonBlock('feed-item-skeleton__line'),
+    skeletonBlock('feed-item-skeleton__line feed-item-skeleton__line--short'),
+  );
+  const thumb = skeletonBlock('feed-item-skeleton__thumb');
+
+  row.append(icon, body, thumb);
+  return row;
+}
+
+export function appendFeedListSkeleton(
+  container: HTMLElement,
+  count = 5,
+): void {
+  container.replaceChildren();
+  container.setAttribute('aria-busy', 'true');
+  container.setAttribute('aria-label', 'Loading activity');
+  for (let i = 0; i < count; i++) {
+    container.appendChild(createFeedItemSkeleton());
+  }
+}
+
+export function clearFeedListBusy(container: HTMLElement): void {
+  container.removeAttribute('aria-busy');
+  container.removeAttribute('aria-label');
+}
+
 export function appendMiiGridSkeleton(
   container: HTMLElement,
   count = DEFAULT_SKELETON_GRID_COUNT,

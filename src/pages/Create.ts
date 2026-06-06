@@ -197,7 +197,7 @@ export function renderCreate(
               cleanupModal = undefined;
             },
           },
-          { editMii },
+          { editMii, remixOfMiiId: remixMii?.id },
         );
       })
       .catch((err) => {

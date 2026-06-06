@@ -1,0 +1,45 @@
+.appeal-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.appeal-modal {
+  width: min(100%, 28rem);
+  padding: 1.25rem;
+  border-radius: var(--radius-lg, 16px);
+  background: var(--surface-elevated, #fff);
+  box-shadow: var(--shadow-lg, 0 12px 40px rgba(0, 0, 0, 0.15));
+}
+
+.appeal-modal__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.25rem;
+}
+
+.appeal-modal__lead {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: var(--text-muted, #666);
+}
+
+.appeal-modal__input {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border, #ddd);
+  border-radius: var(--radius-md, 10px);
+  font: inherit;
+  resize: vertical;
+}
+
+.appeal-modal__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

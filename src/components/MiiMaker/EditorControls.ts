@@ -265,7 +265,10 @@ export function createEditorWorkspace(
     const swatches = document.createElement('div');
     swatches.className = 'mii-maker__swatches';
 
-    const options = control.options ?? [];
+    const options = reorderOptionsForDisplay(
+      control.path,
+      control.options ?? [],
+    );
 
     for (const opt of options) {
       const btn = document.createElement('button');

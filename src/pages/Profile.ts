@@ -9,7 +9,11 @@ import { wrapPublicPage } from '@/layout/pageShell';
 import { createPaginatedList } from '@/components/ListPager/ListPager';
 import { createMiiTile } from '@/components/MiiTile/MiiTile';
 import { openMiiEditModal } from '@/components/MiiEditModal/MiiEditModal';
-import { createTileOverflowMenu } from '@/components/TileOverflowMenu/TileOverflowMenu';
+import {
+  createTileOverflowMenu,
+  type TileOverflowMenuItem,
+} from '@/components/TileOverflowMenu/TileOverflowMenu';
+import '@/components/TileOverflowMenu/TileOverflowMenu.css';
 import { getAuthSession, isLoggedIn } from '@/services/auth';
 import { openLoginModal } from '@/components/LoginModal/LoginModal';
 import {
@@ -35,7 +39,6 @@ import {
   createMiiTileCornerOverflowOnly,
   createProfileShareActionCluster,
 } from '@/components/ShareActions/ShareActions';
-import { createIconActionButton } from '@/components/IconActionButton/IconActionButton';
 import { setPageMeta } from '@/utils/pageMeta';
 import {
   fetchPublicCollectionsForUser,
@@ -45,6 +48,9 @@ import {
   unfollowUser,
   type MiiCollection,
 } from '@/services/social';
+import { blockUser, muteUser } from '@/services/safety';
+import { fetchUserPublicActivity } from '@/services/activityFeed';
+import { createFeedItem } from '@/components/FeedItem/FeedItem';
 
 export type ProfileMode = 'edit' | 'public';
 
@@ -495,20 +501,15 @@ async function buildPublicPage(
     ),
   );
 
-  const headActionsRow = document.createElement('div');
-  headActionsRow.className =
-    'profile-card__head-actions icon-action-cluster icon-action-cluster--horizontal';
+  const menuItems: TileOverflowMenuItem[] = [];
 
   if (isOwner) {
-    headActionsRow.appendChild(
-      createIconActionButton({
-        iconName: 'pen',
-        label: 'Edit profile',
-        onClick: () => {
-          window.location.hash = '#/settings';
-        },
-      }),
-    );
+    menuItems.push({
+      label: 'Edit profile',
+      onSelect: () => {
+        window.location.hash = '#/settings';
+      },
+    });
   } else if (viewerId) {
     let following = false;
     try {
@@ -517,67 +518,85 @@ async function buildPublicPage(
       /* ignore */
     }
 
-    const followBtn = createIconActionButton({
-      iconName: 'user-plus',
+    menuItems.push({
       label: following ? 'Unfollow' : 'Follow',
-      variant: following ? 'accent' : 'default',
-      onClick: async () => {
+      onSelect: async () => {
         try {
           if (following) {
             await unfollowUser(viewerId, profile.id);
             following = false;
-            followBtn.setAttribute('aria-label', 'Follow');
-            followBtn.classList.remove('icon-action--accent');
-            followBtn.classList.add('icon-action--default');
-            const tip = followBtn.querySelector('.chat-tooltip');
-            if (tip) tip.textContent = 'Follow';
           } else {
             await followUser(viewerId, profile.id);
             following = true;
-            followBtn.setAttribute('aria-label', 'Unfollow');
-            followBtn.classList.remove('icon-action--default');
-            followBtn.classList.add('icon-action--accent');
-            const tip = followBtn.querySelector('.chat-tooltip');
-            if (tip) tip.textContent = 'Unfollow';
           }
         } catch (err) {
           alert(err instanceof Error ? err.message : 'Could not update follow');
         }
       },
     });
-
-    headActionsRow.append(
-      followBtn,
-      createIconActionButton({
-        iconName: 'flag',
+    menuItems.push(
+      {
+        label: 'Mute',
+        onSelect: async () => {
+          try {
+            await muteUser(profile.id);
+            alert(
+              `${profile.username} muted — you will not get notifications from them.`,
+            );
+          } catch (err) {
+            alert(err instanceof Error ? err.message : 'Could not mute');
+          }
+        },
+      },
+      {
+        label: 'Block',
+        danger: true,
+        onSelect: async () => {
+          if (
+            !window.confirm(
+              `Block ${profile.username}? Their content will be hidden from you.`,
+            )
+          ) {
+            return;
+          }
+          try {
+            await blockUser(profile.id);
+            window.location.hash = '#/';
+          } catch (err) {
+            alert(err instanceof Error ? err.message : 'Could not block');
+          }
+        },
+      },
+      {
         label: 'Report',
-        onClick: () => {
+        danger: true,
+        onSelect: () => {
           openReportModal({
             targetType: 'profile',
             targetId: profile.id,
             targetLabel: profile.username,
           });
         },
-      }),
+      },
     );
   } else {
-    headActionsRow.appendChild(
-      createIconActionButton({
-        iconName: 'flag',
-        label: 'Report profile',
-        onClick: () => {
-          openReportModal({
-            targetType: 'profile',
-            targetId: profile.id,
-            targetLabel: profile.username,
-          });
-        },
-      }),
-    );
+    menuItems.push({
+      label: 'Report profile',
+      danger: true,
+      onSelect: () => {
+        openReportModal({
+          targetType: 'profile',
+          targetId: profile.id,
+          targetLabel: profile.username,
+        });
+      },
+    });
   }
 
-  if (headActionsRow.childElementCount > 0) {
-    cornerActions.appendChild(headActionsRow);
+  if (menuItems.length > 0) {
+    const overflow = createTileOverflowMenu(menuItems, 'Profile options');
+    overflow.classList.add('profile-card__overflow');
+    cornerActions.appendChild(overflow);
   }
 
   bannerWrap.appendChild(cornerActions);
@@ -626,7 +645,34 @@ async function buildPublicPage(
   const miiSections = await buildMiiSections(profile, isOwner);
   page.appendChild(miiSections);
 
+  const activitySection = await buildProfileActivitySection(profile.id);
+  if (activitySection) page.appendChild(activitySection);
+
   return page;
+}
+
+async function buildProfileActivitySection(
+  userId: string,
+): Promise<HTMLElement | null> {
+  try {
+    const { items } = await fetchUserPublicActivity(userId, { limit: 12 });
+    if (!items.length) return null;
+
+    const section = document.createElement('section');
+    section.className = 'profile-activity';
+    const title = document.createElement('h2');
+    title.className = 'profile-activity__title';
+    title.textContent = 'Recent activity';
+    const list = document.createElement('div');
+    list.className = 'feed-list';
+    for (const item of items) {
+      list.appendChild(createFeedItem(item));
+    }
+    section.append(title, list);
+    return section;
+  } catch {
+    return null;
+  }
 }
 
 async function buildCollectionsSection(
@@ -695,6 +741,18 @@ async function buildCollectionsSection(
 
   if (!grid.childElementCount) return null;
 
-  section.appendChild(grid);
+  const publicCards = collections.filter((c) => isOwner || c.is_public);
+  if (publicCards.length > 2) {
+    grid.classList.add('profile-collections__grid--preview');
+    const viewAll = document.createElement('a');
+    viewAll.href = isOwner ? '#/collections' : `#/u/${encodeURIComponent(profile.username)}`;
+    viewAll.className =
+      'profile-collections__view-all pill-btn pill-btn--outline interactive';
+    viewAll.textContent = 'View all collections';
+    section.append(grid, viewAll);
+  } else {
+    section.appendChild(grid);
+  }
+
   return section;
 }

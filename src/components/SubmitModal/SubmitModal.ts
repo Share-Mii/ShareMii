@@ -34,8 +34,8 @@ export interface SubmitModalCallbacks {
 }
 
 export interface SubmitModalOptions {
-  
   editMii?: Mii;
+  remixOfMiiId?: string;
 }
 
 let activeTeardown: (() => void) | null = null;
@@ -180,6 +180,12 @@ function buildModal(
   errorEl.className = 'submit-modal__error';
   errorEl.setAttribute('role', 'alert');
   errorEl.hidden = true;
+
+  const statusEl = document.createElement('p');
+  statusEl.className = 'submit-modal__status';
+  statusEl.hidden = true;
+  statusEl.setAttribute('role', 'status');
+  statusEl.setAttribute('aria-live', 'polite');
 
   const nameField = document.createElement('div');
   nameField.className = 'submit-modal__field';
@@ -342,7 +348,15 @@ function buildModal(
     : `${iconSpan('cloud-arrow-up')} Share Mii`;
 
   actions.append(cancelBtn, submitBtn);
-  form.append(nameField, platformField, visibilityField, descField, errorEl, actions);
+  form.append(
+    nameField,
+    platformField,
+    visibilityField,
+    descField,
+    errorEl,
+    statusEl,
+    actions,
+  );
   formCol.appendChild(form);
   body.append(previewCol, formCol);
 
@@ -353,10 +367,14 @@ function buildModal(
   let closed = false;
   let submitting = false;
 
-  function setSubmittingUi(on: boolean): void {
+  function setSubmittingUi(
+    on: boolean,
+    phase: 'checking' | 'saving' = 'saving',
+  ): void {
     overlay.classList.toggle('submit-modal-overlay--submitting', on);
     modal.classList.toggle('submit-modal--busy', on);
     submitBtn.disabled = on;
+    submitBtn.setAttribute('aria-busy', String(on));
     cancelBtn.disabled = on;
     closeBtn.disabled = on;
     nameInput.disabled = on;
@@ -364,11 +382,32 @@ function buildModal(
     platformButtons.forEach((btn) => {
       btn.disabled = on;
     });
-    submitBtn.innerHTML = on
-      ? `${iconSpan('spinner')} ${isEdit ? 'Saving…' : 'Sharing…'}`
-      : isEdit
+    visibilityButtons.forEach((btn) => {
+      btn.disabled = on;
+    });
+    if (on) {
+      const label =
+        phase === 'checking'
+          ? 'Checking your details…'
+          : isEdit
+            ? 'Saving your Mii…'
+            : 'Sharing your Mii…';
+      statusEl.textContent = label;
+      statusEl.hidden = false;
+      submitBtn.innerHTML = `${iconSpan('spinner')} ${phase === 'checking' ? 'Checking…' : isEdit ? 'Saving…' : 'Sharing…'}`;
+    } else {
+      statusEl.hidden = true;
+      statusEl.textContent = '';
+      submitBtn.innerHTML = isEdit
         ? `${iconSpan('floppy-disk')} Save changes`
         : `${iconSpan('cloud-arrow-up')} Share Mii`;
+    }
+  }
+
+  function releaseSubmitLock(): void {
+    if (closed) return;
+    submitting = false;
+    setSubmittingUi(false);
   }
 
   function dismiss(): void {
@@ -413,6 +452,8 @@ function buildModal(
     e.preventDefault();
     if (submitting || closed) return;
 
+    submitting = true;
+    setSubmittingUi(true, 'checking');
     errorEl.hidden = true;
 
     const name = truncateMiiName(nameInput.value);
@@ -423,6 +464,7 @@ function buildModal(
       errorEl.textContent = nameValidation.error ?? 'Invalid Mii name.';
       errorEl.hidden = false;
       nameInput.focus();
+      releaseSubmitLock();
       return;
     }
 
@@ -432,6 +474,7 @@ function buildModal(
       errorEl.hidden = false;
       void logProfileContentPolicyAttempt('mii_name', name, nameBlocked);
       nameInput.focus();
+      releaseSubmitLock();
       return;
     }
 
@@ -441,11 +484,11 @@ function buildModal(
       errorEl.hidden = false;
       void logProfileContentPolicyAttempt('mii_description', description, descriptionBlocked);
       descInput.focus();
+      releaseSubmitLock();
       return;
     }
 
-    submitting = true;
-    setSubmittingUi(true);
+    setSubmittingUi(true, 'saving');
 
     try {
       if (isEdit && editMii) {
@@ -472,6 +515,7 @@ function buildModal(
           mii_data_download: decoded.miiDataDownloadBase64 ?? null,
           visibility: selectedVisibility,
           user_id: userId,
+          remix_of_mii_id: options.remixOfMiiId ?? null,
         });
 
         dismiss();
@@ -479,8 +523,7 @@ function buildModal(
         navigateToUploadedMii(mii.id);
       }
     } catch (err) {
-      submitting = false;
-      setSubmittingUi(false);
+      releaseSubmitLock();
       errorEl.textContent =
         err instanceof Error && err.message
           ? err.message

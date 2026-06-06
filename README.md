@@ -64,11 +64,18 @@ A modern Mii sharing community website with a Wii-inspired design. Browse, yeah,
 
 ## Features
 
-- **Home** (`#/` or `/`) — Channel-style grid, spotlight, following feed
-- **Detail** (`#/mii/:id`) — Expressions, yeah, save, share/embed, remix, related Miis, platform render styles
-- **Browse** (`#/browse`) — Search, platform/gender/tag filters, sort
-- **Create** (`#/create`) — In-browser Mii Maker with optional 3D preview spike
-- **Submit** — Opens the QR scan modal (not a standalone page). Use any control with `data-scan-submit` or visit `#/submit` to trigger the same flow.
+- **Home** (`#/`) — Plaza grid, spotlight, trending sort, following strip (links to full feed)
+- **Feed** (`#/feed`) — Activity timeline from follows (yeahs, uploads, comments, remixes, collections) with filters; **Latest uploads** tab shows a Mii grid from people you follow
+- **Browse** (`#/browse`) — Search Miis and creators, platform/gender/tag filters, trending sort
+- **Tag pages** (`#/tag/:slug`) — Browse by tag (cosplay, game, funny, etc.)
+- **Detail** (`#/mii/:id`) — Expressions, yeah, favorite, collections, share/embed, remix lineage, comments with @mentions, Open Graph previews
+- **Create** (`#/create`) — In-browser Mii Maker; remix and edit flows
+- **Submit** — QR scan modal via `data-scan-submit` or `#/submit`
+- **Profiles** (`#/u/:username`) — Follow, block/mute, pins, collections, public activity
+- **Collections** — Private/public lists; discover public collections at `#/collections/browse`
+- **Creator dashboard** (`#/dashboard`) — Upload and engagement stats
+- **Settings** — Privacy (hide profile), blocked users, notifications, data export, account delete
+- **Admin** — Reports, appeals, bugs, auto-mod, users, audit (staff)
 
 ## Mii rendering API
 

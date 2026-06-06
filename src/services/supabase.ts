@@ -76,6 +76,24 @@ export async function fetchMiis(options: FetchMiisOptions = {}): Promise<Mii[]> 
     search = '',
     tagSlugs = [],
   } = options;
+
+  if (sort === 'trending') {
+    const { fetchTrendingMiis } = await import('@/services/discovery');
+    let rows = await fetchTrendingMiis(48);
+    if (gender) rows = rows.filter((m) => m.gender === gender);
+    if (platform) rows = rows.filter((m) => m.platform === platform);
+    const term = sanitizePostgrestSearchTerm(search);
+    if (term) {
+      const lower = term.toLowerCase();
+      rows = rows.filter(
+        (m) =>
+          m.name.toLowerCase().includes(lower) ||
+          m.creator_name.toLowerCase().includes(lower),
+      );
+    }
+    return filterBlockedMiis(rows);
+  }
+
   const col = sortColumn(sort);
   const ascending = false;
 
@@ -131,7 +149,34 @@ export async function fetchMiis(options: FetchMiisOptions = {}): Promise<Mii[]> 
 
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []).map((row) => normalizeMii(row as Record<string, unknown>));
+  const rows = (data ?? []).map((row) =>
+    normalizeMii(row as Record<string, unknown>),
+  );
+  return filterBlockedMiis(rows);
+}
+
+let blockedUserIdsCache: { ids: Set<string>; at: number } | null = null;
+
+async function getBlockedUserIds(): Promise<Set<string>> {
+  const now = Date.now();
+  if (blockedUserIdsCache && now - blockedUserIdsCache.at < 60_000) {
+    return blockedUserIdsCache.ids;
+  }
+  try {
+    const { listBlockedUsers } = await import('@/services/safety');
+    const rows = await listBlockedUsers();
+    const ids = new Set(rows.map((r) => r.user_id));
+    blockedUserIdsCache = { ids, at: now };
+    return ids;
+  } catch {
+    return new Set();
+  }
+}
+
+async function filterBlockedMiis(miis: Mii[]): Promise<Mii[]> {
+  const blocked = await getBlockedUserIds();
+  if (!blocked.size) return miis;
+  return miis.filter((m) => !m.user_id || !blocked.has(m.user_id));
 }
 
 export async function fetchMiiById(id: string): Promise<Mii | null> {
@@ -290,6 +335,9 @@ export async function insertMii(payload: InsertMiiPayload): Promise<Mii> {
     name: truncateMiiName(rest.name),
     description: rest.description.trim(),
     visibility: rest.visibility ?? 'public',
+    ...(rest.remix_of_mii_id != null
+      ? { remix_of_mii_id: rest.remix_of_mii_id }
+      : {}),
   };
   const { data, error } = await getClient()
     .from('miis')
@@ -406,14 +454,24 @@ export async function recordQrDownload(miiId: string): Promise<StatRecordResult>
 }
 
 export async function fetchComments(miiId: string): Promise<Comment[]> {
-  const { data, error } = await getClient()
-    .from('comments')
-    .select('*')
-    .eq('mii_id', miiId)
-    .eq('visibility', 'public')
-    .order('created_at', { ascending: true });
-  if (error) throw error;
-  return (data ?? []).map((row) => ({
+  const { data, error } = await getClient().rpc('fetch_mii_comments', {
+    p_mii_id: miiId,
+  });
+  if (error) {
+    const { data: fallback, error: fbErr } = await getClient()
+      .from('comments')
+      .select('*')
+      .eq('mii_id', miiId)
+      .eq('visibility', 'public')
+      .order('created_at', { ascending: true });
+    if (fbErr) throw fbErr;
+    return ((fallback ?? []) as Comment[]).map((row) => ({
+      ...row,
+      visibility: row.visibility ?? 'public',
+      parent_id: row.parent_id ?? null,
+    }));
+  }
+  return ((data ?? []) as Comment[]).map((row) => ({
     ...(row as Comment),
     visibility: (row as Comment).visibility ?? 'public',
     parent_id: (row as Comment).parent_id ?? null,

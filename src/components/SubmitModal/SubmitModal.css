@@ -22,12 +22,31 @@
   overflow-y: auto;
   background: var(--color-bg-panel);
   border-radius: 20px;
-  box-shadow: 0 24px 64px rgba(26, 26, 46, 0.18);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-modal);
   padding: var(--spacing-xl);
 }
 
 .submit-modal--busy {
   pointer-events: none;
+}
+
+.submit-modal--busy::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--color-bg-panel) 55%, transparent);
+  z-index: 4;
+  pointer-events: none;
+}
+
+.submit-modal--busy .submit-modal__header,
+.submit-modal--busy .submit-modal__body,
+.submit-modal--busy .submit-modal__actions,
+.submit-modal--busy .submit-modal__status {
+  position: relative;
+  z-index: 5;
 }
 
 .submit-modal--busy .submit-modal__submit,
@@ -265,6 +284,17 @@
   cursor: not-allowed;
 }
 
+.submit-modal__status {
+  margin: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-accent);
+  text-align: center;
+  background: var(--color-accent-tint);
+  border-radius: var(--radius-md);
+}
+
 .submit-modal__error {
   margin: 0;
   padding: var(--spacing-sm) var(--spacing-md);
@@ -320,7 +350,7 @@
   background: var(--color-accent);
   color: var(--color-on-accent);
   cursor: pointer;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 35%, transparent);
+  box-shadow: none;
   transition:
     background 0.15s ease,
     transform 0.1s ease;

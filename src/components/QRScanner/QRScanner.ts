@@ -6,6 +6,7 @@ import {
   decodeQrPayload,
   extractQrBytes,
   scanQrFromCanvas,
+  scanQrFromImageFile,
 } from '@/services/qrDecode';
 import type { DecodedQrMii } from '@/types';
 
@@ -68,8 +69,9 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     binary: Uint8Array,
     status: HTMLElement,
   ): Promise<void> {
-    status.textContent = 'QR detected! Decoding…';
+    if (processing || closed) return;
     processing = true;
+    status.textContent = 'QR detected! Decoding…';
     closed = true;
     cancelAnimationFrame(rafId);
     stream?.getTracks().forEach((t) => t.stop());
@@ -115,12 +117,39 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
         <div class="qr-scanner-guide" aria-hidden="true"></div>
       </div>
       <p class="qr-scanner-status">Point your camera at a Mii QR code (3DS, Wii U, Switch, or Tomodachi Life)</p>
+      <div class="qr-scanner-upload">
+        <button type="button" class="qr-scanner-upload__btn interactive" data-action="upload">or upload a QR code</button>
+        <input type="file" accept="image/*" class="qr-scanner-upload__input" hidden />
+      </div>
     `;
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
     modal.querySelector('.qr-scanner-modal__close')?.addEventListener('click', cancel);
+
+    const status = modal.querySelector('.qr-scanner-status') as HTMLElement;
+
+    const fileInput = modal.querySelector(
+      '.qr-scanner-upload__input',
+    ) as HTMLInputElement;
+    modal
+      .querySelector('[data-action="upload"]')
+      ?.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files?.[0];
+      fileInput.value = '';
+      if (!file || processing || closed) return;
+      void (async () => {
+        try {
+          const binary = await scanQrFromImageFile(file);
+          await handleDecodedBytes(binary, status);
+        } catch {
+          if (!processing) showError(INVALID_MII_MSG);
+        }
+      })();
+    });
 
     const video = modal.querySelector('video')!;
     const canvas = document.createElement('canvas');
@@ -141,15 +170,20 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
       return;
     }
 
-    const status = modal.querySelector('.qr-scanner-status') as HTMLElement;
-
-    async function tick(): Promise<void> {
+    function scheduleNextFrame(): void {
       if (closed || processing) return;
       rafId = requestAnimationFrame(() => {
         void tick();
       });
+    }
 
-      if (video.readyState !== video.HAVE_ENOUGH_DATA) return;
+    async function tick(): Promise<void> {
+      if (closed || processing) return;
+
+      if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+        scheduleNextFrame();
+        return;
+      }
 
       canvas.width = video.videoWidth;
       canvas.height = video.videoHeight;
@@ -157,7 +191,6 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
 
       frameCount += 1;
 
-      
       if (frameCount % 15 === 0) {
         try {
           const scanned = await scanQrFromCanvas(canvas);
@@ -168,17 +201,22 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
         }
       }
 
+      if (closed || processing) return;
+
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const code = jsQR(imageData.data, imageData.width, imageData.height, {
         inversionAttempts: 'attemptBoth',
       });
 
-      if (!code) return;
+      if (code) {
+        const binary = extractQrBytes(code);
+        if (binary?.length) {
+          await handleDecodedBytes(binary, status);
+          return;
+        }
+      }
 
-      const binary = extractQrBytes(code);
-      if (!binary?.length) return;
-
-      await handleDecodedBytes(binary, status);
+      scheduleNextFrame();
     }
 
     tick();

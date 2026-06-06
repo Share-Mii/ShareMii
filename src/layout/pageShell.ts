@@ -6,7 +6,10 @@ let persistentHeader: HTMLElement | null = null;
 let persistentFooter: HTMLElement | null = null;
 let persistentBottomBar: HTMLElement | null = null;
 
-export function wrapPublicPage(content: HTMLElement): HTMLElement {
+export function wrapPublicPage(
+  content: HTMLElement,
+  options: { admin?: boolean } = {},
+): HTMLElement {
   if (!persistentHeader) {
     persistentHeader = createSiteHeader();
     persistentFooter = createSiteFooter();
@@ -14,7 +17,7 @@ export function wrapPublicPage(content: HTMLElement): HTMLElement {
   }
 
   const shell = document.createElement('div');
-  shell.className = 'page-shell page-shell--with-bottom-bar';
+  shell.className = `page-shell page-shell--with-bottom-bar${options.admin ? ' page-shell--admin' : ''}`;
 
   const contentWrap = document.createElement('div');
   contentWrap.className = 'page-shell__content';

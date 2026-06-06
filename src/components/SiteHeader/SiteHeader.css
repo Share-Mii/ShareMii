@@ -98,9 +98,9 @@
   .site-header__inner {
     grid-template-columns: auto 1fr;
     grid-template-rows: auto;
-    padding: var(--spacing-sm) var(--page-gutter);
+    padding: var(--spacing-xs) var(--mobile-gutter);
     gap: var(--spacing-sm);
-    min-height: 56px;
+    min-height: var(--header-mobile-height);
   }
 
   .site-header__brand {
@@ -125,10 +125,5 @@
     height: 1px;
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
-  }
-
-  .site-header__actions--auth [data-scan-submit] {
-    min-width: 2.5rem;
-    padding-inline: var(--spacing-sm);
   }
 }

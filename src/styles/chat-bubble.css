@@ -1,0 +1,57 @@
+.chat-bubble-popup {
+  position: fixed;
+  z-index: 10000;
+  transform: translateX(-50%) translateY(4px);
+  width: max-content;
+  max-width: min(280px, 70vw);
+  padding: 0.4rem 0.75rem;
+  border-radius: 12px;
+  background: var(--tooltip-bg);
+  color: var(--tooltip-fg);
+  font-family: var(--font-family);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  box-shadow: var(--shadow-modal);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0.15s;
+}
+
+.chat-bubble-popup::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--tooltip-bg);
+}
+
+.chat-bubble-popup--visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+.chat-bubble-popup--left {
+  transform: translateX(-100%) translateY(-50%) translateX(-4px);
+}
+
+.chat-bubble-popup--left::before {
+  bottom: auto;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 6px solid transparent;
+  border-left-color: var(--tooltip-bg);
+}
+
+.chat-bubble-popup--left.chat-bubble-popup--visible {
+  transform: translateX(-100%) translateY(-50%);
+}

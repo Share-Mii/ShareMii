@@ -133,6 +133,30 @@ export function extractQrBytes(code: {
   return null;
 }
 
+export async function scanQrFromImageFile(file: File): Promise<Uint8Array> {
+  const scanned = await scanQR(file);
+  if (scanned && scanned.length > 0) {
+    return bufferToUint8(scanned);
+  }
+
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = () => reject(new Error('Could not load image'));
+      el.src = url;
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    canvas.getContext('2d')!.drawImage(img, 0, 0);
+    return scanQrFromCanvas(canvas);
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
 export async function scanQrFromCanvas(
   canvas: HTMLCanvasElement,
 ): Promise<Uint8Array> {

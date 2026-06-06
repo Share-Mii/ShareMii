@@ -1,6 +1,9 @@
 import { decodeMii, encodeMii, MiiFormats } from 'miijs';
 import type { DecodedQrMii, Gender, Mii } from '@/types';
-import { MII_EYE_COLOR_SWITCH } from '@/services/miiColorPalettes';
+import {
+  MII_EYE_COLOR_SWITCH,
+  MII_SKIN_COLOR_DISPLAY_ORDER,
+} from '@/services/miiColorPalettes';
 import { base64ToUint8, uint8ToBase64 } from '@/services/miiApi';
 import { isTomodachiMii } from '@/services/tlClothing';
 import { buildRenderUrl } from '@/services/miiApi';
@@ -282,6 +285,11 @@ const EYE_COLOR_OPTIONS = MII_EYE_COLOR_SWITCH.map((value, i) => ({
   value,
 }));
 
+const SKIN_COLOR_OPTIONS = MII_SKIN_COLOR_DISPLAY_ORDER.map((value, i) => ({
+  label: String(i + 1),
+  value,
+}));
+
 const FAVORITE_COLORS = [
   'Red',
   'Orange',
@@ -376,7 +384,13 @@ const FEATURE_CATEGORIES: EditorCategory[] = [
       },
       {
         type: 'choice',
-        label: 'Wrinkles',
+        label: 'Skin tone',
+        path: 'face.color',
+        options: SKIN_COLOR_OPTIONS,
+      },
+      {
+        type: 'choice',
+        label: 'Wrinkles & freckles',
         path: 'face.feature',
         options: rangeOptions(12),
       },
@@ -620,6 +634,8 @@ export const EDITOR_CATEGORIES: EditorCategory[] = [
 const RANDOM_PATHS: { path: string; max: number }[] = [
   { path: 'face.type', max: 11 },
   { path: 'face.color', max: 9 },
+  { path: 'face.feature', max: 11 },
+  { path: 'face.makeup', max: 11 },
   { path: 'hair.type', max: 131 },
   { path: 'hair.color', max: 7 },
   { path: 'eyes.type', max: 55 },

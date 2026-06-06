@@ -58,13 +58,34 @@
   width: 100%;
 }
 
+.report-modal__field input[type='text'],
 .report-modal__field textarea {
+  box-sizing: border-box;
+  width: 100%;
   padding: 0.5rem 0.65rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-bg-section-alt);
   color: var(--color-text);
   font: inherit;
+  line-height: 1.4;
+}
+
+.report-modal__field input[type='text'] {
+  min-height: 2.5rem;
+}
+
+.report-modal__field input[type='text']::placeholder,
+.report-modal__field textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 1;
+}
+
+.report-modal__field input[type='text']:focus,
+.report-modal__field textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: var(--focus-ring);
 }
 
 .report-modal__error {

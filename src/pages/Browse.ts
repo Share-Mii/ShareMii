@@ -1,9 +1,11 @@
 import './pages.css';
+import './Browse.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
 import { createPaginatedList } from '@/components/ListPager/ListPager';
 import { createMiiTile } from '@/components/MiiTile/MiiTile';
 import { fetchMiis, isSupabaseConfigured } from '@/services/supabase';
+import { searchProfiles } from '@/services/discovery';
 import { createTagFilter } from '@/components/TagFilter/TagFilter';
 import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { icon } from '@/utils/icon';
@@ -13,6 +15,7 @@ import type { Gender, Mii, Platform, SortOption } from '@/types';
 
 const SORTS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Newest' },
+  { value: 'trending', label: 'Trending' },
   { value: 'favorites', label: "Most Yeah'd" },
   { value: 'downloads', label: 'Most Downloaded' },
   { value: 'views', label: 'Most Viewed' },
@@ -125,6 +128,10 @@ export function renderBrowse(container: HTMLElement): () => void {
 
   filterPanel.append(genderGroup, platformGroup, tagGroup);
 
+  const creatorResults = document.createElement('div');
+  creatorResults.className = 'browse-creators';
+  creatorResults.hidden = true;
+
   const residentsMain = document.createElement('div');
   residentsMain.className = 'residents-main';
 
@@ -135,7 +142,7 @@ export function renderBrowse(container: HTMLElement): () => void {
 
   layout.append(filterPanel, residentsMain);
   residentsMain.appendChild(paginated.root);
-  browseSection.append(browseHead, layout);
+  browseSection.append(browseHead, creatorResults, layout);
   content.appendChild(browseSection);
 
   const unbindFilterDrawer = bindFilterDrawer(
@@ -196,9 +203,41 @@ export function renderBrowse(container: HTMLElement): () => void {
     resultsMeta.textContent = `${count} ${noun} · Discover and filter Mii characters from the community.`;
   }
 
+  async function loadCreatorSearch(): Promise<void> {
+    creatorResults.replaceChildren();
+    if (search.trim().length < 2) {
+      creatorResults.hidden = true;
+      return;
+    }
+    try {
+      const profiles = await searchProfiles(search, 8);
+      if (!profiles.length) {
+        creatorResults.hidden = true;
+        return;
+      }
+      creatorResults.hidden = false;
+      const title = document.createElement('h2');
+      title.className = 'browse-creators__title';
+      title.textContent = 'Creators';
+      const row = document.createElement('div');
+      row.className = 'browse-creators__row';
+      for (const p of profiles) {
+        const a = document.createElement('a');
+        a.href = `#/u/${encodeURIComponent(p.username)}`;
+        a.className = 'browse-creators__card interactive';
+        a.innerHTML = `<strong>${escapeHtml(p.username)}</strong>${p.trusted_creator ? ' <span class="browse-creators__trusted">Trusted</span>' : ''}`;
+        row.appendChild(a);
+      }
+      creatorResults.append(title, row);
+    } catch {
+      creatorResults.hidden = true;
+    }
+  }
+
   async function loadMiis(): Promise<void> {
     setResultsMeta(true);
     paginated.showSkeletonGrid();
+    void loadCreatorSearch();
 
     if (!isSupabaseConfigured()) {
       paginated.showMessage('<p class="page-error">Supabase is not configured.</p>');
@@ -252,4 +291,12 @@ export function renderBrowse(container: HTMLElement): () => void {
     sortSelect.destroy();
     unbindFilterDrawer();
   };
+}
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }

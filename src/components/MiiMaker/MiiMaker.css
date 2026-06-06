@@ -105,7 +105,7 @@
   background: var(--color-accent);
   border-color: var(--color-accent);
   color: var(--color-on-accent);
-  box-shadow: 0 2px 8px var(--color-accent-tint);
+  box-shadow: none;
 }
 
 .mii-maker__cat-btn--general {
@@ -125,14 +125,14 @@
 
 .mii-maker__cat-btn--general:hover {
   border-color: var(--color-accent);
-  box-shadow: 0 2px 10px var(--color-accent-tint);
+  box-shadow: var(--shadow-1);
 }
 
 .mii-maker__cat-btn--general.mii-maker__cat-btn--active {
   background: var(--color-accent);
   border-color: var(--color-accent);
   color: var(--color-on-accent);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-accent) 40%, transparent);
+  box-shadow: none;
 }
 
 .mii-maker__cat-btn-inner {
@@ -965,6 +965,37 @@
 @media (max-width: 1100px) {
   .mii-maker__general-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .mii-maker {
+    --mii-maker-preview-w: 100%;
+    --mii-maker-preview-size-w: 120px;
+    --mii-maker-preview-size-h: 180px;
+    --mii-maker-preview-render: 180px;
+  }
+
+  .mii-maker__cat-rail {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mii-maker__cat-rail .mii-maker__cat-btn {
+    flex-shrink: 0;
+  }
+
+  .mii-maker__preview-col {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: 12rem;
+    order: 2;
   }
 }
 

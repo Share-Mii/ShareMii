@@ -120,16 +120,71 @@ export async function unfollowUser(
   if (error) throw error;
 }
 
-export async function fetchFollowingFeedMiis(
-  userId: string,
-  limit = 24,
-): Promise<Mii[]> {
+export const HOME_FOLLOWING_SLOTS = 8;
+
+function shuffleInPlace<T>(items: T[]): T[] {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j]!, items[i]!];
+  }
+  return items;
+}
+
+/** One Mii per creator when possible; fills remaining slots from the pool if needed. */
+export function pickDiverseFollowingMiis(
+  miis: Mii[],
+  slotCount: number,
+): Mii[] {
+  if (!miis.length || slotCount < 1) return [];
+
+  const byCreator = new Map<string, Mii[]>();
+  for (const mii of miis) {
+    const uid = mii.user_id;
+    if (!uid) continue;
+    const list = byCreator.get(uid) ?? [];
+    list.push(mii);
+    byCreator.set(uid, list);
+  }
+
+  const selected: Mii[] = [];
+  const usedMiiIds = new Set<string>();
+
+  for (const creatorId of shuffleInPlace([...byCreator.keys()])) {
+    if (selected.length >= slotCount) break;
+    const pool = byCreator.get(creatorId);
+    if (!pool?.length) continue;
+    const pick = pool[Math.floor(Math.random() * pool.length)]!;
+    if (usedMiiIds.has(pick.id)) continue;
+    selected.push(pick);
+    usedMiiIds.add(pick.id);
+  }
+
+  if (selected.length < slotCount) {
+    const rest = shuffleInPlace(miis.filter((m) => !usedMiiIds.has(m.id)));
+    for (const mii of rest) {
+      if (selected.length >= slotCount) break;
+      selected.push(mii);
+      usedMiiIds.add(mii.id);
+    }
+  }
+
+  return shuffleInPlace(selected);
+}
+
+async function fetchFollowingIds(userId: string): Promise<string[]> {
   const { data: follows, error: fErr } = await getSupabaseClient()
     .from('user_follows')
     .select('following_id')
     .eq('follower_id', userId);
   if (fErr) throw fErr;
-  const ids = (follows ?? []).map((r) => r.following_id as string);
+  return (follows ?? []).map((r) => r.following_id as string);
+}
+
+export async function fetchFollowingFeedMiis(
+  userId: string,
+  limit = 24,
+): Promise<Mii[]> {
+  const ids = await fetchFollowingIds(userId);
   if (!ids.length) return [];
 
   const { data, error } = await getSupabaseClient()
@@ -141,6 +196,27 @@ export async function fetchFollowingFeedMiis(
     .limit(limit);
   if (error) throw error;
   return (data ?? []).map((row) => mapMii(row as Record<string, unknown>));
+}
+
+/** Home strip: one row of Miis from random followed creators (unique per slot when possible). */
+export async function fetchHomeFollowingMiis(
+  userId: string,
+  slotCount = HOME_FOLLOWING_SLOTS,
+): Promise<Mii[]> {
+  const ids = await fetchFollowingIds(userId);
+  if (!ids.length) return [];
+
+  const poolLimit = Math.max(80, slotCount * 20);
+  const { data, error } = await getSupabaseClient()
+    .from('miis')
+    .select('*')
+    .in('user_id', ids)
+    .eq('visibility', 'public')
+    .order('created_at', { ascending: false })
+    .limit(poolLimit);
+  if (error) throw error;
+  const pool = (data ?? []).map((row) => mapMii(row as Record<string, unknown>));
+  return pickDiverseFollowingMiis(pool, slotCount);
 }
 
 function mapCollectionRow(

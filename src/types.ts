@@ -29,7 +29,75 @@ export type Gender = 'male' | 'female' | 'other';
 
 export type SourceFilter = 'all' | '3ds' | 'wiiu' | 'tomodachi';
 
-export type SortOption = 'newest' | 'favorites' | 'downloads' | 'views';
+export type SortOption =
+  | 'newest'
+  | 'favorites'
+  | 'downloads'
+  | 'views'
+  | 'trending';
+
+export type ActivityFeedFilter =
+  | 'all'
+  | 'yeah'
+  | 'submit'
+  | 'comment'
+  | 'remix'
+  | 'collection_add';
+
+export interface ContentAppeal {
+  id: string;
+  appellant_id: string;
+  target_type: 'mii' | 'comment' | 'profile';
+  target_id: string;
+  reason: string;
+  status: 'open' | 'approved' | 'denied';
+  staff_note: string | null;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+export interface CreatorStats {
+  upload_count: number;
+  public_upload_count: number;
+  total_yeahs: number;
+  total_views: number;
+  total_downloads: number;
+  remix_received_count: number;
+  follower_count: number;
+  following_count: number;
+}
+
+export interface PublicCollectionSummary {
+  id: string;
+  name: string;
+  description: string;
+  user_id: string;
+  owner_username: string;
+  item_count: number;
+  preview_mii_ids: string[];
+}
+
+export interface ProfileSearchResult {
+  id: string;
+  username: string;
+  bio: string;
+  avatar_url: string | null;
+  trusted_creator: boolean;
+}
+
+export interface FollowSuggestion {
+  user_id: string;
+  username: string;
+  avatar_url: string | null;
+  reason: string;
+}
+
+export interface RateLimitStatus {
+  allowed: boolean;
+  retry_after_seconds: number;
+  limit?: number;
+  used?: number;
+}
 
 export type MiiStat = 'views' | 'downloads' | 'favorites';
 
@@ -106,6 +174,7 @@ export interface Mii {
   views: number;
   visibility: ContentVisibility;
   hidden_reason: string | null;
+  remix_of_mii_id?: string | null;
   created_at: string;
 }
 
@@ -226,7 +295,7 @@ export interface InsertMiiPayload {
   mii_data: string;
   mii_data_download?: string | null;
   visibility?: MiiVisibility;
-  
+  remix_of_mii_id?: string | null;
   user_id?: string;
 }
 

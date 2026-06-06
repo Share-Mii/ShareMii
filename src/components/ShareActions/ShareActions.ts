@@ -2,7 +2,10 @@ import './ShareActions.css';
 import '@/components/IconActionButton/IconActionButton.css';
 import '@/components/IconActionCluster/IconActionCluster.css';
 import { createIconActionCluster } from '@/components/IconActionCluster/IconActionCluster';
-import type { IconActionButtonOptions } from '@/components/IconActionButton/IconActionButton';
+import {
+  createIconActionButton,
+  type IconActionButtonOptions,
+} from '@/components/IconActionButton/IconActionButton';
 import {
   buildEmbedHtml,
   buildMiiShareUrl,
@@ -85,6 +88,41 @@ export function createShareActionCluster(
     layout: opts.layout ?? 'vertical',
     className: opts.className,
     buttons,
+  });
+}
+
+export function createShareOnlyButton(opts: {
+  title: string;
+  description?: string;
+  shareUrl: string;
+  className?: string;
+}): HTMLButtonElement {
+  return createIconActionButton({
+    iconName: 'share-nodes',
+    label: 'Share',
+    className: opts.className,
+    onClick: async () => {
+      const result = await shareNative({
+        title: opts.title,
+        text: opts.description,
+        url: opts.shareUrl,
+      });
+      if (result === 'copied') toast('Link copied!');
+      else if (result === 'shared') toast('Shared!');
+    },
+  });
+}
+
+export function createMiiShareOnlyButton(
+  miiId: string,
+  miiName: string,
+  className?: string,
+): HTMLButtonElement {
+  return createShareOnlyButton({
+    title: `${miiName} on ShareMii`,
+    description: 'Check out this Mii on ShareMii',
+    shareUrl: buildMiiShareUrl(miiId),
+    className,
   });
 }
 

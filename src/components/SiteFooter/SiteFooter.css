@@ -76,3 +76,50 @@
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
 }
+
+.site-footer__compact {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .site-footer__inner {
+    padding: var(--spacing-md) var(--mobile-gutter) calc(var(--spacing-md) + env(safe-area-inset-bottom, 0px));
+    gap: var(--spacing-sm);
+  }
+
+  .site-footer__credits {
+    display: none;
+  }
+
+  .site-footer__legal {
+    display: none;
+  }
+
+  .site-footer__disclaimer {
+    font-size: var(--font-size-caption);
+  }
+
+  .site-footer__compact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-xs) var(--spacing-md);
+  }
+
+  .site-footer__compact-link {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    background: none;
+    border: none;
+    padding: 0;
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .site-footer__compact-link:hover {
+    color: var(--color-accent);
+  }
+}

@@ -200,6 +200,19 @@ export async function fetchProfileByUsername(
   return normalizeProfile({ ...row, profile_private: priv });
 }
 
+export async function setProfileHidden(hidden: boolean): Promise<Profile> {
+  const { error } = await getSupabaseClient().rpc('set_profile_hidden', {
+    p_hidden: hidden,
+  });
+  if (error) throw new Error(formatError(error));
+  const session = await getSupabaseClient().auth.getUser();
+  const uid = session.data.user?.id;
+  if (!uid) throw new Error('Not signed in');
+  const profile = await fetchProfileById(uid);
+  if (!profile) throw new Error('Profile not found');
+  return profile;
+}
+
 export async function updateProfile(
   userId: string,
   payload: UpdateProfilePayload,

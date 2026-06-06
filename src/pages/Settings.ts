@@ -8,10 +8,12 @@ import {
   cacheProfileUsername,
   ensureProfile,
   fetchProfileById,
+  setProfileHidden,
   updateNotificationPreferences,
   updateProfile,
   uploadProfileImage,
 } from '@/services/profile';
+import { listBlockedUsers, unblockUser } from '@/services/safety';
 import { isSupabaseConfigured, logProfileContentPolicyAttempt } from '@/services/supabase';
 import { validateGamertag } from '@/utils/gamertag';
 import { moderationFailReasonForUserText } from '@/utils/contentModeration';
@@ -406,6 +408,92 @@ function buildSettingsPage(profile: Profile, userId: string): HTMLElement {
 
   notifCard.append(notifHeading, notifLead, toggles);
 
+  const privacyCard = document.createElement('section');
+  privacyCard.className = 'settings-page__card';
+  privacyCard.setAttribute('aria-labelledby', 'settings-privacy-heading');
+
+  const privacyHeading = document.createElement('h2');
+  privacyHeading.id = 'settings-privacy-heading';
+  privacyHeading.className = 'settings-page__card-title';
+  privacyHeading.textContent = 'Privacy';
+
+  const privacyLead = document.createElement('p');
+  privacyLead.className = 'settings-page__card-lead';
+  privacyLead.textContent =
+    'Hide your profile from browse and search. You can still share direct profile links.';
+
+  const hiddenLabel = document.createElement('label');
+  hiddenLabel.className = 'settings-page__toggle';
+  const hiddenInput = document.createElement('input');
+  hiddenInput.type = 'checkbox';
+  hiddenInput.checked = currentProfile.profile_hidden;
+  hiddenInput.addEventListener('change', async () => {
+    try {
+      const updated = await setProfileHidden(hiddenInput.checked);
+      onProfileUpdate(updated);
+    } catch (err) {
+      hiddenInput.checked = !hiddenInput.checked;
+      alert(err instanceof Error ? err.message : 'Could not update privacy');
+    }
+  });
+  const hiddenSpan = document.createElement('span');
+  hiddenSpan.textContent = 'Hide my profile from browse and search';
+  hiddenLabel.append(hiddenSpan, hiddenInput);
+
+  const blockedHost = document.createElement('div');
+  blockedHost.className = 'settings-page__blocked';
+
+  async function loadBlocked(): Promise<void> {
+    blockedHost.replaceChildren();
+    try {
+      const blocked = await listBlockedUsers();
+      if (!blocked.length) {
+        blockedHost.innerHTML =
+          '<p class="settings-row__hint">You have not blocked anyone.</p>';
+        return;
+      }
+      const list = document.createElement('ul');
+      list.className = 'settings-page__blocked-list';
+      for (const row of blocked) {
+        const li = document.createElement('li');
+        li.className = 'settings-page__blocked-item';
+        const name = document.createElement('span');
+        name.textContent = row.username;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'pill-btn pill-btn--outline interactive';
+        btn.textContent = 'Unblock';
+        btn.addEventListener('click', () => {
+          void unblockUser(row.user_id)
+            .then(() => loadBlocked())
+            .catch((err) =>
+              alert(err instanceof Error ? err.message : 'Failed'),
+            );
+        });
+        li.append(name, btn);
+        list.appendChild(li);
+      }
+      blockedHost.appendChild(list);
+    } catch {
+      blockedHost.innerHTML =
+        '<p class="settings-row__hint">Could not load blocked users.</p>';
+    }
+  }
+
+  void loadBlocked();
+
+  const blockedTitle = document.createElement('p');
+  blockedTitle.className = 'settings-row__label';
+  blockedTitle.textContent = 'Blocked users';
+
+  privacyCard.append(
+    privacyHeading,
+    privacyLead,
+    hiddenLabel,
+    blockedTitle,
+    blockedHost,
+  );
+
   const dataCard = document.createElement('section');
   dataCard.className = 'settings-page__card';
   dataCard.id = 'your-data';
@@ -537,6 +625,13 @@ function buildSettingsPage(profile: Profile, userId: string): HTMLElement {
   accountSection.append(signOutBtn);
 
   const root = document.createElement('div');
-  root.append(pageTitle, profileCard, notifCard, dataCard, accountSection);
+  root.append(
+    pageTitle,
+    profileCard,
+    notifCard,
+    privacyCard,
+    dataCard,
+    accountSection,
+  );
   return root;
 }

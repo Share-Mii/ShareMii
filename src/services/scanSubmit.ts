@@ -65,9 +65,16 @@ export async function openScanAndSubmit(
   function scanLoop(): void {
     const cleanupScanner = openQRScanner({
       onSuccess: (decoded) => {
-        queue.push(decoded);
+        const duplicate = queue.some(
+          (item) => item.miiDataBase64 === decoded.miiDataBase64,
+        );
+        if (!duplicate) {
+          queue.push(decoded);
+        }
         const scanMore = window.confirm(
-          `${queue.length} Mii${queue.length === 1 ? '' : 's'} in queue. Scan another QR code?`,
+          duplicate
+            ? 'This Mii is already in the queue. Scan another QR code?'
+            : `${queue.length} Mii${queue.length === 1 ? '' : 's'} in queue. Scan another QR code?`,
         );
         if (scanMore) {
           scanLoop();

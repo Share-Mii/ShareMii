@@ -85,10 +85,32 @@
 }
 
 .qr-scanner-status {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding: var(--spacing-md) var(--spacing-lg) var(--spacing-sm);
   text-align: center;
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+.qr-scanner-upload {
+  padding: 0 var(--spacing-lg) var(--spacing-md);
+  text-align: center;
+}
+
+.qr-scanner-upload__btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+.qr-scanner-upload__btn:hover {
+  color: var(--color-accent-hover);
 }
 
 .qr-scanner-error {

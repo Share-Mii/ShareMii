@@ -17,6 +17,8 @@ function typeIcon(type: NotificationType): string {
       return yeahIcon();
     case 'favorite':
       return icon('bookmark');
+    case 'mention':
+      return icon('at');
     default:
       return icon('bell');
   }
@@ -32,6 +34,8 @@ function typeMessage(n: NotificationRow): string {
       return `${who} yeahed ${mii}`;
     case 'favorite':
       return `${who} favorited ${mii}`;
+    case 'mention':
+      return `${who} mentioned you on ${mii}`;
     default:
       return 'New activity';
   }

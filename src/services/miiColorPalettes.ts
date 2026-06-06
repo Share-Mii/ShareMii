@@ -28,6 +28,11 @@ export const MII_SKIN_SWATCHES: readonly string[] = [
   '#3c2d23',
 ] as const;
 
+/** Display order for skin swatches (matches Nintendo Switch Mii editor). */
+export const MII_SKIN_COLOR_DISPLAY_ORDER: readonly number[] = [
+  0, 7, 1, 4, 5, 6, 3, 2, 8, 9,
+] as const;
+
 export const MII_HAIR_SWATCHES: readonly string[] = [
   '#000000',
   '#402010',
