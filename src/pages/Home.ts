@@ -21,11 +21,7 @@ import { createTagFilter } from '@/components/TagFilter/TagFilter';
 import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { getDiscordInviteUrl } from '@/config/community';
 import type { Gender, SortOption, SourceFilter } from '@/types';
-import {
-  BRAND_NAME,
-  DEFAULT_PUBLIC_DESCRIPTION,
-  LIVING_THE_DREAM_TOOL_URL,
-} from '@/config/brand';
+import { BRAND_NAME, DEFAULT_PUBLIC_DESCRIPTION } from '@/config/brand';
 import { DEFAULT_OG_IMAGE, setPageMeta } from '@/utils/pageMeta';
 
 const HOME_MOBILE_PREVIEW_COUNT = 8;
@@ -99,13 +95,6 @@ export function renderHome(container: HTMLElement): () => void {
   const heroContent = document.createElement('div');
   heroContent.className = 'hero__content';
   heroContent.innerHTML = `
-      <p class="hero__disambiguation">
-        <strong>${BRAND_NAME}</strong> is a community for Mii QR codes — not the
-        <a href="${LIVING_THE_DREAM_TOOL_URL}" target="_blank" rel="noopener noreferrer" class="hero__disambiguation-link interactive">Living the Dream save editor</a>.
-        <a href="/about" class="hero__disambiguation-link interactive">About</a>
-        ·
-        <a href="/help" class="hero__disambiguation-link interactive">Help</a>
-      </p>
       <h1 class="hero__title">
         Browse, share, & collect <span class="hero__title-accent">Miis</span>.
       </h1>
