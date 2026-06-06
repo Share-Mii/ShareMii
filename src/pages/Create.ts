@@ -30,6 +30,7 @@ import {
 import { miiDataForEditor } from '@/services/remixNavigate';
 import type { Mii } from '@/types';
 import { iconSpan } from '@/utils/icon';
+import { DEFAULT_OG_IMAGE, setPageMeta } from '@/utils/pageMeta';
 
 export interface MiiMakerPageOptions {
   editMii?: Mii;
@@ -44,6 +45,21 @@ export function renderCreate(
   const remixMii = options.remixMii;
   const isEdit = Boolean(editMii);
   const isRemix = Boolean(remixMii);
+
+  setPageMeta({
+    title: isEdit
+      ? 'Edit Mii'
+      : isRemix
+        ? 'Remix Mii'
+        : 'Free Online Mii Maker',
+    description: isEdit
+      ? 'Edit your Mii on ShareMii and update your shared QR code.'
+      : isRemix
+        ? 'Remix a community Mii in the ShareMii online Mii Maker.'
+        : 'Create and customize Nintendo Miis in your browser. Export QR codes and share with the ShareMii community.',
+    url: `${window.location.origin}/create`,
+    image: DEFAULT_OG_IMAGE,
+  });
 
   let aborted = false;
   let fields: MiiFields = createDefaultMiiFields(0);
@@ -66,7 +82,7 @@ export function renderCreate(
     ? 'Edit Mii'
     : isRemix
       ? 'Remix Mii'
-      : 'Mii Maker';
+      : 'Free Online Mii Maker';
   const toolbarActions = document.createElement('div');
   toolbarActions.className = 'mii-maker__toolbar-actions';
   toolbar.append(toolbarTitle, toolbarActions);

@@ -36,7 +36,7 @@ export function injectSeoIntoHtml(html: string, meta: SeoMeta): string {
   out = upsertMeta(out, 'property', 'og:description', meta.description);
   out = upsertMeta(out, 'property', 'og:url', meta.canonical);
   out = upsertMeta(out, 'property', 'og:type', meta.type ?? 'website');
-  out = upsertMeta(out, 'property', 'og:site_name', 'ShareMii');
+  out = upsertMeta(out, 'property', 'og:site_name', 'ShareMii.net');
   out = upsertMeta(out, 'name', 'twitter:card', meta.image ? 'summary_large_image' : 'summary');
   out = upsertMeta(out, 'name', 'twitter:title', meta.title);
   out = upsertMeta(out, 'name', 'twitter:description', meta.description);

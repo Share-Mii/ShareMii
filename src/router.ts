@@ -15,6 +15,8 @@ import {
   fetchProfileById,
   hasCompletedProfile,
 } from '@/services/profile';
+import { renderAbout } from '@/pages/About';
+import { renderHelp } from '@/pages/Help';
 import { isLegalPageId, renderLegal } from '@/pages/Legal';
 import { getAuthSession, isLoggedIn } from '@/services/auth';
 import { openLoginModal } from '@/components/LoginModal/LoginModal';
@@ -299,6 +301,20 @@ function navigate(): void {
         username,
       }),
     );
+    return;
+  }
+
+  if (path === '/about') {
+    runWithPageTransition(() => {
+      renderAbout(app);
+    });
+    return;
+  }
+
+  if (path === '/help') {
+    runWithPageTransition(() => {
+      renderHelp(app);
+    });
     return;
   }
 

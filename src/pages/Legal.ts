@@ -2,6 +2,7 @@ import './pages.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
 import { LEGAL_CONTACT_EMAIL, LEGAL_LAST_UPDATED } from '@/config/legal';
+import { DEFAULT_OG_IMAGE, setPageMeta } from '@/utils/pageMeta';
 
 type LegalPageId =
   | 'legal'
@@ -325,6 +326,13 @@ export function renderLegal(
   container: HTMLElement,
   id: LegalPageId,
 ): void {
+  const config = PAGES[id];
+  setPageMeta({
+    title: config.title,
+    description: config.intro,
+    url: `${window.location.origin}/${id}`,
+    image: DEFAULT_OG_IMAGE,
+  });
   container.replaceChildren(wrapPublicPage(buildLegalPage(id)));
 }
 

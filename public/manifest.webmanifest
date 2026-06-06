@@ -1,7 +1,7 @@
 {
-  "name": "ShareMii",
-  "short_name": "ShareMii",
-  "description": "Browse, share, and create Nintendo Miis with the community.",
+  "name": "ShareMii.net",
+  "short_name": "ShareMii.net",
+  "description": "Community Mii QR code gallery and online Mii Maker for 3DS, Wii U, and Tomodachi Life.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5f0ff",

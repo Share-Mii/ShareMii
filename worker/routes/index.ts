@@ -1,8 +1,11 @@
 import {
+  aboutMeta,
   browseMeta,
   collectionMeta,
   createMeta,
+  helpMeta,
   homeMeta,
+  legalMeta,
   miiMeta,
   notFoundMeta,
   profileMeta,
@@ -16,7 +19,7 @@ import {
   fetchTag,
   type WorkerEnv,
 } from '../data/supabase';
-import { siteOrigin } from '../data/meta';
+import { DEFAULT_OG_IMAGE, siteOrigin } from '../data/meta';
 
 const NOINDEX_PREFIXES = [
   '/settings',
@@ -26,7 +29,16 @@ const NOINDEX_PREFIXES = [
   '/admin',
   '/edit/',
   '/profile',
+  '/feed',
 ];
+
+const LEGAL_PATHS = [
+  '/legal',
+  '/privacy',
+  '/terms',
+  '/child-safety',
+  '/delete-account',
+] as const;
 
 export async function resolveSeoMeta(
   env: WorkerEnv,
@@ -40,13 +52,26 @@ export async function resolveSeoMeta(
   }
 
   if (pathname === '/' || pathname === '') {
-    return homeMeta(origin);
+    return homeMeta(origin, env);
+  }
+  if (pathname === '/about') {
+    return aboutMeta(origin);
+  }
+  if (pathname === '/help') {
+    return helpMeta(origin);
   }
   if (pathname === '/browse') {
     return browseMeta(origin);
   }
   if (pathname === '/create') {
     return createMeta(origin);
+  }
+
+  if ((LEGAL_PATHS as readonly string[]).includes(pathname)) {
+    return legalMeta(
+      origin,
+      pathname.slice(1) as Parameters<typeof legalMeta>[1],
+    );
   }
 
   const miiMatch = pathname.match(/^\/mii\/([^/]+)$/);
@@ -83,9 +108,10 @@ export async function resolveSeoMeta(
 
   if (pathname === '/collections/browse') {
     return {
-      title: 'Public collections · ShareMii',
+      title: 'Public collections · ShareMii.net',
       description: 'Curated Mii lists shared by the ShareMii community.',
       canonical: `${origin}/collections/browse`,
+      image: DEFAULT_OG_IMAGE,
       bodyHtml:
         '<main><h1>Public collections</h1><p>Curated Mii lists from the community.</p></main>',
     };

@@ -353,7 +353,7 @@ export function createSiteHeader(): HTMLElement {
   brand.href = '/';
   brand.innerHTML = `
     <span class="site-header__logo" aria-hidden="true">${logoMark()}</span>
-    <span class="site-header__brand-text">ShareMii</span>
+    <span class="site-header__brand-text">ShareMii.net</span>
   `;
 
   const nav = document.createElement('nav');

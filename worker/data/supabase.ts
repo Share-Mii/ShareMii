@@ -2,6 +2,7 @@ export interface WorkerEnv {
   SUPABASE_URL?: string;
   SUPABASE_ANON_KEY?: string;
   SITE_ORIGIN?: string;
+  DISCORD_INVITE_URL?: string;
 }
 
 async function supabaseFetch<T>(
@@ -95,10 +96,14 @@ export async function fetchTag(
 }
 
 export interface SitemapIds {
-  miis: { id: string; updated_at?: string }[];
-  profiles: { username: string }[];
-  tags: { slug: string }[];
-  collections: { id: string }[];
+  miis: { id: string; created_at?: string; updated_at?: string }[];
+  profiles: { username: string; updated_at?: string }[];
+  tags: { slug: string; created_at?: string }[];
+  collections: {
+    id: string;
+    created_at?: string;
+    updated_at?: string;
+  }[];
 }
 
 export async function fetchSitemapIds(env: WorkerEnv): Promise<SitemapIds> {
@@ -120,16 +125,19 @@ export async function fetchSitemapIds(env: WorkerEnv): Promise<SitemapIds> {
 
   const [miis, profiles, tags, collections] = await Promise.all([
     fetch(
-      `${base}/rest/v1/miis?visibility=eq.public&select=id&order=created_at.desc&limit=5000`,
+      `${base}/rest/v1/miis?visibility=eq.public&select=id,created_at&order=created_at.desc&limit=5000`,
       { headers },
     ),
     fetch(
-      `${base}/rest/v1/profiles?profile_hidden=eq.false&select=username&limit=2000`,
+      `${base}/rest/v1/profiles?profile_hidden=eq.false&select=username,updated_at&limit=2000`,
       { headers },
     ),
-    fetch(`${base}/rest/v1/mii_tags?select=slug&limit=500`, { headers }),
     fetch(
-      `${base}/rest/v1/mii_collections?is_public=eq.true&select=id&limit=1000`,
+      `${base}/rest/v1/mii_tags?select=slug,created_at&limit=500`,
+      { headers },
+    ),
+    fetch(
+      `${base}/rest/v1/mii_collections?is_public=eq.true&select=id,created_at,updated_at&limit=1000`,
       { headers },
     ),
   ]);

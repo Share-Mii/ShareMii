@@ -1,6 +1,12 @@
 import './SiteFooter.css';
+import { BRAND_NAME } from '@/config/brand';
 import { getDiscordInviteUrl } from '@/config/community';
 import { logoMark } from '@/utils/logo';
+
+const INFO_LINKS = [
+  { href: '/about', label: 'About' },
+  { href: '/help', label: 'Help' },
+] as const;
 
 const LEGAL_LINKS = [
   { href: '/legal', label: 'Legal' },
@@ -28,7 +34,8 @@ export function createSiteFooter(): HTMLElement {
   const credits = document.createElement('p');
   credits.className = 'site-footer__credits';
   credits.innerHTML = `
-    <span class="site-footer__brand">${logoMark('site-footer__logo', { size: 'sm' })} ShareMii</span>
+    <span class="site-footer__brand">${logoMark('site-footer__logo', { size: 'sm' })} ${BRAND_NAME}</span>
+    · Community Mii QR sharing
     · Mii rendering by
     <a href="https://mii-unsecure.ariankordi.net/" target="_blank" rel="noopener noreferrer">Arian Kordi Mii Renderer</a>
     · Built with
@@ -38,6 +45,13 @@ export function createSiteFooter(): HTMLElement {
   const compactNav = document.createElement('nav');
   compactNav.className = 'site-footer__compact';
   compactNav.setAttribute('aria-label', 'Footer links');
+  for (const link of INFO_LINKS) {
+    const a = document.createElement('a');
+    a.href = link.href;
+    a.className = 'site-footer__compact-link interactive';
+    a.textContent = link.label;
+    compactNav.appendChild(a);
+  }
   const legalHub = document.createElement('a');
   legalHub.href = '/legal';
   legalHub.className = 'site-footer__compact-link interactive';
@@ -63,6 +77,14 @@ export function createSiteFooter(): HTMLElement {
   const nav = document.createElement('nav');
   nav.className = 'site-footer__legal';
   nav.setAttribute('aria-label', 'Legal');
+
+  for (const link of INFO_LINKS) {
+    const a = document.createElement('a');
+    a.href = link.href;
+    a.className = 'site-footer__legal-link interactive';
+    a.textContent = link.label;
+    nav.appendChild(a);
+  }
 
   for (const link of LEGAL_LINKS) {
     const a = document.createElement('a');

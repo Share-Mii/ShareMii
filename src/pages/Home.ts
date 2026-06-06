@@ -21,7 +21,12 @@ import { createTagFilter } from '@/components/TagFilter/TagFilter';
 import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { getDiscordInviteUrl } from '@/config/community';
 import type { Gender, SortOption, SourceFilter } from '@/types';
-import { setPageMeta } from '@/utils/pageMeta';
+import {
+  BRAND_NAME,
+  DEFAULT_PUBLIC_DESCRIPTION,
+  LIVING_THE_DREAM_TOOL_URL,
+} from '@/config/brand';
+import { DEFAULT_OG_IMAGE, setPageMeta } from '@/utils/pageMeta';
 
 const HOME_MOBILE_PREVIEW_COUNT = 8;
 const MOBILE_HOME_MQ = '(max-width: 768px)';
@@ -70,10 +75,10 @@ function createHeroPolaroidPlaceholder(): HTMLElement {
 
 export function renderHome(container: HTMLElement): () => void {
   setPageMeta({
-    title: 'ShareMii — Browse, Share & Scan Mii QR Codes',
-    description:
-      'Browse, share, and scan Mii QR codes from 3DS, Wii U, and Tomodachi Life. Free online Mii Maker and community gallery.',
+    title: `${BRAND_NAME} — Browse, Share & Scan Mii QR Codes`,
+    description: DEFAULT_PUBLIC_DESCRIPTION,
     url: `${window.location.origin}/`,
+    image: DEFAULT_OG_IMAGE,
   });
 
   let sort: SortOption = 'newest';
@@ -94,11 +99,18 @@ export function renderHome(container: HTMLElement): () => void {
   const heroContent = document.createElement('div');
   heroContent.className = 'hero__content';
   heroContent.innerHTML = `
+      <p class="hero__disambiguation">
+        <strong>${BRAND_NAME}</strong> is a community for Mii QR codes — not the
+        <a href="${LIVING_THE_DREAM_TOOL_URL}" target="_blank" rel="noopener noreferrer" class="hero__disambiguation-link interactive">Living the Dream save editor</a>.
+        <a href="/about" class="hero__disambiguation-link interactive">About</a>
+        ·
+        <a href="/help" class="hero__disambiguation-link interactive">Help</a>
+      </p>
       <h1 class="hero__title">
-        Browse, share, & collect <span class="hero__title-accent">Mii's</span>.
+        Browse, share, & collect <span class="hero__title-accent">Miis</span>.
       </h1>
       <p class="hero__subtitle">
-        Browse Mii characters shared by the community, or scan a QR code from your 3DS, Wii U, or Tomodachi Life to share them with everyone.
+        Browse Mii QR codes shared by the community, or scan a code from your 3DS, Wii U, or Tomodachi Life to share them with everyone.
       </p>
       <div class="hero__actions" data-hero-actions>
         <a href="/" class="pill-btn pill-btn--filled pill-btn--lg interactive" data-browse-residents>${iconSpan('magnifying-glass')} Browse Residents</a>
