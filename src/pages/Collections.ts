@@ -1,7 +1,6 @@
 import './pages.css';
 import { navigateTo } from '@/utils/navigation';
 import './Collections.css';
-import './Favorites.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
 import { openConfirmModal } from '@/components/ConfirmModal/ConfirmModal';
@@ -23,7 +22,7 @@ export function renderCollections(container: HTMLElement): () => void {
 
   const page = document.createElement('main');
   page.className =
-    'page-content page-content--offset-top favorites-page collections-page';
+    'page-content page-content--offset-top collections-page';
   page.innerHTML = '<p class="page-loading">Loading collections…</p>';
   container.replaceChildren(wrapPublicPage(page));
 
@@ -59,6 +58,7 @@ export function renderCollections(container: HTMLElement): () => void {
     header.className = 'collections-page__header';
 
     const intro = document.createElement('div');
+    intro.className = 'collections-page__intro';
     const heading = document.createElement('h1');
     heading.className = 'collections-page__title page-title';
     heading.textContent = 'My Collections';

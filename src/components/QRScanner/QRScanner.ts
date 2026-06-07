@@ -19,6 +19,9 @@ export interface QRScannerCallbacks {
 const INVALID_MII_MSG =
   'This QR code does not contain a valid Mii. Supports 3DS, Wii U, Switch, and Tomodachi Life Mii QR codes.';
 
+const UNREADABLE_IMAGE_MSG =
+  'Could not read a QR code from that image. Photos of screens often fail because of glare or moiré — try a direct screenshot, crop tightly to the QR code, or use the live camera instead.';
+
 /** Max edge length for live jsQR frames (full-res decode uses miijs separately). */
 const SCAN_MAX_DIM = 640;
 /** Run jsQR every N animation frames to keep the scan-line animation smooth. */
@@ -47,12 +50,15 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
   let rafId = 0;
   let closed = false;
   let processing = false;
+  /** True while an uploaded image is being decoded (separate from `processing`). */
+  let fileUploadActive = false;
+  /** Bumped when uploads start or the modal closes — ignores in-flight getUserMedia. */
+  let cameraGeneration = 0;
 
   function close(): void {
     if (closed) return;
     closed = true;
-    cancelAnimationFrame(rafId);
-    stream?.getTracks().forEach((t) => t.stop());
+    stopScanLoop();
     overlay.remove();
     unlockBodyScroll();
     document.removeEventListener('keydown', onKeyDown);
@@ -69,7 +75,16 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
 
   document.addEventListener('keydown', onKeyDown);
 
+  function stopScanLoop(): void {
+    cancelAnimationFrame(rafId);
+    rafId = 0;
+    stream?.getTracks().forEach((t) => t.stop());
+    stream = null;
+  }
+
   function showError(message: string): void {
+    stopScanLoop();
+    processing = false;
     overlay.innerHTML = '';
     const modal = document.createElement('div');
     modal.className = 'qr-scanner-modal';
@@ -87,13 +102,13 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
   async function handleDecodedBytes(
     binary: Uint8Array,
     status: HTMLElement,
+    retryCanvas?: HTMLCanvasElement,
   ): Promise<void> {
     if (processing || closed) return;
     processing = true;
     status.textContent = 'QR detected! Decoding…';
     closed = true;
-    cancelAnimationFrame(rafId);
-    stream?.getTracks().forEach((t) => t.stop());
+    stopScanLoop();
 
     try {
       const decoded = await decodeQrPayload(binary);
@@ -104,12 +119,15 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     } catch {
       try {
         status.textContent = 'Retrying with enhanced scan…';
-        const canvas = document.createElement('canvas');
-        const video = overlay.querySelector('video') as HTMLVideoElement | null;
-        if (!video) throw new Error('no video');
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d')!.drawImage(video, 0, 0);
+        let canvas = retryCanvas;
+        if (!canvas) {
+          const video = overlay.querySelector('video') as HTMLVideoElement | null;
+          if (!video) throw new Error('no video');
+          canvas = document.createElement('canvas');
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          canvas.getContext('2d')!.drawImage(video, 0, 0);
+        }
         const rescanned = await scanQrFromCanvas(canvas);
         const decoded = await decodeQrPayload(rescanned);
         overlay.remove();
@@ -124,7 +142,15 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     }
   }
 
+  function beginFileUpload(status: HTMLElement): void {
+    cameraGeneration += 1;
+    fileUploadActive = true;
+    stopScanLoop();
+    status.textContent = 'Reading image…';
+  }
+
   async function startCamera(): Promise<void> {
+    const generation = ++cameraGeneration;
     const modal = document.createElement('div');
     modal.className = 'qr-scanner-modal';
 
@@ -163,13 +189,21 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     fileInput.addEventListener('change', () => {
       const file = fileInput.files?.[0];
       fileInput.value = '';
-      if (!file || processing || closed) return;
+      if (!file || processing || closed || fileUploadActive) return;
+      beginFileUpload(status);
       void (async () => {
         try {
-          const binary = await scanQrFromImageFile(file);
-          await handleDecodedBytes(binary, status);
-        } catch {
-          if (!processing) showError(INVALID_MII_MSG);
+          status.textContent = 'Scanning QR code…';
+          const { bytes, canvas } = await scanQrFromImageFile(file);
+          fileUploadActive = false;
+          await handleDecodedBytes(bytes, status, canvas);
+        } catch (err) {
+          const unreadable =
+            err instanceof Error &&
+            (/No QR code found/i.test(err.message) || /timed out/i.test(err.message));
+          showError(unreadable ? UNREADABLE_IMAGE_MSG : INVALID_MII_MSG);
+        } finally {
+          fileUploadActive = false;
         }
       })();
     });
@@ -189,13 +223,23 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     let fullHeight = 0;
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({
+      const nextStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' } },
         audio: false,
       });
+      if (closed || processing || fileUploadActive || generation !== cameraGeneration) {
+        nextStream.getTracks().forEach((t) => t.stop());
+        return;
+      }
+      stream = nextStream;
       video.srcObject = stream;
       await video.play();
+      if (closed || processing || fileUploadActive || generation !== cameraGeneration) {
+        stopScanLoop();
+        return;
+      }
     } catch {
+      if (generation !== cameraGeneration || closed) return;
       showError(
         'Camera access was denied or no camera was found. Please allow camera permissions and try again.',
       );
@@ -203,7 +247,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     }
 
     function scheduleNextFrame(): void {
-      if (closed || processing) return;
+      if (closed || processing || fileUploadActive || !stream) return;
       rafId = requestAnimationFrame(tick);
     }
 
@@ -224,7 +268,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     }
 
     function runHeavyScan(): void {
-      if (heavyScanPending || closed || processing) return;
+      if (heavyScanPending || closed || processing || fileUploadActive) return;
       heavyScanPending = true;
       void (async () => {
         try {
@@ -242,7 +286,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     }
 
     function tick(): void {
-      if (closed || processing) return;
+      if (closed || processing || fileUploadActive || !stream) return;
 
       if (video.readyState !== video.HAVE_ENOUGH_DATA) {
         scheduleNextFrame();
@@ -264,9 +308,15 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
       }
 
       const imageData = scanCtx.getImageData(0, 0, scanWidth, scanHeight);
-      const code = jsQR(imageData.data, imageData.width, imageData.height, {
-        inversionAttempts: 'attemptBoth',
-      });
+      let code: ReturnType<typeof jsQR> = null;
+      try {
+        code = jsQR(imageData.data, imageData.width, imageData.height, {
+          inversionAttempts: 'attemptBoth',
+        });
+      } catch {
+        scheduleNextFrame();
+        return;
+      }
 
       if (code) {
         const binary = extractQrBytes(code);
@@ -279,7 +329,9 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
       scheduleNextFrame();
     }
 
-    scheduleNextFrame();
+    if (!closed && !processing && !fileUploadActive && generation === cameraGeneration) {
+      scheduleNextFrame();
+    }
   }
 
   startCamera();

@@ -8,6 +8,13 @@
   margin-bottom: var(--spacing-xl);
 }
 
+.collections-page__intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  min-width: 0;
+}
+
 .collections-page__title {
   margin: 0 0 var(--spacing-sm);
   font-size: var(--font-size-2xl);

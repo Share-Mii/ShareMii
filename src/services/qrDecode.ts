@@ -1,3 +1,4 @@
+import jsQR from 'jsqr';
 import {
   decodeMii,
   encodeMii,
@@ -116,6 +117,302 @@ export async function normalizeMiiDataForRender(base64: string): Promise<string>
   return base64;
 }
 
+/** Max edge lengths to try for uploads — downscaling ~700px often fixes screen-photo moiré. */
+const UPLOAD_SCAN_MAX_DIMS = [1600, 700, 640, 512] as const;
+/** Give up if a single upload decode pass runs longer than this (miijs can stall on bad photos). */
+const UPLOAD_SCAN_TIMEOUT_MS = 20_000;
+/** Screen-photo QR crops above this size usually fail until downscaled. */
+const DIRECT_SCAN_MAX_DIM = 800;
+
+function fitImageDimensions(
+  width: number,
+  height: number,
+  maxDim: number,
+): { width: number; height: number } {
+  const longest = Math.max(width, height);
+  if (longest <= maxDim) return { width, height };
+  const scale = maxDim / longest;
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+}
+
+async function loadImageFromObjectUrl(url: string): Promise<HTMLImageElement> {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const el = new Image();
+    el.onload = () => resolve(el);
+    el.onerror = () => reject(new Error('Could not load image'));
+    el.src = url;
+  });
+}
+
+function drawImageRegionToCanvas(
+  img: HTMLImageElement,
+  maxDim: number,
+  sx = 0,
+  sy = 0,
+  sw = img.naturalWidth,
+  sh = img.naturalHeight,
+): HTMLCanvasElement {
+  const { width, height } = fitImageDimensions(sw, sh, maxDim);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d')!.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
+  return canvas;
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(`${label} timed out after ${ms}ms`));
+    }, ms);
+    promise
+      .then((value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      })
+      .catch((err: unknown) => {
+        window.clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
+function cloneCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = source.width;
+  canvas.height = source.height;
+  canvas.getContext('2d')!.drawImage(source, 0, 0);
+  return canvas;
+}
+
+/** Light blur helps photos of screens where moiré breaks QR edge detection. */
+function softenCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = source.width;
+  canvas.height = source.height;
+  const ctx = canvas.getContext('2d')!;
+  ctx.filter = 'blur(1.5px)';
+  ctx.drawImage(source, 0, 0);
+  ctx.filter = 'none';
+  return canvas;
+}
+
+function uploadScanMaxDims(longest: number): number[] {
+  const dims: number[] = [];
+  if (longest <= 700) {
+    dims.push(longest);
+  }
+  for (const dim of UPLOAD_SCAN_MAX_DIMS) {
+    const scaled = Math.min(longest, dim);
+    // Full-resolution screen photos almost never decode — only try smaller scales.
+    if (scaled >= 200 && scaled < longest && !dims.includes(scaled)) {
+      dims.push(scaled);
+    }
+  }
+  // Large screen photos: moiré clears up around 700px — try smaller scales first.
+  if (longest > 700) {
+    dims.sort((a, b) => a - b);
+  } else {
+    dims.sort((a, b) => b - a);
+  }
+  return dims;
+}
+
+function uploadScanCandidates(img: HTMLImageElement): HTMLCanvasElement[] {
+  const seen = new Set<string>();
+  const out: HTMLCanvasElement[] = [];
+  const natW = img.naturalWidth;
+  const natH = img.naturalHeight;
+  const longest = Math.max(natW, natH);
+
+  const add = (canvas: HTMLCanvasElement): void => {
+    const key = `${canvas.width}x${canvas.height}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    out.push(canvas);
+
+    const soft = softenCanvas(canvas);
+    const softKey = `${soft.width}x${soft.height}:soft`;
+    if (!seen.has(softKey)) {
+      seen.add(softKey);
+      out.push(soft);
+    }
+  };
+
+  for (const maxDim of uploadScanMaxDims(longest)) {
+    add(drawImageRegionToCanvas(img, maxDim));
+
+    if (natW / natH >= 1.15) {
+      for (const startX of [0.5, 0.55, 0.58]) {
+        const sx = Math.round(natW * startX);
+        const sw = natW - sx;
+        if (sw < 80) continue;
+        add(drawImageRegionToCanvas(img, maxDim, sx, 0, sw, natH));
+      }
+    }
+  }
+
+  return out;
+}
+
+function clampByte(n: number): number {
+  if (n < 0) return 0;
+  if (n > 255) return 255;
+  return n | 0;
+}
+
+function toGrayscaleContrast(
+  rgba: Uint8ClampedArray,
+  contrast = 1,
+): Uint8ClampedArray {
+  const out = new Uint8ClampedArray(rgba.length);
+  for (let i = 0; i < rgba.length; i += 4) {
+    const lum = rgba[i]! * 0.299 + rgba[i + 1]! * 0.587 + rgba[i + 2]! * 0.114;
+    const adjusted = clampByte((lum - 128) * contrast + 128);
+    out[i] = adjusted;
+    out[i + 1] = adjusted;
+    out[i + 2] = adjusted;
+    out[i + 3] = 255;
+  }
+  return out;
+}
+
+function toBinaryThreshold(
+  rgba: Uint8ClampedArray,
+  threshold = 128,
+): Uint8ClampedArray {
+  const out = new Uint8ClampedArray(rgba.length);
+  for (let i = 0; i < rgba.length; i += 4) {
+    const lum = rgba[i]! * 0.299 + rgba[i + 1]! * 0.587 + rgba[i + 2]! * 0.114;
+    const value = lum < threshold ? 0 : 255;
+    out[i] = value;
+    out[i + 1] = value;
+    out[i + 2] = value;
+    out[i + 3] = 255;
+  }
+  return out;
+}
+
+function resizeNearestRgba(
+  rgba: Uint8ClampedArray,
+  width: number,
+  height: number,
+  scale: number,
+): { width: number; height: number; rgba: Uint8ClampedArray } {
+  const outWidth = Math.max(1, Math.round(width * scale));
+  const outHeight = Math.max(1, Math.round(height * scale));
+  if (outWidth === width && outHeight === height) {
+    return { width, height, rgba };
+  }
+
+  const out = new Uint8ClampedArray(outWidth * outHeight * 4);
+  for (let y = 0; y < outHeight; y++) {
+    const srcY = Math.min(height - 1, Math.floor(y / scale));
+    for (let x = 0; x < outWidth; x++) {
+      const srcX = Math.min(width - 1, Math.floor(x / scale));
+      const srcI = (srcY * width + srcX) * 4;
+      const outI = (y * outWidth + x) * 4;
+      out[outI] = rgba[srcI]!;
+      out[outI + 1] = rgba[srcI + 1]!;
+      out[outI + 2] = rgba[srcI + 2]!;
+      out[outI + 3] = rgba[srcI + 3]!;
+    }
+  }
+
+  return { width: outWidth, height: outHeight, rgba: out };
+}
+
+type RgbaFrame = {
+  width: number;
+  height: number;
+  rgba: Uint8ClampedArray;
+};
+
+/**
+ * miijs scanQR upscales sub-700px frames back to full size, which breaks screen-photo
+ * QR crops we intentionally downscaled. Run jsQR variants on canvas pixels directly instead.
+ */
+function decodeWithJsQrVariants(
+  rgba: Uint8ClampedArray,
+  width: number,
+  height: number,
+  allowUpscale: boolean,
+): Uint8Array | null {
+  const variants: RgbaFrame[] = [
+    { width, height, rgba },
+    { width, height, rgba: toGrayscaleContrast(rgba, 1.4) },
+    { width, height, rgba: toGrayscaleContrast(rgba, 1.9) },
+  ];
+
+  for (const threshold of [112, 128, 144]) {
+    variants.push({ width, height, rgba: toBinaryThreshold(rgba, threshold) });
+  }
+
+  if (allowUpscale && width * height <= 700 * 700) {
+    const upscaled = resizeNearestRgba(rgba, width, height, 2);
+    variants.push(upscaled);
+    variants.push({
+      width: upscaled.width,
+      height: upscaled.height,
+      rgba: toGrayscaleContrast(upscaled.rgba, 1.4),
+    });
+    variants.push({
+      width: upscaled.width,
+      height: upscaled.height,
+      rgba: toBinaryThreshold(upscaled.rgba, 128),
+    });
+  }
+
+  const decodeOptions = [
+    { inversionAttempts: 'attemptBoth' as const },
+    { inversionAttempts: 'dontInvert' as const },
+  ];
+
+  for (const variant of variants) {
+    for (const opts of decodeOptions) {
+      try {
+        const decoded = jsQR(
+          variant.rgba,
+          variant.width,
+          variant.height,
+          opts,
+        );
+        const bytes = extractQrBytes(decoded ?? {});
+        if (bytes?.length) return bytes;
+      } catch {
+        continue;
+      }
+    }
+  }
+
+  return null;
+}
+
+function scanCanvasForQr(
+  canvas: HTMLCanvasElement,
+  allowUpscale: boolean,
+): Uint8Array | null {
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (!ctx) return null;
+  const { data, width, height } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  return decodeWithJsQrVariants(data, width, height, allowUpscale);
+}
+
+function yieldToMainThread(): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, 0);
+  });
+}
+
+async function scanUploadCanvas(
+  canvas: HTMLCanvasElement,
+): Promise<Uint8Array | null> {
+  return scanCanvasForQr(canvas, false);
+}
+
 export function extractQrBytes(code: {
   binaryData?: number[] | Uint8Array;
   data?: string;
@@ -133,44 +430,73 @@ export function extractQrBytes(code: {
   return null;
 }
 
-export async function scanQrFromImageFile(file: File): Promise<Uint8Array> {
-  const scanned = await scanQR(file);
-  if (scanned && scanned.length > 0) {
-    return bufferToUint8(scanned);
-  }
+export type QrImageScanResult = {
+  bytes: Uint8Array;
+  /** Scaled canvas used for decode — handy for enhanced retries without the live camera. */
+  canvas: HTMLCanvasElement;
+};
 
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const el = new Image();
-      el.onload = () => resolve(el);
-      el.onerror = () => reject(new Error('Could not load image'));
-      el.src = url;
-    });
-    const canvas = document.createElement('canvas');
-    canvas.width = img.naturalWidth;
-    canvas.height = img.naturalHeight;
-    canvas.getContext('2d')!.drawImage(img, 0, 0);
-    return scanQrFromCanvas(canvas);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
+export async function scanQrFromImageFile(
+  file: File,
+): Promise<QrImageScanResult> {
+  return withTimeout(
+    (async () => {
+      const url = URL.createObjectURL(file);
+      try {
+        const img = await loadImageFromObjectUrl(url);
+        const longest = longestUploadDim(img);
+
+        // Wide Tomodachi cards decode from the original JPEG; square screen photos do not.
+        const isWideCard = img.naturalWidth / img.naturalHeight >= 1.15;
+        if (longest <= DIRECT_SCAN_MAX_DIM || isWideCard) {
+          const direct = await scanQR(file);
+          if (direct && direct.length > 0) {
+            return {
+              bytes: bufferToUint8(direct),
+              canvas: drawImageRegionToCanvas(img, longest),
+            };
+          }
+        }
+
+        for (const candidate of uploadScanCandidates(img)) {
+          await yieldToMainThread();
+          const bytes = await scanUploadCanvas(candidate);
+          if (bytes?.length) {
+            return { bytes, canvas: cloneCanvas(candidate) };
+          }
+        }
+        throw new Error('No QR code found in image');
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    })(),
+    UPLOAD_SCAN_TIMEOUT_MS,
+    'QR image scan',
+  );
+}
+
+function longestUploadDim(img: HTMLImageElement): number {
+  return Math.max(img.naturalWidth, img.naturalHeight);
 }
 
 export async function scanQrFromCanvas(
   canvas: HTMLCanvasElement,
 ): Promise<Uint8Array> {
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => {
-      if (b) resolve(b);
-      else reject(new Error('Could not capture frame'));
-    }, 'image/png');
-  });
+  const direct = scanCanvasForQr(canvas, true);
+  if (direct?.length) return direct;
 
-  const scanned = await scanQR(blob);
-  if (scanned && scanned.length > 0) {
-    return bufferToUint8(scanned);
+  const longest = Math.max(canvas.width, canvas.height);
+  for (const maxDim of UPLOAD_SCAN_MAX_DIMS) {
+    if (maxDim >= longest) continue;
+    const { width, height } = fitImageDimensions(canvas.width, canvas.height, maxDim);
+    const scaled = document.createElement('canvas');
+    scaled.width = width;
+    scaled.height = height;
+    scaled.getContext('2d')!.drawImage(canvas, 0, 0, width, height);
+    const scaledBytes = scanCanvasForQr(scaled, false);
+    if (scaledBytes?.length) return scaledBytes;
   }
+
   throw new Error('No QR code found in frame');
 }
 

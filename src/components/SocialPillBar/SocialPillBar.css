@@ -14,13 +14,19 @@
 .social-pill-bar__track {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0;
-  padding: 0.25rem 0.25rem 0.25rem 0.35rem;
+  padding: 0.25rem;
   border-radius: var(--radius-pill);
   background: color-mix(in srgb, var(--color-bg-panel) 88%, transparent);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-tile);
   overflow: visible;
+}
+
+.social-pill-bar--open:not(.social-pill-bar--vertical) .social-pill-bar__track {
+  padding: 0.25rem 0.25rem 0.25rem 0.35rem;
+  justify-content: flex-start;
 }
 
 .social-pill-bar__expand {
@@ -99,7 +105,12 @@
 
 .social-pill-bar--vertical .social-pill-bar__track {
   flex-direction: column;
+  padding: 0.25rem;
+}
+
+.social-pill-bar--vertical.social-pill-bar--open .social-pill-bar__track {
   padding: 0.35rem 0.25rem 0.25rem;
+  justify-content: flex-start;
 }
 
 .social-pill-bar--vertical .social-pill-bar__expand {

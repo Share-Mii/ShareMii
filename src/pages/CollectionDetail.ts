@@ -1,7 +1,6 @@
 import './pages.css';
 import { navigateTo } from '@/utils/navigation';
 import './Collections.css';
-import './Favorites.css';
 import '@/components/shared.css';
 import '@/components/IconActionButton/IconActionButton.css';
 import '@/components/IconActionCluster/IconActionCluster.css';
@@ -37,7 +36,7 @@ export function renderCollectionDetail(
 
   const page = document.createElement('main');
   page.className =
-    'page-content page-content--offset-top favorites-page collection-detail';
+    'page-content page-content--offset-top collection-detail';
   page.innerHTML = '<p class="page-loading">Loading collection…</p>';
   container.replaceChildren(wrapPublicPage(page));
 

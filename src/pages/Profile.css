@@ -26,20 +26,13 @@
   gap: var(--spacing-sm);
 }
 
-.profile-card__share-cluster {
-  flex-shrink: 0;
-}
-
-.profile-card__head-actions {
+.profile-card__social-pill {
   flex-shrink: 0;
 }
 
 .profile-card__overflow {
+  display: none;
   flex-shrink: 0;
-}
-
-.profile-card__head-actions.icon-action-cluster {
-  display: flex;
 }
 
 .profile-card__banner-wrap {
@@ -347,8 +340,12 @@
     right: var(--spacing-sm);
   }
 
-  .profile-card__head-actions.icon-action-cluster {
+  .profile-card__social-pill {
     display: none;
+  }
+
+  .profile-card__overflow {
+    display: block;
   }
 
   .profile-collections {

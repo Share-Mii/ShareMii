@@ -32,8 +32,20 @@ export function isDarkTheme(): boolean {
   return document.documentElement.dataset.theme === 'dark';
 }
 
+function syncThemeColorMeta(theme: Theme): void {
+  const content = theme === 'light' ? '#f3f1f8' : '#121214';
+  let meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+  if (!meta) {
+    meta = document.createElement('meta');
+    meta.name = 'theme-color';
+    document.head.appendChild(meta);
+  }
+  meta.content = content;
+}
+
 export function applyTheme(theme: Theme): void {
   document.documentElement.dataset.theme = theme;
+  syncThemeColorMeta(theme);
   try {
     localStorage.setItem(STORAGE_KEY, theme);
     localStorage.removeItem(LEGACY_STORAGE_KEY);
@@ -52,4 +64,7 @@ export function toggleTheme(): Theme {
 
 export function initTheme(): void {
   applyTheme(getPreferredTheme());
+  requestAnimationFrame(() => {
+    document.documentElement.classList.add('theme-transitions-enabled');
+  });
 }

@@ -148,6 +148,7 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
     : '/settings';
 
   const discordUrl = getDiscordInviteUrl();
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
   const items: UserMenuItem[] = [
     {
@@ -161,17 +162,7 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
     { href: '/collections', label: 'Collections', icon: 'folder' },
     { href: '/uploads', label: 'Uploads', icon: 'cloud-arrow-up' },
     { href: '/dashboard', label: 'Dashboard', icon: 'chart-line' },
-    { kind: 'section', label: 'App' },
     { href: '/settings', label: 'Settings', icon: 'gear' },
-    {
-      label: 'Scan QR',
-      icon: 'camera',
-      action: () => {
-        document
-          .querySelector<HTMLElement>('[data-scan-submit]')
-          ?.click();
-      },
-    },
     {
       label: 'Report a bug',
       icon: 'bug',
@@ -181,7 +172,19 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
     },
   ];
 
-  if (discordUrl) {
+  if (isMobile) {
+    items.splice(7, 0, {
+      label: 'Scan QR',
+      icon: 'camera',
+      action: () => {
+        document
+          .querySelector<HTMLElement>('[data-scan-submit]')
+          ?.click();
+      },
+    });
+  }
+
+  if (discordUrl && isMobile) {
     items.push({
       href: discordUrl,
       label: 'Discord',
@@ -189,10 +192,12 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
     });
   }
 
-  items.push(
-    { kind: 'section', label: 'Legal' },
-    { href: '/legal', label: 'Legal & support', icon: 'scale-balanced' },
-  );
+  if (isMobile) {
+    items.push(
+      { kind: 'section', label: 'Legal' },
+      { href: '/legal', label: 'Legal & support', icon: 'scale-balanced' },
+    );
+  }
 
   if (isStaff(profile)) {
     items.push(

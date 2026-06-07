@@ -4,16 +4,12 @@ import './Profile.css';
 import { navigateTo } from '@/utils/navigation';
 import '@/components/shared.css';
 import '@/components/IconActionButton/IconActionButton.css';
-import '@/components/IconActionCluster/IconActionCluster.css';
 import { createProfilePageSkeleton } from '@/components/Skeleton/Skeleton';
 import { wrapPublicPage } from '@/layout/pageShell';
 import { createPaginatedList } from '@/components/ListPager/ListPager';
 import { createMiiTile } from '@/components/MiiTile/MiiTile';
 import { openMiiEditModal } from '@/components/MiiEditModal/MiiEditModal';
-import {
-  createTileOverflowMenu,
-  type TileOverflowMenuItem,
-} from '@/components/TileOverflowMenu/TileOverflowMenu';
+import { createTileOverflowMenu } from '@/components/TileOverflowMenu/TileOverflowMenu';
 import '@/components/TileOverflowMenu/TileOverflowMenu.css';
 import { getAuthSession, isLoggedIn } from '@/services/auth';
 import { openLoginModal } from '@/components/LoginModal/LoginModal';
@@ -35,21 +31,18 @@ import type { Mii, Profile } from '@/types';
 import { navigateToMiiMakerEdit } from '@/services/miiMakerNavigate';
 import { confirmDeleteMii } from '@/utils/miiDeleteConfirm';
 import { iconSpan } from '@/utils/icon';
-import { openReportModal } from '@/components/ReportModal/ReportModal';
+import { createMiiTileCornerOverflowOnly } from '@/components/ShareActions/ShareActions';
 import {
-  createMiiTileCornerOverflowOnly,
-  createProfileShareActionCluster,
-} from '@/components/ShareActions/ShareActions';
+  createProfileOverflowMenu,
+  createProfileSocialPillBar,
+} from '@/pages/profileSocialPillBar';
 import { getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
 import {
   fetchPublicCollectionsForUser,
   fetchUserCollections,
-  followUser,
   isFollowing,
-  unfollowUser,
   type MiiCollection,
 } from '@/services/social';
-import { blockUser, muteUser } from '@/services/safety';
 import { fetchUserPublicActivity } from '@/services/activityFeed';
 import { createFeedItem } from '@/components/FeedItem/FeedItem';
 
@@ -495,110 +488,19 @@ async function buildPublicPage(
   const cornerActions = document.createElement('div');
   cornerActions.className = 'profile-card__corner-actions';
 
-  cornerActions.appendChild(
-    createProfileShareActionCluster(
-      profile.username,
-      'profile-card__share-cluster',
-    ),
-  );
-
-  const menuItems: TileOverflowMenuItem[] = [];
-
-  if (isOwner) {
-    menuItems.push({
-      label: 'Edit profile',
-      onSelect: () => {
-        navigateTo('/settings');
-      },
-    });
-  } else if (viewerId) {
-    let following = false;
+  let following = false;
+  if (!isOwner && viewerId) {
     try {
       following = await isFollowing(viewerId, profile.id);
     } catch {
       /* ignore */
     }
-
-    menuItems.push({
-      label: following ? 'Unfollow' : 'Follow',
-      onSelect: async () => {
-        try {
-          if (following) {
-            await unfollowUser(viewerId, profile.id);
-            following = false;
-          } else {
-            await followUser(viewerId, profile.id);
-            following = true;
-          }
-        } catch (err) {
-          alert(err instanceof Error ? err.message : 'Could not update follow');
-        }
-      },
-    });
-    menuItems.push(
-      {
-        label: 'Mute',
-        onSelect: async () => {
-          try {
-            await muteUser(profile.id);
-            alert(
-              `${profile.username} muted — you will not get notifications from them.`,
-            );
-          } catch (err) {
-            alert(err instanceof Error ? err.message : 'Could not mute');
-          }
-        },
-      },
-      {
-        label: 'Block',
-        danger: true,
-        onSelect: async () => {
-          if (
-            !window.confirm(
-              `Block ${profile.username}? Their content will be hidden from you.`,
-            )
-          ) {
-            return;
-          }
-          try {
-            await blockUser(profile.id);
-            navigateTo('/');
-          } catch (err) {
-            alert(err instanceof Error ? err.message : 'Could not block');
-          }
-        },
-      },
-      {
-        label: 'Report',
-        danger: true,
-        onSelect: () => {
-          openReportModal({
-            targetType: 'profile',
-            targetId: profile.id,
-            targetLabel: profile.username,
-          });
-        },
-      },
-    );
-  } else {
-    menuItems.push({
-      label: 'Report profile',
-      danger: true,
-      onSelect: () => {
-        openReportModal({
-          targetType: 'profile',
-          targetId: profile.id,
-          targetLabel: profile.username,
-        });
-      },
-    });
   }
 
-  if (menuItems.length > 0) {
-    const overflow = createTileOverflowMenu(menuItems, 'Profile options');
-    overflow.classList.add('profile-card__overflow');
-    cornerActions.appendChild(overflow);
-  }
+  cornerActions.append(
+    createProfileSocialPillBar(profile, isOwner, viewerId, following),
+    createProfileOverflowMenu(profile, isOwner, viewerId, following),
+  );
 
   bannerWrap.appendChild(cornerActions);
 

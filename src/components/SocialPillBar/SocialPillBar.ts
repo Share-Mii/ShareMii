@@ -79,7 +79,9 @@ export function createSocialPillBar(opts: SocialPillBarOptions): HTMLElement {
 
   function updateToggleIcon(): void {
     if (open) {
-      toggle.innerHTML = icon('chevron-up');
+      toggle.innerHTML = icon(
+        orientation === 'vertical' ? 'chevron-down' : 'chevron-right',
+      );
       return;
     }
     const iconName = customToggleIcon

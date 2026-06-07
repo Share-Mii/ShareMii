@@ -6,10 +6,18 @@ import { wrapPublicPage } from '@/layout/pageShell';
 import { getAuthSession, isLoggedIn } from '@/services/auth';
 import { openLoginModal } from '@/components/LoginModal/LoginModal';
 import { fetchCreatorStats } from '@/services/creator';
+import {
+  fetchUserCollections,
+  type MiiCollection,
+} from '@/services/social';
 import { isSupabaseConfigured } from '@/services/supabase';
 import { icon } from '@/utils/icon';
 import type { CreatorStats } from '@/types';
 import { escapeHtml } from '@/utils/escapeHtml';
+import {
+  destroyCreatorDashboardCharts,
+  renderCreatorDashboardCharts,
+} from '@/components/CreatorDashboardCharts/CreatorDashboardCharts';
 
 export function renderCreatorDashboard(container: HTMLElement): () => void {
   let abort = false;
@@ -33,8 +41,12 @@ export function renderCreatorDashboard(container: HTMLElement): () => void {
     }
 
     let stats: CreatorStats;
+    let collections: MiiCollection[] = [];
     try {
-      stats = await fetchCreatorStats(session!.user.id);
+      [stats, collections] = await Promise.all([
+        fetchCreatorStats(session!.user.id),
+        fetchUserCollections(session!.user.id),
+      ]);
     } catch (err) {
       const msg =
         err instanceof Error ? err.message : 'Could not load creator stats.';
@@ -72,17 +84,22 @@ export function renderCreatorDashboard(container: HTMLElement): () => void {
       grid.appendChild(card);
     }
 
+    const chartsWrap = document.createElement('div');
+    chartsWrap.className = 'creator-dashboard-charts';
+    renderCreatorDashboardCharts(stats, collections, chartsWrap);
+
     const links = document.createElement('p');
     links.className = 'creator-dashboard__links';
     links.innerHTML =
       '<a href="/uploads" class="interactive">Manage uploads</a> · <a href="/collections" class="interactive">Collections</a>';
 
-    page.append(heading, grid, links);
+    page.append(heading, grid, chartsWrap, links);
   }
 
   void init();
 
   return () => {
     abort = true;
+    destroyCreatorDashboardCharts();
   };
 }

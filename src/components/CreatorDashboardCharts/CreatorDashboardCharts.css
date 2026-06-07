@@ -1,0 +1,50 @@
+.creator-dashboard-charts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-lg);
+  margin: var(--spacing-xl) 0;
+}
+
+.creator-dashboard-charts__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-tile);
+  box-shadow: var(--shadow-tile);
+  min-width: 0;
+}
+
+.creator-dashboard-charts__panel--wide {
+  grid-column: 1 / -1;
+}
+
+.creator-dashboard-charts__title {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.creator-dashboard-charts__canvas-wrap {
+  position: relative;
+  height: 220px;
+  max-height: 220px;
+  overflow: hidden;
+}
+
+.creator-dashboard-charts__canvas-wrap canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 768px) {
+  .creator-dashboard-charts {
+    grid-template-columns: 1fr;
+  }
+}

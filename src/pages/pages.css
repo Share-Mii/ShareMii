@@ -1445,7 +1445,11 @@
   .detail-page--app,
   .profile-page,
   .settings-page,
-  .create-page {
+  .create-page,
+  .collections-page,
+  .favorites-page,
+  .uploads-page,
+  .creator-dashboard {
     padding-top: var(--mobile-page-top);
   }
 

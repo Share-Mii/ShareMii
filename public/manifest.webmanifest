@@ -4,7 +4,7 @@
   "description": "Community Mii QR code gallery and online Mii Maker for 3DS, Wii U, and Tomodachi Life.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f5f0ff",
+  "background_color": "#121214",
   "theme_color": "#0088ff",
   "icons": [
     {
