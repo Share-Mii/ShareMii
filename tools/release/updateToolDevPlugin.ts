@@ -156,6 +156,7 @@ function buildPreviewEmbeds(
   changes: string,
   options: {
     discordChangelogHeaderImageUrl?: string;
+    discordChangelogMainEmbedImageUrl?: string;
     discordChangelogFooterImageUrl?: string;
     discordChangelogEmbedColor?: string;
   },
@@ -168,7 +169,7 @@ function buildPreviewEmbeds(
     summaryPlain: parsed.summary,
     changesMd: parsed.changesMd,
     headerImageUrl: options.discordChangelogHeaderImageUrl,
-    mainEmbedImageUrl: undefined,
+    mainEmbedImageUrl: options.discordChangelogMainEmbedImageUrl,
     footerImageUrl: options.discordChangelogFooterImageUrl,
     embedColor: parseDiscordEmbedColor(options.discordChangelogEmbedColor),
   });
@@ -315,6 +316,7 @@ export function updateToolDevPlugin(options: {
               const parsed = parseCommitBody(message);
               const discordEmbeds = buildPreviewEmbeds(next, summary, changes, {
                 discordChangelogHeaderImageUrl,
+                discordChangelogMainEmbedImageUrl,
                 discordChangelogFooterImageUrl,
                 discordChangelogEmbedColor,
               });
