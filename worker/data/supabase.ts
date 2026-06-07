@@ -95,6 +95,35 @@ export async function fetchTag(
   return rows?.[0] ?? null;
 }
 
+export interface FeaturedMiiRow {
+  id: string;
+  name: string;
+}
+
+export async function fetchFeaturedMiis(
+  env: WorkerEnv,
+  limit = 8,
+): Promise<FeaturedMiiRow[]> {
+  const rows = await supabaseFetch<FeaturedMiiRow[]>(
+    env,
+    `miis?visibility=eq.public&select=id,name&order=favorites.desc&limit=${limit}`,
+  );
+  return rows ?? [];
+}
+
+export interface TagListRow {
+  slug: string;
+  label: string;
+}
+
+export async function fetchAllTags(env: WorkerEnv): Promise<TagListRow[]> {
+  const rows = await supabaseFetch<TagListRow[]>(
+    env,
+    'mii_tags?select=slug,label&order=label.asc&limit=500',
+  );
+  return rows ?? [];
+}
+
 export interface SitemapIds {
   miis: { id: string; created_at?: string; updated_at?: string }[];
   profiles: { username: string; updated_at?: string }[];
@@ -125,7 +154,7 @@ export async function fetchSitemapIds(env: WorkerEnv): Promise<SitemapIds> {
 
   const [miis, profiles, tags, collections] = await Promise.all([
     fetch(
-      `${base}/rest/v1/miis?visibility=eq.public&select=id,created_at&order=created_at.desc&limit=5000`,
+      `${base}/rest/v1/miis?visibility=eq.public&select=id,created_at,updated_at&order=created_at.desc&limit=5000`,
       { headers },
     ),
     fetch(

@@ -11,6 +11,7 @@ import {
   MII_SKIN_COLOR_DISPLAY_ORDER,
   MII_SKIN_SWATCHES,
 } from '@/services/miiColorPalettes';
+import { isDarkTheme } from '@/services/theme';
 
 export type MiiIconCategory =
   | 'face'
@@ -86,6 +87,23 @@ const FAVORITE_TOP = MII_FAVORITE_SWATCHES;
 
 const GLASSES_COLORS = MII_GLASSES_SWATCHES;
 
+/** High-contrast picker icon colors in dark mode (shape preview, not swatch colors). */
+const DARK_PICKER_FEATURE = {
+  faceDetail: '#ffffff',
+  faceStroke: '#c8c8d0',
+  faceWrinkles: '#ffffff',
+  headStroke: '#c8c8d0',
+  eyebrowFill: '#ffffff',
+  facialHairFill: '#ffffff',
+  eyeColor: '#ffffff',
+  lipTop: '#ffffff',
+  lipBottom: '#e8e8ee',
+  mouthTooth: '#3a3a40',
+  glassesFill: '#ffffff',
+  glassesShade: '#c8c8d0',
+  featureColor: '#ffffff',
+} as const;
+
 export function hasPartIcon(path: string): boolean {
   return path in PATH_TO_ICON_CATEGORY;
 }
@@ -148,6 +166,7 @@ export function reorderOptionsForDisplay<T extends { value: number | string | bo
 }
 
 export function applyIconThemeVars(host: HTMLElement, fields: MiiFields): void {
+  const dark = isDarkTheme();
   const skin = Number(getNestedField(fields, 'face.color') ?? 0);
   const hair = Number(getNestedField(fields, 'hair.color') ?? 1);
   const eyes = eyeColorSwitchToSwatchIndex(
@@ -163,12 +182,34 @@ export function applyIconThemeVars(host: HTMLElement, fields: MiiFields): void {
   const lip = MOUTH_LIP[mouth % MOUTH_LIP.length] ?? MOUTH_LIP[0]!;
 
   host.style.setProperty('--icon-face-fill', skinHex);
+  host.style.setProperty('--icon-head-fill', skinHex);
+  host.style.setProperty('--icon-hair-fill', HAIR_COLORS[hair % HAIR_COLORS.length] ?? '#402010');
+  host.style.setProperty('--icon-hair-tie', FAVORITE_TOP[fav % FAVORITE_TOP.length] ?? '#d21e14');
+  host.style.setProperty('--icon-hat-fill', FAVORITE_TOP[fav % FAVORITE_TOP.length] ?? '#d21e14');
+  host.style.setProperty('--icon-hat-stroke', dark ? '#c8c8d0' : '#333333');
+
+  if (dark) {
+    host.style.setProperty('--icon-face-stroke', DARK_PICKER_FEATURE.faceStroke);
+    host.style.setProperty('--icon-face-detail', DARK_PICKER_FEATURE.faceDetail);
+    host.style.setProperty('--icon-face-wrinkles', DARK_PICKER_FEATURE.faceWrinkles);
+    host.style.setProperty('--icon-head-stroke', DARK_PICKER_FEATURE.headStroke);
+    host.style.setProperty('--icon-eyebrow-fill', DARK_PICKER_FEATURE.eyebrowFill);
+    host.style.setProperty('--icon-facial-hair-fill', DARK_PICKER_FEATURE.facialHairFill);
+    host.style.setProperty('--eye-color', DARK_PICKER_FEATURE.eyeColor);
+    host.style.setProperty('--icon-lip-color-top', DARK_PICKER_FEATURE.lipTop);
+    host.style.setProperty('--icon-lip-color-bottom', DARK_PICKER_FEATURE.lipBottom);
+    host.style.setProperty('--icon-mouth-tooth', DARK_PICKER_FEATURE.mouthTooth);
+    host.style.setProperty('--icon-glasses-fill', DARK_PICKER_FEATURE.glassesFill);
+    host.style.setProperty('--icon-glasses-shade', DARK_PICKER_FEATURE.glassesShade);
+    host.style.color = DARK_PICKER_FEATURE.featureColor;
+    return;
+  }
+
+  host.style.removeProperty('color');
   host.style.setProperty('--icon-face-stroke', '#6f6f6f');
   host.style.setProperty('--icon-face-detail', '#8d8d8d');
   host.style.setProperty('--icon-face-wrinkles', '#996d54');
-  host.style.setProperty('--icon-head-fill', skinHex);
   host.style.setProperty('--icon-head-stroke', '#999999');
-  host.style.setProperty('--icon-hair-fill', HAIR_COLORS[hair % HAIR_COLORS.length] ?? '#402010');
   host.style.setProperty('--icon-eyebrow-fill', HAIR_COLORS[brows % HAIR_COLORS.length] ?? '#402010');
   host.style.setProperty(
     '--icon-facial-hair-fill',
@@ -177,9 +218,7 @@ export function applyIconThemeVars(host: HTMLElement, fields: MiiFields): void {
   host.style.setProperty('--eye-color', EYE_COLORS[eyes] ?? '#000000');
   host.style.setProperty('--icon-lip-color-top', lip.top);
   host.style.setProperty('--icon-lip-color-bottom', lip.bottom);
+  host.style.setProperty('--icon-mouth-tooth', '#ffffff');
   host.style.setProperty('--icon-glasses-fill', GLASSES_COLORS[glasses % GLASSES_COLORS.length] ?? '#000');
   host.style.setProperty('--icon-glasses-shade', '#606060');
-  host.style.setProperty('--icon-hair-tie', FAVORITE_TOP[fav % FAVORITE_TOP.length] ?? '#d21e14');
-  host.style.setProperty('--icon-hat-fill', FAVORITE_TOP[fav % FAVORITE_TOP.length] ?? '#d21e14');
-  host.style.setProperty('--icon-hat-stroke', '#333333');
 }

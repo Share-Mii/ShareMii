@@ -14,6 +14,7 @@ import {
 } from '@/services/social';
 import { icon, iconSpan } from '@/utils/icon';
 import { consumePageEntrance } from '@/utils/motion';
+import { revealOnNextFrame, revealWithMotion } from '@/utils/reveal';
 import { scrollToTop, scrollToTopIfAtTop } from '@/utils/scroll';
 import { bindFilterDrawer } from '@/utils/filterDrawer';
 import { createEmptyState } from '@/utils/emptyState';
@@ -22,10 +23,10 @@ import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { getDiscordInviteUrl } from '@/config/community';
 import type { Gender, SortOption, SourceFilter } from '@/types';
 import { BRAND_NAME, DEFAULT_PUBLIC_DESCRIPTION } from '@/config/brand';
-import { DEFAULT_OG_IMAGE, setPageMeta } from '@/utils/pageMeta';
+import { DEFAULT_OG_IMAGE, getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
+import { MOBILE_MQ, onMobileChange } from '@/utils/viewport';
 
 const HOME_MOBILE_PREVIEW_COUNT = 8;
-const MOBILE_HOME_MQ = '(max-width: 768px)';
 
 const SORTS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Newest' },
@@ -48,12 +49,6 @@ const SOURCES: { value: SourceFilter; label: string }[] = [
   { value: 'tomodachi', label: 'Tomodachi Life' },
 ];
 
-function revealOnNextFrame(el: HTMLElement, className: string): void {
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => el.classList.add(className));
-  });
-}
-
 function createHeroPolaroidPlaceholder(): HTMLElement {
   const wrap = document.createElement('div');
   wrap.className = 'hero-polaroids-placeholder';
@@ -73,7 +68,7 @@ export function renderHome(container: HTMLElement): () => void {
   setPageMeta({
     title: `${BRAND_NAME} — Browse, Share & Scan Mii QR Codes`,
     description: DEFAULT_PUBLIC_DESCRIPTION,
-    url: `${window.location.origin}/`,
+    url: `${getSiteOrigin()}/`,
     image: DEFAULT_OG_IMAGE,
   });
 
@@ -84,9 +79,13 @@ export function renderHome(container: HTMLElement): () => void {
   let search = '';
   let searchTimer = 0;
   let abort = false;
-  let mobilePreview = window.matchMedia(MOBILE_HOME_MQ).matches;
+  let mobilePreview = window.matchMedia(MOBILE_MQ).matches;
+  let spotlightMiis: import('@/types').Mii[] | null = null;
   const content = document.createElement('main');
   content.className = 'page-content home-page';
+  if (mobilePreview) {
+    content.classList.add('home-page--app');
+  }
 
   const heroSection = document.createElement('section');
   heroSection.className = 'hero';
@@ -96,7 +95,8 @@ export function renderHome(container: HTMLElement): () => void {
   heroContent.className = 'hero__content';
   heroContent.innerHTML = `
       <h1 class="hero__title">
-        Browse, share, & collect <span class="hero__title-accent">Miis</span>.
+        <span class="hero__title-line">Browse, share, &amp; collect</span>
+        <span class="hero__title-accent hero__title-line">Miis.</span>
       </h1>
       <p class="hero__subtitle">
         Browse Mii QR codes shared by the community, or scan a code from your 3DS, Wii U, or Tomodachi Life to share them with everyone.
@@ -333,10 +333,48 @@ export function renderHome(container: HTMLElement): () => void {
   residentsMain.appendChild(paginated.root);
   residentsSection.append(browseHead, layout, mobileCta);
 
-  function syncMobileHomeLayout(): void {
-    const next = window.matchMedia(MOBILE_HOME_MQ).matches;
-    if (next === mobilePreview) return;
-    mobilePreview = next;
+  function syncSectionOrder(): void {
+    if (mobilePreview) {
+      if (followingSection.parentNode === content && followingSection !== spotlightSlot.previousElementSibling) {
+        content.insertBefore(followingSection, spotlightSlot);
+      }
+      return;
+    }
+    if (
+      followingSection.parentNode === content &&
+      followingSection !== residentsSection.previousElementSibling
+    ) {
+      content.insertBefore(followingSection, residentsSection);
+    }
+  }
+
+  function renderHeroPolaroids(miis: import('@/types').Mii[]): void {
+    const byFavorites = [...miis].sort((a, b) => b.favorites - a.favorites);
+    const featured = byFavorites[0]!;
+    const heroSides = byFavorites
+      .filter((m) => m.id !== featured.id)
+      .slice(0, 2);
+    heroPolaroidSlot.replaceChildren(createHeroPolaroids(featured, heroSides));
+    const polaroids = heroPolaroidSlot.querySelector('.hero-polaroids');
+    if (polaroids instanceof HTMLElement) {
+      revealWithMotion(polaroids, 'hero-polaroids--enter');
+    }
+  }
+
+  function syncHeroVisual(): void {
+    if (mobilePreview) {
+      heroPolaroidSlot.replaceChildren();
+      return;
+    }
+    if (spotlightMiis?.length) {
+      renderHeroPolaroids(spotlightMiis);
+      return;
+    }
+    showHeroPlaceholder();
+  }
+
+  function applyMobileHomeChrome(): void {
+    content.classList.toggle('home-page--app', mobilePreview);
     heroSection.classList.toggle('hero--mobile-compact', mobilePreview);
     residentsSection.classList.toggle(
       'browse-section--mobile-preview',
@@ -350,29 +388,33 @@ export function renderHome(container: HTMLElement): () => void {
       browseTitle.innerHTML = `${icon('users')} Browse all residents`;
       browseResidentsBtn.innerHTML = `${iconSpan('magnifying-glass')} Browse Residents`;
     }
+    syncSectionOrder();
+    syncHeroVisual();
+  }
+
+  function syncMobileHomeLayout(): void {
+    const next = window.matchMedia(MOBILE_MQ).matches;
+    if (next === mobilePreview) return;
+    mobilePreview = next;
+    applyMobileHomeChrome();
     void loadGrid();
   }
 
-  heroSection.classList.toggle('hero--mobile-compact', mobilePreview);
-  residentsSection.classList.toggle(
-    'browse-section--mobile-preview',
-    mobilePreview,
-  );
+  applyMobileHomeChrome();
   if (mobilePreview) {
-    browseTitle.innerHTML = `${icon('fire')} Trending residents`;
     browseResidentsBtn.href = '/browse';
   }
 
-  const mobileMq = window.matchMedia(MOBILE_HOME_MQ);
-  mobileMq.addEventListener('change', syncMobileHomeLayout);
+  const stopMobileMq = onMobileChange(() => syncMobileHomeLayout());
 
-  const unbindFilterDrawer = bindFilterDrawer(
+  const filterDrawer = bindFilterDrawer(
     layout,
     filterPanel,
     browseHead.querySelector('.browse-section__controls')!,
   );
 
   content.append(heroSection, spotlightSlot, followingSection, residentsSection);
+  syncSectionOrder();
 
   function renderGenderButtons(): void {
     genderPills.replaceChildren();
@@ -409,39 +451,37 @@ export function renderHome(container: HTMLElement): () => void {
   }
 
   function showHeroPlaceholder(): void {
+    if (mobilePreview) {
+      heroPolaroidSlot.replaceChildren();
+      return;
+    }
     heroPolaroidSlot.replaceChildren(createHeroPolaroidPlaceholder());
   }
 
   function updateSpotlight(miis: import('@/types').Mii[]): void {
+    spotlightMiis = miis.length ? miis : null;
+
     if (miis.length === 0) {
       spotlightSlot.hidden = true;
-      spotlightSlot.classList.remove('spotlight-section--enter');
       spotlightSlot.replaceChildren();
-      showHeroPlaceholder();
+      syncHeroVisual();
       scrollToTopIfAtTop();
       return;
     }
 
     const byFavorites = [...miis].sort((a, b) => b.favorites - a.favorites);
     const featured = byFavorites[0]!;
-    const heroSides = byFavorites
-      .filter((m) => m.id !== featured.id)
-      .slice(0, 2);
     const mostLoved = byFavorites
       .filter((m) => m.id !== featured.id)
       .slice(0, 3);
 
-    heroPolaroidSlot.replaceChildren(createHeroPolaroids(featured, heroSides));
-    const polaroids = heroPolaroidSlot.querySelector('.hero-polaroids');
-    if (polaroids instanceof HTMLElement && playEntrance) {
-      revealOnNextFrame(polaroids, 'hero-polaroids--enter');
-    }
+    syncHeroVisual();
 
-    spotlightSlot.classList.remove('spotlight-section--enter');
     spotlightSlot.replaceChildren(createSpotlightSection(featured, mostLoved));
     spotlightSlot.hidden = false;
-    if (playEntrance) {
-      revealOnNextFrame(spotlightSlot, 'spotlight-section--enter');
+    const spotlightSection = spotlightSlot.querySelector('.spotlight-section');
+    if (spotlightSection instanceof HTMLElement) {
+      revealWithMotion(spotlightSection, 'spotlight-section--enter');
     }
     scrollToTopIfAtTop();
   }
@@ -511,19 +551,20 @@ export function renderHome(container: HTMLElement): () => void {
   container.replaceChildren(wrapPublicPage(content));
   scrollToTop();
 
-  if (playEntrance) {
+  if (playEntrance && !mobilePreview) {
     revealOnNextFrame(content, 'home-page--ready');
   } else {
     content.classList.add('home-page--ready', 'home-page--instant');
     residentsSection.classList.add('browse-section--visible');
   }
 
-  const browseRevealTimer = playEntrance
-    ? window.setTimeout(() => {
-        residentsSection.classList.add('browse-section--visible');
-        scrollToTopIfAtTop();
-      }, 900)
-    : 0;
+  const browseRevealTimer =
+    playEntrance && !mobilePreview
+      ? window.setTimeout(() => {
+          residentsSection.classList.add('browse-section--visible');
+          scrollToTopIfAtTop();
+        }, 900)
+      : 0;
 
   loadSpotlight();
   loadGrid();
@@ -535,7 +576,7 @@ export function renderHome(container: HTMLElement): () => void {
     window.clearTimeout(searchTimer);
     sortSelect.destroy();
     tagFilter.dispose();
-    unbindFilterDrawer();
-    mobileMq.removeEventListener('change', syncMobileHomeLayout);
+    filterDrawer.destroy();
+    stopMobileMq();
   };
 }

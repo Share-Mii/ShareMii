@@ -8,8 +8,7 @@
             localStorage.getItem('sharemii-theme') ||
             localStorage.getItem('miishare-theme');
           if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
-          else if (matchMedia('(prefers-color-scheme: dark)').matches)
-            document.documentElement.dataset.theme = 'dark';
+          else document.documentElement.dataset.theme = 'dark';
         } catch (e) {}
       })();
     </script>
@@ -38,6 +37,8 @@
       property="og:image"
       content="https://sharemii.net/assets/og-default.png"
     />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta
       name="twitter:image"
@@ -57,9 +58,22 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+    />
+    <link
       href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
   </head>
   <body>
     <div id="app"></div>

@@ -1,0 +1,21 @@
+# ShareMii.net
+
+> Community Mii QR code gallery and free online Mii Maker for 3DS, Wii U, and Tomodachi Life. Not the Tomodachi Life: Living the Dream save editor.
+
+## Primary pages
+
+- Home: https://sharemii.net/
+- Browse Mii QR codes: https://sharemii.net/browse
+- Free online Mii Maker: https://sharemii.net/create
+- How to use ShareMii: https://sharemii.net/help
+- About (brand disambiguation): https://sharemii.net/about
+- Mii tags index: https://sharemii.net/tags
+- Public collections: https://sharemii.net/collections/browse
+
+## What this site is not
+
+ShareMii.net is not https://sharemii.qwkuns.me/ — that is a separate tool for editing Tomodachi Life: Living the Dream save files (.ltd).
+
+## Sitemap
+
+https://sharemii.net/sitemap.xml

@@ -30,7 +30,8 @@ import {
 import { miiDataForEditor } from '@/services/remixNavigate';
 import type { Mii } from '@/types';
 import { iconSpan } from '@/utils/icon';
-import { DEFAULT_OG_IMAGE, setPageMeta } from '@/utils/pageMeta';
+import { BRAND_NAME } from '@/config/brand';
+import { DEFAULT_OG_IMAGE, getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
 
 export interface MiiMakerPageOptions {
   editMii?: Mii;
@@ -46,19 +47,32 @@ export function renderCreate(
   const isEdit = Boolean(editMii);
   const isRemix = Boolean(remixMii);
 
+  const origin = getSiteOrigin();
+  const publicMaker = !isEdit && !isRemix;
   setPageMeta({
     title: isEdit
       ? 'Edit Mii'
       : isRemix
         ? 'Remix Mii'
-        : 'Free Online Mii Maker',
+        : 'Free Online Mii Maker — Create Mii QR Codes',
     description: isEdit
       ? 'Edit your Mii on ShareMii and update your shared QR code.'
       : isRemix
         ? 'Remix a community Mii in the ShareMii online Mii Maker.'
-        : 'Create and customize Nintendo Miis in your browser. Export QR codes and share with the ShareMii community.',
-    url: `${window.location.origin}/create`,
+        : `Free online Mii Maker — create Nintendo Miis in your browser, export QR codes, and share with the ${BRAND_NAME} community.`,
+    url: `${origin}/create`,
     image: DEFAULT_OG_IMAGE,
+    jsonLd: publicMaker
+      ? {
+          '@context': 'https://schema.org',
+          '@type': 'WebApplication',
+          name: `${BRAND_NAME} Mii Maker`,
+          applicationCategory: 'DesignApplication',
+          operatingSystem: 'Web browser',
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          url: `${origin}/create`,
+        }
+      : undefined,
   });
 
   let aborted = false;
@@ -115,20 +129,24 @@ export function renderCreate(
   const undoBtn = document.createElement('button');
   undoBtn.type = 'button';
   undoBtn.className = 'pill-btn interactive';
-  undoBtn.innerHTML = `${iconSpan('rotate-left')} Undo`;
+  undoBtn.innerHTML = `${iconSpan('rotate-left')}<span class="mii-maker__toolbar-btn-label"> Undo</span>`;
+  undoBtn.setAttribute('aria-label', 'Undo');
   undoBtn.disabled = true;
 
   const randomBtn = document.createElement('button');
   randomBtn.type = 'button';
   randomBtn.className = 'pill-btn interactive';
-  randomBtn.innerHTML = `${iconSpan('shuffle')} Randomize`;
+  randomBtn.innerHTML = `${iconSpan('shuffle')}<span class="mii-maker__toolbar-btn-label"> Randomize</span>`;
+  randomBtn.setAttribute('aria-label', 'Randomize');
 
   const shareBtn = document.createElement('button');
   shareBtn.type = 'button';
   shareBtn.className = 'pill-btn pill-btn--filled interactive';
+  const shareLabel = isEdit ? 'Save Changes' : 'Share on ShareMii';
   shareBtn.innerHTML = isEdit
-    ? `${iconSpan('floppy-disk')} Save Changes`
-    : `${iconSpan('share-nodes')} Share on ShareMii`;
+    ? `${iconSpan('floppy-disk')}<span class="mii-maker__toolbar-btn-label"> ${shareLabel}</span>`
+    : `${iconSpan('share-nodes')}<span class="mii-maker__toolbar-btn-label"> ${shareLabel}</span>`;
+  shareBtn.setAttribute('aria-label', shareLabel);
 
   toolbarActions.append(undoBtn, randomBtn, shareBtn);
 
@@ -149,6 +167,7 @@ export function renderCreate(
 
   function mountWorkspace(): void {
     workspaceHost.classList.remove('mii-maker__workspace-host--enter');
+    workspace?.destroy?.();
     workspace = createEditorWorkspace(activeCategory, fields, callbacks);
     workspaceHost.replaceChildren(workspace.root);
     requestAnimationFrame(() => {
@@ -265,6 +284,7 @@ export function renderCreate(
 
   return () => {
     aborted = true;
+    workspace?.destroy?.();
     detachLayout();
     debouncedPreview.cancel();
     cleanupModal?.();

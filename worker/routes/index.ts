@@ -2,6 +2,7 @@ import {
   aboutMeta,
   browseMeta,
   collectionMeta,
+  collectionsBrowseMeta,
   createMeta,
   helpMeta,
   homeMeta,
@@ -10,16 +11,19 @@ import {
   notFoundMeta,
   profileMeta,
   tagMeta,
+  tagsIndexMeta,
   type SeoMeta,
 } from '../data/meta';
 import {
+  fetchAllTags,
+  fetchFeaturedMiis,
   fetchPublicCollection,
   fetchPublicMii,
   fetchPublicProfile,
   fetchTag,
   type WorkerEnv,
 } from '../data/supabase';
-import { DEFAULT_OG_IMAGE, siteOrigin } from '../data/meta';
+import { siteOrigin } from '../data/meta';
 
 const NOINDEX_PREFIXES = [
   '/settings',
@@ -61,7 +65,12 @@ export async function resolveSeoMeta(
     return helpMeta(origin);
   }
   if (pathname === '/browse') {
-    return browseMeta(origin);
+    const featured = await fetchFeaturedMiis(env);
+    return browseMeta(origin, featured);
+  }
+  if (pathname === '/tags') {
+    const tags = await fetchAllTags(env);
+    return tagsIndexMeta(origin, tags);
   }
   if (pathname === '/create') {
     return createMeta(origin);
@@ -107,14 +116,7 @@ export async function resolveSeoMeta(
   }
 
   if (pathname === '/collections/browse') {
-    return {
-      title: 'Public collections · ShareMii.net',
-      description: 'Curated Mii lists shared by the ShareMii community.',
-      canonical: `${origin}/collections/browse`,
-      image: DEFAULT_OG_IMAGE,
-      bodyHtml:
-        '<main><h1>Public collections</h1><p>Curated Mii lists from the community.</p></main>',
-    };
+    return collectionsBrowseMeta(origin);
   }
 
   return null;

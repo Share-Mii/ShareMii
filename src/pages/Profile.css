@@ -1,7 +1,9 @@
 .profile-page {
   max-width: var(--layout-max-width);
   margin: 0 auto;
-  padding: var(--page-content-top) var(--spacing-lg) var(--spacing-2xl);
+  padding: var(--page-content-top) var(--page-gutter) var(--spacing-2xl);
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .profile-card {
@@ -65,7 +67,7 @@
 
 .profile-card__body {
   position: relative;
-  padding: 0 var(--spacing-xl) var(--spacing-xl);
+  padding: 0 var(--mobile-card-padding) var(--spacing-xl);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
@@ -136,6 +138,7 @@
   font-weight: 800;
   color: var(--color-text);
   margin: 0;
+  overflow-wrap: anywhere;
 }
 
 .profile-card__name-link {
@@ -304,27 +307,87 @@
 
 @media (max-width: 768px) {
   .profile-page {
-    padding-inline: var(--mobile-gutter);
+    padding-bottom: var(--spacing-lg);
+    overflow-x: clip;
   }
 
-  .profile-card__body {
-    padding-inline: var(--spacing-lg);
+  .profile-card__banner-wrap,
+  .profile-skeleton__banner {
+    height: clamp(140px, 38vw, 180px);
+  }
+
+  .profile-card__avatar,
+  .profile-skeleton__avatar {
+    width: clamp(72px, 20vw, 96px);
+    height: clamp(72px, 20vw, 96px);
+    margin-top: clamp(-36px, -10vw, -48px);
+  }
+
+  .profile-collections__head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-card,
+  .profile-skeleton__card {
+    margin-bottom: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+  }
+
+  .profile-card__body,
+  .profile-skeleton__body {
+    padding-bottom: var(--spacing-lg);
   }
 
   .profile-card__corner-actions {
     flex-direction: row;
     align-items: center;
     gap: var(--spacing-xs);
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
   }
 
   .profile-card__head-actions.icon-action-cluster {
     display: none;
   }
 
+  .profile-collections {
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .profile-collections__head {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .profile-collections__grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-miis-sections {
+    gap: var(--spacing-lg);
+  }
+
+  .profile-miis__title {
+    margin-bottom: var(--spacing-md);
+  }
+
   .profile-miis__grid,
   .profile-miis__grid--pinned {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-md);
+  }
+
+  .profile-miis__grid .mii-tile--grid {
+    min-width: 0;
+  }
+
+  .profile-activity {
+    margin-top: var(--spacing-lg);
+  }
+
+  .profile-activity__title {
+    margin-bottom: var(--spacing-md);
   }
 
   .profile-collections__grid--preview .profile-collections__card:nth-child(n + 3) {

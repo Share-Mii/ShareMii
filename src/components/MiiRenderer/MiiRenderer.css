@@ -21,6 +21,12 @@
   max-height: 100%;
   object-fit: contain;
   display: block;
+  opacity: 0;
+  transition: opacity 0.35s var(--ease-out-smooth);
+}
+
+.mii-renderer__img--loaded {
+  opacity: 1;
 }
 
 .mii-renderer__stage {
@@ -59,4 +65,11 @@
 .mii-renderer__error-icon {
   font-size: 2rem;
   opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mii-renderer__img {
+    opacity: 1;
+    transition: none;
+  }
 }

@@ -74,6 +74,12 @@
   transform: rotate(18deg);
 }
 
+.hero-polaroids:not(.hero-polaroids--enter) .hero-polaroids__hint,
+.hero-polaroids:not(.hero-polaroids--enter)
+  .hero-polaroids__card:not(.hero-polaroids__card--empty) {
+  opacity: 0;
+}
+
 .hero-polaroids--enter .hero-polaroids__hint {
   animation: polaroid-hint-pop 0.55s var(--ease-out-smooth) both;
   animation-delay: 0.5s;
@@ -218,5 +224,13 @@
     right: 8px;
     bottom: 6px;
     transform: rotate(16deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-polaroids:not(.hero-polaroids--enter) .hero-polaroids__hint,
+  .hero-polaroids:not(.hero-polaroids--enter)
+    .hero-polaroids__card:not(.hero-polaroids__card--empty) {
+    opacity: 1;
   }
 }

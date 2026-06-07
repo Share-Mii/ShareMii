@@ -215,12 +215,10 @@ function openUserMenu(trigger: HTMLButtonElement, profile: Profile): void {
     },
   );
 
-  menuDropdown = createUserMenuDropdown(items, closeUserMenu);
-  if (menuDropdown.classList.contains('user-menu__sheet-shell')) {
-    document.body.appendChild(menuDropdown);
-  } else {
-    wrap.appendChild(menuDropdown);
-  }
+  menuDropdown = createUserMenuDropdown(items, closeUserMenu, {
+    presentation: 'dropdown',
+  });
+  wrap.appendChild(menuDropdown);
   menuTrigger = trigger;
   trigger.setAttribute('aria-expanded', 'true');
   menuDismiss = bindUserMenuDismiss(trigger, menuDropdown, closeUserMenu);

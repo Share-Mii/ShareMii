@@ -134,3 +134,12 @@
   color: var(--color-on-accent);
 }
 
+.touch-target--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  padding: 0;
+}
+

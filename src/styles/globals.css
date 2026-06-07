@@ -137,12 +137,14 @@ body {
   background: var(--color-bg-body);
   line-height: var(--line-height-body);
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   max-width: 100%;
 }
 
 #app {
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   max-width: 100%;
 }
@@ -167,6 +169,7 @@ a,
 [role='button'],
 .interactive {
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {
@@ -203,6 +206,11 @@ h3 {
   border: 0;
 }
 
+.touch-target {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -210,5 +218,17 @@ h3 {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 }

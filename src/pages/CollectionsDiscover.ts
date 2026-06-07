@@ -5,7 +5,7 @@ import { wrapPublicPage } from '@/layout/pageShell';
 import { fetchPublicCollections } from '@/services/discovery';
 import { fetchMiiById, isSupabaseConfigured } from '@/services/supabase';
 import { createMiiRenderer } from '@/components/MiiRenderer/MiiRenderer';
-import { setPageMeta } from '@/utils/pageMeta';
+import { getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
 import { icon } from '@/utils/icon';
 
 export function renderCollectionsDiscover(container: HTMLElement): () => void {
@@ -17,8 +17,10 @@ export function renderCollectionsDiscover(container: HTMLElement): () => void {
   container.replaceChildren(wrapPublicPage(page));
 
   setPageMeta({
-    title: 'Public collections',
-    description: 'Curated Mii lists shared by the ShareMii community.',
+    title: 'Public Mii Collections',
+    description:
+      'Curated public Mii collections shared by the ShareMii community — themed lists of Mii QR codes.',
+    url: `${getSiteOrigin()}/collections/browse`,
   });
 
   async function load(): Promise<void> {

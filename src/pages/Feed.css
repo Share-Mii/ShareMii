@@ -5,7 +5,7 @@
 
 .feed-page__lead {
   margin: 0 0 1.5rem;
-  color: var(--text-muted);
+  color: var(--color-text-muted);
 }
 
 .feed-page__error {
@@ -19,12 +19,11 @@
   min-height: 12rem;
 }
 
-/* `display: flex` on panels can override the default [hidden] rule in some cases */
-.feed-page__filters[hidden],
 .feed-list[hidden],
 .feed-page__uploads[hidden],
 .feed-page__suggestions[hidden],
-.feed-page__load-more[hidden] {
+.feed-page__load-more[hidden],
+.feed-page__filters[hidden] {
   display: none !important;
 }
 
@@ -72,7 +71,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  margin-bottom: 1rem;
 }
 
 .feed-page__filter-chip {
@@ -151,20 +149,56 @@
   margin-bottom: 1rem;
 }
 
+/* Drawer panel hidden on desktop — inline chips used instead */
+.feed-page__filter-apply {
+  display: none;
+}
+
 .feed-page__filter-toggle {
   display: none;
 }
 
-.feed-page__filter-backdrop {
-  display: none;
-}
-
-.feed-page__filter-sheet {
-  display: none;
+@media (min-width: 769px) {
+  .feed-page__filter-panel,
+  .feed-page .feed-page__filter-panel,
+  .feed-page .feed-page__filter-toggle.filter-drawer-toggle {
+    display: none !important;
+  }
 }
 
 @media (max-width: 768px) {
-  .feed-page__lead {
+  .feed-page--app {
+    padding-bottom: var(--spacing-lg);
+    overflow-x: clip;
+  }
+
+  .feed-page--app .feed-page__sticky-head {
+    position: sticky;
+    top: calc(var(--header-mobile-total-height) + var(--spacing-xs));
+    z-index: 40;
+    margin: 0 0 var(--spacing-md);
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    background: var(--color-bg-frosted);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-tile);
+  }
+
+  .feed-page--app .feed-page__title {
+    margin-bottom: var(--spacing-xs);
+    font-size: var(--font-size-xl);
+  }
+
+  .feed-page--app .feed-page__tabs {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .feed-page--app .feed-page__filter-bar {
+    margin-bottom: 0;
+  }
+
+  .feed-page--app .feed-page__lead {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -172,66 +206,39 @@
     margin-bottom: var(--spacing-md);
   }
 
-  .feed-page__filter-toggle {
-    display: inline-flex;
+  .feed-page--app .feed-page__filter-bar {
+    margin-bottom: var(--spacing-md);
   }
 
-  .feed-page__filters {
+  .feed-page--app .feed-page__filters {
     display: none;
   }
 
-  .feed-page__filter-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 280;
-    border: none;
-    background: color-mix(in srgb, var(--color-text) 35%, transparent);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--transition-normal);
-  }
-
-  .feed-page__filter-backdrop--open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  .feed-page__filter-sheet {
-    display: block;
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 290;
-    padding: var(--spacing-lg) var(--mobile-gutter)
-      calc(var(--spacing-lg) + env(safe-area-inset-bottom, 0px));
-    border-radius: var(--radius-tile) var(--radius-tile) 0 0;
-    background: var(--color-bg-panel);
-    border-top: 1px solid var(--color-border);
-    transform: translateY(100%);
-    transition: transform var(--transition-normal);
-  }
-
-  .feed-page__filter-sheet--open {
-    transform: translateY(0);
-  }
-
-  .feed-page__filter-sheet-title {
-    margin: 0 0 var(--spacing-md);
-    font-weight: 800;
-  }
-
-  .feed-page__filter-sheet-chips {
-    display: flex;
-    flex-wrap: wrap;
+  .feed-page--app .feed-page__filter-toggle.filter-drawer-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     gap: var(--spacing-sm);
+    width: 100%;
+    min-height: 2.5rem;
+    margin-bottom: 0;
   }
 
-  .feed-page__filter-sheet-chips .feed-page__filter-chip {
+  .filter-panel--bottom-sheet .feed-page__filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .filter-panel--bottom-sheet .feed-page__filter-options .feed-page__filter-chip {
+    display: flex;
+    align-items: center;
+    width: 100%;
     min-height: 2.75rem;
-    padding: 0.5rem 1rem;
-    font-size: var(--font-size-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-body);
+    text-align: left;
   }
 
   .feed-page__suggest-row {
@@ -239,6 +246,11 @@
     overflow-x: auto;
     padding-bottom: var(--spacing-xs);
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .feed-page__suggest-row::-webkit-scrollbar {
+    display: none;
   }
 
   .feed-page__suggest-title {

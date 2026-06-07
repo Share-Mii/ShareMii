@@ -7,7 +7,8 @@ import {
   LIVING_THE_DREAM_GITHUB_URL,
   LIVING_THE_DREAM_TOOL_URL,
 } from '@/config/brand';
-import { DEFAULT_OG_IMAGE, setPageMeta } from '@/utils/pageMeta';
+import { ABOUT_SAFETY_BLURB } from '@/config/seo';
+import { DEFAULT_OG_IMAGE, getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
 
 interface AboutSection {
   heading: string;
@@ -46,9 +47,9 @@ const SECTIONS: AboutSection[] = [
 
 export function renderAbout(container: HTMLElement): void {
   setPageMeta({
-    title: `About ${BRAND_NAME}`,
-    description: DEFAULT_PUBLIC_DESCRIPTION,
-    url: `${window.location.origin}/about`,
+    title: `About ${BRAND_NAME} — Is ShareMii Safe?`,
+    description: `${ABOUT_SAFETY_BLURB} ${DEFAULT_PUBLIC_DESCRIPTION}`,
+    url: `${getSiteOrigin()}/about`,
     image: DEFAULT_OG_IMAGE,
   });
 

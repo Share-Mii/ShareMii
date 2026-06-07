@@ -17,12 +17,14 @@ export function formatBrandTitle(title: string): string {
   return `${title} · ${BRAND_NAME}`;
 }
 
+export const SHAREMII_GITHUB_URL = 'https://github.com/Stewared/ShareMii';
+
 export function organizationSameAs(
   origin: string,
   env?: { DISCORD_INVITE_URL?: string },
 ): string[] {
-  const links = [origin];
+  const links = [origin, LIVING_THE_DREAM_GITHUB_URL, SHAREMII_GITHUB_URL];
   const discord = env?.DISCORD_INVITE_URL?.trim();
   if (discord) links.push(discord);
-  return links;
+  return [...new Set(links)];
 }

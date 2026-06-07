@@ -38,7 +38,9 @@ import {
 import { renderTomodachiClothingList } from '@/utils/tlClothingDisplay';
 import { isYeahedLocally, setYeahedLocally } from '@/utils/yeahCache';
 import { buildRenderUrl } from '@/services/miiApi';
-import { setPageMeta } from '@/utils/pageMeta';
+import { MII_FACE_OG_SIZE } from '@/config/seo';
+import { getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
+import { MOBILE_MQ } from '@/utils/viewport';
 import { createRelatedMiisSection } from '@/components/RelatedMiis/RelatedMiis';
 import { createRemixSection } from '@/components/RemixSection/RemixSection';
 import { openAppealModal } from '@/components/AppealModal/AppealModal';
@@ -70,6 +72,7 @@ export function renderDetail(
 ): () => void {
   let abort = false;
   let cleanupDetail: (() => void) | null = null;
+  let cleanupMobileLayout: (() => void) | null = null;
 
   container.replaceChildren(wrapPublicPage(createDetailPageSkeleton()));
 
@@ -118,7 +121,22 @@ export function renderDetail(
     const back = document.createElement('a');
     back.href = '/';
     back.className = 'detail-back interactive';
-    back.innerHTML = `${icon('arrow-left')} Back to plaza`;
+
+    const MOBILE_DETAIL_MQ = MOBILE_MQ;
+
+    function syncDetailMobileLayout(): void {
+      const mobile = window.matchMedia(MOBILE_DETAIL_MQ).matches;
+      page.classList.toggle('detail-page--app', mobile);
+      back.innerHTML = mobile
+        ? `${icon('arrow-left')} Back`
+        : `${icon('arrow-left')} Back to plaza`;
+    }
+
+    const mobileDetailMq = window.matchMedia(MOBILE_DETAIL_MQ);
+    mobileDetailMq.addEventListener('change', syncDetailMobileLayout);
+    cleanupMobileLayout = () => {
+      mobileDetailMq.removeEventListener('change', syncDetailMobileLayout);
+    };
 
     const session = await getAuthSession();
     const isOwner =
@@ -129,6 +147,8 @@ export function renderDetail(
     const built = buildDetailContent(mii, isOwner);
     cleanupDetail = built.cleanup;
     const detail = built.el;
+
+    syncDetailMobileLayout();
 
     const viewedKey = `viewed:${id}`;
     if (!sessionStorage.getItem(viewedKey)) {
@@ -151,12 +171,14 @@ export function renderDetail(
     if (abort) return;
 
     setPageMeta({
-      title: mii.name,
+      title: `${mii.name} Mii QR Code`,
       description:
         mii.description ||
         `${mii.name} — shared on ShareMii by ${mii.creator_name || 'the community'}`,
-      image: buildRenderUrl(mii.mii_data, { type: 'face', width: 512 }),
-      url: `${window.location.origin}/mii/${mii.id}`,
+      image: buildRenderUrl(mii.mii_data, { type: 'face', width: MII_FACE_OG_SIZE }),
+      imageWidth: MII_FACE_OG_SIZE,
+      imageHeight: MII_FACE_OG_SIZE,
+      url: `${getSiteOrigin()}/mii/${mii.id}`,
     });
 
     page.append(back, detail);
@@ -191,6 +213,8 @@ export function renderDetail(
     abort = true;
     cleanupDetail?.();
     cleanupDetail = null;
+    cleanupMobileLayout?.();
+    cleanupMobileLayout = null;
   };
 }
 
@@ -420,14 +444,14 @@ function buildDetailContent(
   const saveBtn = document.createElement('button');
   saveBtn.type = 'button';
   saveBtn.className = 'pill-btn pill-btn--outline interactive detail__save';
-  saveBtn.innerHTML = `${iconSpan('star')} Favorite`;
+  saveBtn.innerHTML = `${iconSpan('star')} Save`;
 
   void (async () => {
     if (!isLoggedIn(await getAuthSession())) return;
     try {
       if (await isUserFavorited(mii.id)) {
         saveBtn.classList.add('detail__save--active');
-        saveBtn.innerHTML = `${iconSpan('star')} Starred`;
+        saveBtn.innerHTML = `${iconSpan('star')} Saved`;
       }
     } catch {
       /* ignore */
@@ -437,7 +461,7 @@ function buildDetailContent(
   const collectionBtn = document.createElement('button');
   collectionBtn.type = 'button';
   collectionBtn.className =
-    'pill-btn pill-btn--outline interactive detail__action-overflow';
+    'pill-btn pill-btn--outline interactive detail__action-overflow detail__action-secondary';
   collectionBtn.innerHTML = `${iconSpan('folder-plus')} Add to collection`;
   const openCollection = async (): Promise<void> => {
     if (!isLoggedIn(await getAuthSession())) {
@@ -461,11 +485,11 @@ function buildDetailContent(
       if (active) {
         await removeUserFavorite(mii.id);
         saveBtn.classList.remove('detail__save--active');
-        saveBtn.innerHTML = `${iconSpan('star')} Favorite`;
+        saveBtn.innerHTML = `${iconSpan('star')} Save`;
       } else {
         await addUserFavorite(mii.id);
         saveBtn.classList.add('detail__save--active');
-        saveBtn.innerHTML = `${iconSpan('star')} Starred`;
+        saveBtn.innerHTML = `${iconSpan('star')} Saved`;
       }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Could not update favorite');
@@ -531,8 +555,8 @@ function buildDetailContent(
   const qrBtn = document.createElement('button');
   qrBtn.type = 'button';
   qrBtn.className =
-    'pill-btn pill-btn--filled interactive detail__action-overflow';
-  qrBtn.innerHTML = `${iconSpan('qrcode')} Show QR Code`;
+    'pill-btn pill-btn--filled interactive detail__action-overflow detail__action-qr';
+  qrBtn.innerHTML = `${iconSpan('qrcode')} QR`;
 
   const showQr = (): void => {
     if (!hasRecordedQrDownload(mii.id)) {

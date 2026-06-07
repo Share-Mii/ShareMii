@@ -6,6 +6,7 @@ import { openLoginModal } from '@/components/LoginModal/LoginModal';
 import { fetchProfileById } from '@/services/profile';
 import type { Profile } from '@/types';
 import { getRoutePath, ROUTE_CHANGE_EVENT } from '@/utils/navigation';
+import { scrollToTop } from '@/utils/scroll';
 
 interface TabItem {
   href: string;
@@ -57,7 +58,13 @@ function renderTabs(nav: HTMLElement): void {
     const active = tab.match.test(path);
     const locked = Boolean(tab.requiresAuth && !loggedIn);
     a.className = `bottom-bar__tab interactive${active ? ' bottom-bar__tab--active' : ''}${locked ? ' bottom-bar__tab--locked' : ''}`;
-    if (active) a.setAttribute('aria-current', 'page');
+    if (active) {
+      a.setAttribute('aria-current', 'page');
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        scrollToTop();
+      });
+    }
     if (locked) {
       a.setAttribute('aria-disabled', 'true');
       a.addEventListener('click', (e) => {

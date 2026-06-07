@@ -5,7 +5,8 @@ import { wrapPublicPage } from '@/layout/pageShell';
 import { createMiiTile } from '@/components/MiiTile/MiiTile';
 import { createPaginatedList } from '@/components/ListPager/ListPager';
 import { fetchMiis, isSupabaseConfigured } from '@/services/supabase';
-import { setPageMeta } from '@/utils/pageMeta';
+import { TAG_PLATFORM_BLURB } from '@/config/seo';
+import { getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
 import type { Mii } from '@/types';
 
 const TAG_LABELS: Record<string, string> = {
@@ -30,9 +31,9 @@ export function renderTagBrowse(
   container.replaceChildren(wrapPublicPage(page));
 
   setPageMeta({
-    title: `${label} Miis`,
-    description: `Browse ShareMii residents tagged ${label}.`,
-    url: `${window.location.origin}/tag/${slug}`,
+    title: `${label} Mii QR Codes`,
+    description: `Browse ${label} Mii QR codes on ShareMii.net. ${TAG_PLATFORM_BLURB} — download and share community Miis tagged ${label}.`,
+    url: `${getSiteOrigin()}/tag/${slug}`,
   });
 
   async function load(): Promise<void> {

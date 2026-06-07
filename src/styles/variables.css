@@ -102,13 +102,24 @@
   --bottom-bar-total-height: calc(
     var(--bottom-bar-height) + env(safe-area-inset-bottom, 0px)
   );
+  /* Mobile overlay stack: page content → sheet backdrop → sheet → header → bottom bar */
+  --z-nav-sheet-backdrop: 180;
+  --z-nav-sheet: 190;
+  --z-bottom-bar: 220;
+  --touch-target-min: 44px;
+  --mobile-section-gap: var(--spacing-lg);
+  --mobile-page-top: var(--spacing-md);
+  --mobile-card-padding: var(--spacing-lg);
+  --mobile-carousel-tile-width: clamp(9.5rem, 42vw, 11.25rem);
   --mobile-gutter: max(
-    1rem,
+    clamp(1rem, 4vw, 1.25rem),
     env(safe-area-inset-left, 0px),
-    env(safe-area-inset-right, 0px),
-    var(--page-gutter)
+    env(safe-area-inset-right, 0px)
   );
-  --header-mobile-height: 52px;
+  --header-mobile-height: 64px;
+  --header-mobile-total-height: calc(
+    var(--header-mobile-height) + env(safe-area-inset-top, 0px)
+  );
   --layout-max-width: 1440px;
   --layout-reading-width: 48rem;
   --mii-card-min-width: 200px;

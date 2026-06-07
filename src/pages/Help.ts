@@ -1,8 +1,9 @@
 import './pages.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
-import { BRAND_NAME, formatBrandTitle } from '@/config/brand';
-import { DEFAULT_OG_IMAGE, setPageMeta } from '@/utils/pageMeta';
+import { BRAND_NAME } from '@/config/brand';
+import { ABOUT_SAFETY_BLURB, faqPageJsonLd, HELP_FAQ } from '@/config/seo';
+import { DEFAULT_OG_IMAGE, getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
 
 interface HelpSection {
   heading: string;
@@ -53,11 +54,13 @@ const SECTIONS: HelpSection[] = [
 ];
 
 export function renderHelp(container: HTMLElement): void {
+  const origin = getSiteOrigin();
   setPageMeta({
-    title: formatBrandTitle('How to Use ShareMii'),
-    description: `Learn how to browse, scan, create, and share Mii QR codes on ${BRAND_NAME}.`,
-    url: `${window.location.origin}/help`,
+    title: 'How to Use ShareMii — Tutorial & FAQ',
+    description: `How to use ShareMii.net: browse Mii QR codes, scan from 3DS/Wii U/Tomodachi Life, and create Miis online. Is ShareMii safe? ${ABOUT_SAFETY_BLURB}`,
+    url: `${origin}/help`,
     image: DEFAULT_OG_IMAGE,
+    jsonLd: faqPageJsonLd(origin, HELP_FAQ),
   });
 
   const page = document.createElement('main');

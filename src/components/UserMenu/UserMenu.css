@@ -170,7 +170,7 @@
   position: absolute;
   inset: 0;
   border: none;
-  background: color-mix(in srgb, var(--color-text) 35%, transparent);
+  background: var(--color-modal-overlay);
   opacity: 0;
   transition: opacity var(--transition-normal);
   cursor: pointer;
@@ -207,6 +207,48 @@
 }
 
 @media (max-width: 768px) {
+  .site-header .user-menu__trigger {
+    min-height: var(--touch-target-min);
+    padding: 0.2rem 0.35rem 0.2rem 0.2rem;
+    gap: var(--spacing-xs);
+  }
+
+  .site-header .user-menu__avatar,
+  .site-header .user-menu__avatar--initial {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1rem;
+  }
+
+  .site-header .user-menu__chevron {
+    font-size: 0.7rem;
+    margin-right: 0.1rem;
+  }
+
+  .site-header .user-menu__dropdown {
+    position: fixed;
+    top: calc(var(--header-mobile-total-height) + var(--spacing-xs));
+    right: var(--mobile-gutter);
+    left: auto;
+    min-width: min(18rem, calc(100vw - 2 * var(--mobile-gutter)));
+    max-height: min(
+      calc(
+        100dvh - var(--header-mobile-total-height) -
+          var(--bottom-bar-total-height) - var(--spacing-xl)
+      ),
+      24rem
+    );
+    z-index: 220;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .site-header .user-menu__dropdown .user-menu__menu {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   .user-menu__dropdown .user-menu__item,
   .user-menu__sheet .user-menu__item {
     min-height: 3rem;

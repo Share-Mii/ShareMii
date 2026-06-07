@@ -7,12 +7,13 @@ import { createMiiTile } from '@/components/MiiTile/MiiTile';
 import { fetchMiis, isSupabaseConfigured } from '@/services/supabase';
 import { searchProfiles } from '@/services/discovery';
 import { createTagFilter } from '@/components/TagFilter/TagFilter';
-import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
-import { icon } from '@/utils/icon';
+import { icon, iconSpan } from '@/utils/icon';
 import { bindFilterDrawer } from '@/utils/filterDrawer';
 import { createEmptyState } from '@/utils/emptyState';
 import type { Gender, Mii, Platform, SortOption } from '@/types';
-import { setPageMeta } from '@/utils/pageMeta';
+import { getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
+import { MOBILE_MQ } from '@/utils/viewport';
+const DEFAULT_SORT: SortOption = 'newest';
 
 const SORTS: { value: SortOption; label: string }[] = [
   { value: 'newest', label: 'Newest' },
@@ -41,11 +42,11 @@ export function renderBrowse(container: HTMLElement): () => void {
   setPageMeta({
     title: 'Browse Mii QR Codes & Community Miis',
     description:
-      'Search and browse Nintendo Mii characters shared by the community. Filter by platform, tags, and trending.',
-    url: `${window.location.origin}/browse`,
+      'Search and browse Nintendo Mii QR codes shared by the community. Filter by 3DS, Wii U, Tomodachi Life, tags, and trending.',
+    url: `${getSiteOrigin()}/browse`,
   });
 
-  let sort: SortOption = 'newest';
+  let sort: SortOption = DEFAULT_SORT;
   let gender: Gender | null = null;
   let platform: Platform | null = null;
   let tagSlugs: string[] = [];
@@ -61,44 +62,60 @@ export function renderBrowse(container: HTMLElement): () => void {
 
   const browseHead = document.createElement('div');
   browseHead.className = 'browse-section__head';
-  browseHead.innerHTML = `
-    <div class="browse-section__title-wrap">
-      <h1 class="browse-section__title page-title">${icon('users')} Browse all residents</h1>
-      <p class="browse-section__subtitle" data-results>Discover and filter Mii characters from the community.</p>
-    </div>
-    <div class="browse-section__controls">
-      <div class="browse-section__search-wrap">
-        ${icon('magnifying-glass')}
-        <input type="search" class="browse-section__search" placeholder="Search residents…" aria-label="Search residents" data-search />
-      </div>
-      <label class="browse-section__sort">
-        Sort by:
-        <span class="browse-section__sort-control" data-sort></span>
-      </label>
-    </div>
+
+  const titleWrap = document.createElement('div');
+  titleWrap.className = 'browse-section__title-wrap';
+  titleWrap.innerHTML = `
+    <h1 class="browse-section__title page-title">${icon('users')} <span class="browse-section__title-text">Browse all residents</span></h1>
+    <p class="browse-section__subtitle" data-results>Discover and filter Mii characters from the community.</p>
   `;
+
+  const toolbar = document.createElement('div');
+  toolbar.className = 'browse-section__toolbar';
+
+  const searchWrap = document.createElement('div');
+  searchWrap.className = 'browse-section__search-wrap';
+  searchWrap.innerHTML = `
+    ${icon('magnifying-glass')}
+    <input type="search" class="browse-section__search" placeholder="Search residents…" aria-label="Search residents" data-search />
+  `;
+
+  const toolbarActions = document.createElement('div');
+  toolbarActions.className = 'browse-section__toolbar-actions';
+
+  const mobileActions = document.createElement('div');
+  mobileActions.className = 'browse-section__mobile-actions';
+
+  toolbar.append(searchWrap, toolbarActions);
+
+  const activeFilters = document.createElement('div');
+  activeFilters.className = 'browse-section__active-filters';
+  activeFilters.setAttribute('role', 'list');
+  activeFilters.setAttribute('aria-label', 'Active filters');
+  activeFilters.hidden = true;
+
+  browseHead.append(titleWrap, toolbar, mobileActions, activeFilters);
 
   const resultsMeta = browseHead.querySelector<HTMLElement>('[data-results]')!;
   const searchInput = browseHead.querySelector<HTMLInputElement>('[data-search]')!;
-  const sortHost = browseHead.querySelector<HTMLElement>('[data-sort]')!;
-  const sortSelect = createCustomSelect({
-    options: SORTS.map((s) => ({ value: s.value, label: s.label })),
-    value: sort,
-    ariaLabel: 'Sort residents',
-    variant: 'pill',
-    onChange: (v) => {
-      sort = v as SortOption;
-      loadMiis();
-    },
-  });
-  sortHost.appendChild(sortSelect.root);
 
   const layout = document.createElement('div');
   layout.className = 'residents-layout';
 
   const filterPanel = document.createElement('aside');
   filterPanel.className = 'filter-panel';
+  filterPanel.setAttribute('role', 'dialog');
+  filterPanel.setAttribute('aria-label', 'Filters');
   filterPanel.innerHTML = `<h3 class="filter-panel__title">${icon('filter')} Filters</h3>`;
+
+  const sortGroup = document.createElement('div');
+  sortGroup.className = 'filter-panel__group';
+  const sortLabel = document.createElement('span');
+  sortLabel.className = 'filter-panel__label';
+  sortLabel.textContent = 'Sort by';
+  const sortPills = document.createElement('div');
+  sortPills.className = 'pill-group filter-panel__sort-pills';
+  sortGroup.append(sortLabel, sortPills);
 
   const genderGroup = document.createElement('div');
   genderGroup.className = 'filter-panel__group';
@@ -129,12 +146,20 @@ export function renderBrowse(container: HTMLElement): () => void {
   const tagFilter = createTagFilter({
     onChange: (tags) => {
       tagSlugs = tags.map((t) => t.slug);
+      renderActiveFilters();
       loadMiis();
     },
   });
   tagGroup.append(tagLabel, tagHint, tagFilter.root);
 
-  filterPanel.append(genderGroup, platformGroup, tagGroup);
+  const filterApplyBar = document.createElement('div');
+  filterApplyBar.className = 'filter-panel__apply-bar';
+  const filterApplyBtn = document.createElement('button');
+  filterApplyBtn.type = 'button';
+  filterApplyBtn.className = 'pill-btn pill-btn--filled interactive filter-panel__apply-btn';
+  filterApplyBtn.textContent = 'Show results';
+  filterApplyBar.appendChild(filterApplyBtn);
+  filterPanel.append(sortGroup, genderGroup, platformGroup, tagGroup, filterApplyBar);
 
   const creatorResults = document.createElement('div');
   creatorResults.className = 'browse-creators';
@@ -151,13 +176,156 @@ export function renderBrowse(container: HTMLElement): () => void {
   layout.append(filterPanel, residentsMain);
   residentsMain.appendChild(paginated.root);
   browseSection.append(browseHead, creatorResults, layout);
-  content.appendChild(browseSection);
+  content.append(browseSection);
 
-  const unbindFilterDrawer = bindFilterDrawer(
-    layout,
-    filterPanel,
-    browseHead.querySelector('.browse-section__controls')!,
-  );
+  const filterDrawer = bindFilterDrawer(layout, filterPanel, mobileActions);
+
+  filterApplyBtn.addEventListener('click', () => filterDrawer.close());
+
+  function syncBrowseAppClass(): void {
+    const isMobile = window.matchMedia(MOBILE_MQ).matches;
+    content.classList.toggle('browse-page--app', isMobile);
+    filterPanel.classList.toggle('filter-panel--bottom-sheet', isMobile);
+    filterDrawer.setNavDock(isMobile);
+
+    if (isMobile) {
+      if (!mobileActions.contains(filterDrawer.toggle)) {
+        mobileActions.append(filterDrawer.toggle);
+      }
+      filterDrawer.toggle.classList.add('browse-mobile-action-btn');
+    } else {
+      filterDrawer.close();
+      if (!toolbarActions.contains(filterDrawer.toggle)) {
+        toolbarActions.prepend(filterDrawer.toggle);
+      }
+      filterDrawer.toggle.classList.remove('browse-mobile-action-btn');
+    }
+  }
+
+  syncBrowseAppClass();
+  const browseMq = window.matchMedia(MOBILE_MQ);
+  browseMq.addEventListener('change', syncBrowseAppClass);
+
+  function activeFilterCount(): number {
+    let n = 0;
+    if (sort !== DEFAULT_SORT) n++;
+    if (gender) n++;
+    if (platform) n++;
+    n += tagSlugs.length;
+    return n;
+  }
+
+  function renderActiveFilters(): void {
+    filterDrawer.setBadgeCount(activeFilterCount());
+    activeFilters.replaceChildren();
+
+    const chips: { label: string; clear: () => void }[] = [];
+
+    if (sort !== DEFAULT_SORT) {
+      const s = SORTS.find((x) => x.value === sort);
+      chips.push({
+        label: s?.label ?? 'Sort',
+        clear: () => {
+          sort = DEFAULT_SORT;
+          renderSortButtons();
+          renderActiveFilters();
+          loadMiis();
+        },
+      });
+    }
+
+    if (gender) {
+      const g = GENDERS.find((x) => x.value === gender);
+      chips.push({
+        label: g?.label ?? 'Gender',
+        clear: () => {
+          gender = null;
+          renderGenderButtons();
+          renderActiveFilters();
+          loadMiis();
+        },
+      });
+    }
+
+    if (platform) {
+      const p = PLATFORMS.find((x) => x.value === platform);
+      chips.push({
+        label: p?.label ?? 'Platform',
+        clear: () => {
+          platform = null;
+          renderPlatformButtons();
+          renderActiveFilters();
+          loadMiis();
+        },
+      });
+    }
+
+    for (const slug of tagSlugs) {
+      chips.push({
+        label: `#${slug}`,
+        clear: () => {
+          tagFilter.removeBySlug(slug);
+        },
+      });
+    }
+
+    if (!chips.length) {
+      activeFilters.hidden = true;
+      return;
+    }
+
+    activeFilters.hidden = false;
+
+    if (chips.length > 1) {
+      const clearAll = document.createElement('button');
+      clearAll.type = 'button';
+      clearAll.className =
+        'browse-active-filter browse-active-filter--clear interactive';
+      clearAll.textContent = 'Clear all';
+      clearAll.addEventListener('click', () => {
+        sort = DEFAULT_SORT;
+        gender = null;
+        platform = null;
+        tagSlugs = [];
+        tagFilter.clearAll();
+        renderSortButtons();
+        renderGenderButtons();
+        renderPlatformButtons();
+        renderActiveFilters();
+        loadMiis();
+      });
+      activeFilters.appendChild(clearAll);
+    }
+
+    for (const chip of chips) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'browse-active-filter interactive';
+      el.setAttribute('role', 'listitem');
+      el.innerHTML = `${escapeHtml(chip.label)} ${iconSpan('xmark', 'browse-active-filter__icon')}`;
+      el.addEventListener('click', chip.clear);
+      activeFilters.appendChild(el);
+    }
+  }
+
+  function renderSortButtons(): void {
+    sortPills.replaceChildren();
+    for (const s of SORTS) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = `app-tab interactive${sort === s.value ? ' app-tab--active' : ''}`;
+      btn.textContent = s.label;
+      btn.setAttribute('aria-pressed', String(sort === s.value));
+      btn.addEventListener('click', () => {
+        if (sort === s.value) return;
+        sort = s.value;
+        renderSortButtons();
+        renderActiveFilters();
+        loadMiis();
+      });
+      sortPills.appendChild(btn);
+    }
+  }
 
   function renderGenderButtons(): void {
     genderPills.replaceChildren();
@@ -170,6 +338,7 @@ export function renderBrowse(container: HTMLElement): () => void {
       btn.addEventListener('click', () => {
         gender = g.value;
         renderGenderButtons();
+        renderActiveFilters();
         loadMiis();
       });
       genderPills.appendChild(btn);
@@ -187,6 +356,7 @@ export function renderBrowse(container: HTMLElement): () => void {
       btn.addEventListener('click', () => {
         platform = p.value;
         renderPlatformButtons();
+        renderActiveFilters();
         loadMiis();
       });
       platformPills.appendChild(btn);
@@ -208,7 +378,7 @@ export function renderBrowse(container: HTMLElement): () => void {
       return;
     }
     const noun = count === 1 ? 'resident' : 'residents';
-    resultsMeta.textContent = `${count} ${noun} · Discover and filter Mii characters from the community.`;
+    resultsMeta.textContent = `${count} ${noun}`;
   }
 
   async function loadCreatorSearch(): Promise<void> {
@@ -287,17 +457,19 @@ export function renderBrowse(container: HTMLElement): () => void {
     }, 300);
   });
 
+  renderSortButtons();
   renderGenderButtons();
   renderPlatformButtons();
+  renderActiveFilters();
   container.replaceChildren(wrapPublicPage(content));
   loadMiis();
 
   return () => {
     abort = true;
     window.clearTimeout(searchTimer);
+    browseMq.removeEventListener('change', syncBrowseAppClass);
     tagFilter.dispose();
-    sortSelect.destroy();
-    unbindFilterDrawer();
+    filterDrawer.destroy();
   };
 }
 

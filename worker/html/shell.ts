@@ -44,6 +44,12 @@ export function injectSeoIntoHtml(html: string, meta: SeoMeta): string {
   if (meta.image) {
     out = upsertMeta(out, 'property', 'og:image', meta.image);
     out = upsertMeta(out, 'name', 'twitter:image', meta.image);
+    if (meta.imageWidth) {
+      out = upsertMeta(out, 'property', 'og:image:width', String(meta.imageWidth));
+    }
+    if (meta.imageHeight) {
+      out = upsertMeta(out, 'property', 'og:image:height', String(meta.imageHeight));
+    }
   }
 
   out = upsertLink(out, 'canonical', meta.canonical);

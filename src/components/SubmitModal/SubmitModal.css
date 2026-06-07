@@ -5,7 +5,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--spacing-md);
+  padding: max(var(--spacing-md), env(safe-area-inset-top, 0px))
+    max(var(--spacing-md), env(safe-area-inset-right, 0px))
+    max(var(--spacing-md), env(safe-area-inset-bottom, 0px))
+    max(var(--spacing-md), env(safe-area-inset-left, 0px));
   overflow-y: auto;
   background: var(--color-modal-overlay);
   backdrop-filter: blur(4px);
@@ -18,7 +21,7 @@
 .submit-modal {
   position: relative;
   width: min(720px, 100%);
-  max-height: min(92vh, 820px);
+  max-height: min(92dvh, 820px);
   overflow-y: auto;
   background: var(--color-bg-panel);
   border-radius: 20px;
@@ -58,8 +61,10 @@
   position: absolute;
   top: var(--spacing-md);
   right: var(--spacing-md);
-  width: 36px;
-  height: 36px;
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  width: var(--touch-target-min);
+  height: var(--touch-target-min);
   border: 1px solid var(--color-border);
   border-radius: 50%;
   background: var(--color-bg-panel);
@@ -383,10 +388,17 @@
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .submit-modal-overlay {
+    align-items: flex-end;
+    padding-bottom: max(var(--spacing-sm), env(safe-area-inset-bottom, 0px));
+  }
+
   .submit-modal {
+    width: 100%;
+    max-height: min(92dvh, 820px);
     padding: var(--spacing-lg);
-    border-radius: 16px;
+    border-radius: var(--radius-tile) var(--radius-tile) 0 0;
   }
 
   .submit-modal__body {
@@ -400,4 +412,8 @@
     width: 100%;
   }
 
+  .submit-modal__cancel {
+    min-height: var(--touch-target-min);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
 }

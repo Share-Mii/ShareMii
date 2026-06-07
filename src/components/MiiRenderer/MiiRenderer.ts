@@ -6,6 +6,7 @@ import {
   DEFAULT_SHADER_TYPE,
   type RenderOptions,
 } from '@/services/miiApi';
+import { loadMiiImage, whenElementNearViewport } from '@/services/miiImageLoad';
 import { applyMiiView, type MiiViewPreset } from '@/services/miiViews';
 import { normalizeMiiDataForRender } from '@/services/qrDecode';
 
@@ -28,15 +29,6 @@ export interface LiveMiiRendererHandle {
   setMiiData: (miiData: string) => void;
   setView: (view: MiiViewPreset) => void;
   setExpression: (expression: string | undefined) => void;
-}
-
-function preloadImage(url: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const probe = new Image();
-    probe.onload = () => resolve();
-    probe.onerror = () => reject(new Error('Image load failed'));
-    probe.src = url;
-  });
 }
 
 function hasMiiData(data: string): boolean {
@@ -83,7 +75,6 @@ export function createMiiRenderer(options: MiiRendererOptions): HTMLElement {
   const img = document.createElement('img');
   img.className = 'mii-renderer__img';
   img.alt = alt;
-  img.style.display = 'none';
   root.appendChild(img);
 
   function showError(): void {
@@ -98,18 +89,16 @@ export function createMiiRenderer(options: MiiRendererOptions): HTMLElement {
   void (async () => {
     if (!hasMiiData(miiData)) return;
     try {
+      await whenElementNearViewport(root);
       const renderData = await normalizeMiiDataForRender(miiData);
       const url = buildRenderUrl(renderData, renderOpts);
+      await loadMiiImage(url);
 
       img.onload = () => {
         skeleton.remove();
-        img.style.display = 'block';
+        img.classList.add('mii-renderer__img--loaded');
       };
-
-      img.onerror = () => {
-        showError();
-      };
-
+      img.onerror = () => showError();
       img.src = url;
     } catch {
       showError();
@@ -200,7 +189,7 @@ export function createLiveMiiRenderer(
       if (generation !== loadGeneration) return;
       if (url === displayedUrl) return;
 
-      await preloadImage(url);
+      await loadMiiImage(url);
       if (generation !== loadGeneration) return;
 
       clearError();

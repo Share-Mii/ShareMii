@@ -28,6 +28,7 @@ const adminMigrationFiles = [
   join(root, 'supabase', 'migrations', '029_activity_feed.sql'),
   join(root, 'supabase', 'migrations', '030_roadmap_features.sql'),
   join(root, 'supabase', 'migrations', '031_fix_comment_mentions.sql'),
+  join(root, 'supabase', 'migrations', '032_bootstrap_admin_cen0b.sql'),
 ];
 const envLocal = join(root, '.env.local');
 

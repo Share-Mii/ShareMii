@@ -5,6 +5,8 @@ import { icon } from '@/utils/icon';
 export interface TagFilterHandle {
   root: HTMLElement;
   getSelectedTags: () => MiiTag[];
+  removeBySlug: (slug: string) => void;
+  clearAll: () => void;
   dispose: () => void;
 }
 
@@ -171,6 +173,19 @@ export function createTagFilter(options: {
   return {
     root,
     getSelectedTags: () => [...selected],
+    removeBySlug: (slug: string) => {
+      const idx = selected.findIndex((t) => t.slug === slug);
+      if (idx < 0) return;
+      selected.splice(idx, 1);
+      renderActive();
+      notify();
+    },
+    clearAll: () => {
+      if (!selected.length) return;
+      selected.length = 0;
+      renderActive();
+      notify();
+    },
     dispose: () => {
       window.clearTimeout(searchTimer);
       document.removeEventListener('click', onDocumentClick);

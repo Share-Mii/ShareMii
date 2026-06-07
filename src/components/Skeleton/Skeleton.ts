@@ -1,4 +1,5 @@
 import './Skeleton.css';
+import { MOBILE_MQ } from '@/utils/viewport';
 
 export const DEFAULT_SKELETON_GRID_COUNT = 6;
 
@@ -81,6 +82,9 @@ export function appendMiiGridSkeleton(
 export function createDetailPageSkeleton(): HTMLElement {
   const page = document.createElement('main');
   page.className = 'detail-page detail-skeleton';
+  if (window.matchMedia(MOBILE_MQ).matches) {
+    page.classList.add('detail-page--app');
+  }
 
   const back = skeletonBlock('detail-skeleton__back skeleton--pill');
   page.appendChild(back);
@@ -103,6 +107,7 @@ export function createDetailPageSkeleton(): HTMLElement {
   const actions = document.createElement('div');
   actions.className = 'detail-skeleton__actions';
   actions.append(
+    skeletonBlock('detail-skeleton__btn skeleton--pill'),
     skeletonBlock('detail-skeleton__btn skeleton--pill'),
     skeletonBlock('detail-skeleton__btn skeleton--pill'),
   );

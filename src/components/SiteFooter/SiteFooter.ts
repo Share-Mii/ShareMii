@@ -3,6 +3,13 @@ import { BRAND_NAME } from '@/config/brand';
 import { getDiscordInviteUrl } from '@/config/community';
 import { logoMark } from '@/utils/logo';
 
+const EXPLORE_LINKS = [
+  { href: '/browse', label: 'Browse' },
+  { href: '/create', label: 'Mii Maker' },
+  { href: '/tags', label: 'Tags' },
+  { href: '/collections/browse', label: 'Collections' },
+] as const;
+
 const INFO_LINKS = [
   { href: '/about', label: 'About' },
   { href: '/help', label: 'Help' },
@@ -45,6 +52,13 @@ export function createSiteFooter(): HTMLElement {
   const compactNav = document.createElement('nav');
   compactNav.className = 'site-footer__compact';
   compactNav.setAttribute('aria-label', 'Footer links');
+  for (const link of EXPLORE_LINKS) {
+    const a = document.createElement('a');
+    a.href = link.href;
+    a.className = 'site-footer__compact-link interactive';
+    a.textContent = link.label;
+    compactNav.appendChild(a);
+  }
   for (const link of INFO_LINKS) {
     const a = document.createElement('a');
     a.href = link.href;
@@ -78,7 +92,7 @@ export function createSiteFooter(): HTMLElement {
   nav.className = 'site-footer__legal';
   nav.setAttribute('aria-label', 'Legal');
 
-  for (const link of INFO_LINKS) {
+  for (const link of [...EXPLORE_LINKS, ...INFO_LINKS]) {
     const a = document.createElement('a');
     a.href = link.href;
     a.className = 'site-footer__legal-link interactive';

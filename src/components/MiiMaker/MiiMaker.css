@@ -792,6 +792,19 @@
   display: block;
 }
 
+/* Eye icons hardcode black/white paths — remap for dark picker contrast. */
+[data-theme='dark'] .mii-maker__picker-host .mii-maker__part-icon svg [fill='black'] {
+  fill: #ffffff;
+}
+
+[data-theme='dark'] .mii-maker__picker-host .mii-maker__part-icon svg [stroke='black'] {
+  stroke: #ffffff;
+}
+
+[data-theme='dark'] .mii-maker__picker-host .mii-maker__part-icon svg [fill='white'] {
+  fill: #5c5c66;
+}
+
 .mii-maker__asset-cell:hover {
   border-color: var(--color-accent);
 }
@@ -968,38 +981,7 @@
   }
 }
 
-@media (max-width: 768px) {
-  .mii-maker {
-    --mii-maker-preview-w: 100%;
-    --mii-maker-preview-size-w: 120px;
-    --mii-maker-preview-size-h: 180px;
-    --mii-maker-preview-render: 180px;
-  }
-
-  .mii-maker__cat-rail {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    gap: var(--spacing-xs);
-    padding-bottom: var(--spacing-xs);
-    width: 100%;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .mii-maker__cat-rail .mii-maker__cat-btn {
-    flex-shrink: 0;
-  }
-
-  .mii-maker__preview-col {
-    width: 100%;
-    height: auto;
-    min-height: 0;
-    max-height: 12rem;
-    order: 2;
-  }
-}
-
-@media (max-width: 900px) {
+@media (max-width: 900px) and (min-width: 769px) {
   .mii-maker {
     --mii-maker-preview-w: 36%;
     --mii-maker-preview-size-w: 200px;
@@ -1046,5 +1028,79 @@
   .mii-maker__detail-sidebar .mii-maker__control-section {
     flex: 1 1 140px;
     max-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .mii-maker {
+    --mii-maker-preview-w: 100%;
+    --mii-maker-preview-size-w: 120px;
+    --mii-maker-preview-size-h: 180px;
+    --mii-maker-preview-render: 180px;
+    --mii-maker-studio-h: auto;
+  }
+
+  .mii-maker__cat-rail {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: var(--spacing-xs);
+    padding-bottom: var(--spacing-xs);
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mii-maker__cat-rail::-webkit-scrollbar {
+    display: none;
+  }
+
+  .mii-maker__cat-rail .mii-maker__cat-btn {
+    flex-shrink: 0;
+  }
+
+  .mii-maker__studio {
+    flex-wrap: wrap;
+  }
+
+  .mii-maker__preview-col {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: min(12rem, 28dvh);
+    order: 2;
+    flex: 0 0 auto;
+  }
+
+  .mii-maker__workspace-host {
+    width: 100%;
+    min-width: 100%;
+    order: 3;
+    min-height: min(420px, 52dvh);
+  }
+
+  .mii-maker__workspace-body:not(.mii-maker__workspace-body--general) {
+    flex-direction: column;
+  }
+
+  .mii-maker__detail-sidebar {
+    width: 100%;
+    min-width: 0;
+    max-height: 42%;
+    border-left: none;
+    border-top: 1px solid var(--color-border);
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+  }
+
+  .mii-maker__detail-sidebar .mii-maker__control-section {
+    flex: 1 1 140px;
+    max-width: 200px;
+  }
+
+  .mii-maker__pager-btn {
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
   }
 }

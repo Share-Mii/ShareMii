@@ -1,7 +1,7 @@
 import { isBot, isStaticAsset } from '../worker/botDetect';
+import { canonicalRedirectResponse } from '../worker/http/canonical';
 import { injectSeoIntoHtml } from '../worker/html/shell';
 import { resolveSeoMeta } from '../worker/routes/index';
-import { generateSitemap } from '../worker/sitemap/generate';
 import type { WorkerEnv } from '../worker/data/supabase';
 
 interface PagesContext {
@@ -11,6 +11,11 @@ interface PagesContext {
 }
 
 export const onRequest = async (context: PagesContext): Promise<Response> => {
+  const redirect = canonicalRedirectResponse(context.request);
+  if (redirect) {
+    return redirect;
+  }
+
   const url = new URL(context.request.url);
   const { pathname } = url;
 
@@ -20,16 +25,6 @@ export const onRequest = async (context: PagesContext): Promise<Response> => {
 
   if (isStaticAsset(pathname)) {
     return context.next();
-  }
-
-  if (pathname === '/sitemap.xml') {
-    const xml = await generateSitemap(context.env, context.request);
-    return new Response(xml, {
-      headers: {
-        'Content-Type': 'application/xml; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600',
-      },
-    });
   }
 
   if (!isBot(context.request)) {

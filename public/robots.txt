@@ -2,3 +2,6 @@ User-agent: *
 Allow: /
 
 Sitemap: https://sharemii.net/sitemap.xml
+
+# LLM / AI crawlers
+# https://sharemii.net/llms.txt

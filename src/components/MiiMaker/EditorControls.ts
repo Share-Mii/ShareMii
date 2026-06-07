@@ -22,6 +22,7 @@ import {
   miiEditorIconHtml,
   type MiiEditorIconKey,
 } from '@/services/miiEditorIcons';
+import { THEME_CHANGE_EVENT } from '@/services/theme';
 import { iconSpan } from '@/utils/icon';
 import { MII_NAME_MAX } from '@/utils/miiName';
 
@@ -41,8 +42,9 @@ export interface EditorControlsCallbacks {
 export interface EditorWorkspaceHandle {
   root: HTMLElement;
   resetPanels: () => void;
-  
+
   sync: (fields: MiiFields) => void;
+  destroy?: () => void;
 }
 
 function findCategory(id: EditorCategoryId): EditorCategory {
@@ -839,6 +841,11 @@ export function createEditorWorkspace(
   mountPanel();
   sync(fields);
 
+  const onThemeChange = (): void => {
+    applyIconThemeVars(pickerHost, callbacks.getFields());
+  };
+  window.addEventListener(THEME_CHANGE_EVENT, onThemeChange);
+
   return {
     root,
     resetPanels: () => {
@@ -848,5 +855,8 @@ export function createEditorWorkspace(
       sync(callbacks.getFields());
     },
     sync,
+    destroy: () => {
+      window.removeEventListener(THEME_CHANGE_EVENT, onThemeChange);
+    },
   };
 }

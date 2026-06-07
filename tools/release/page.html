@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>
+      (function () {
+        try {
+          var t =
+            localStorage.getItem('sharemii-theme') ||
+            localStorage.getItem('miishare-theme');
+          if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+          else document.documentElement.dataset.theme = 'dark';
+        } catch (e) {}
+      })();
+    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>ShareMii.net — write this update</title>
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/variables.css" />
+    <style>
+      *, *::before, *::after { box-sizing: border-box; }
+
+      html {
+        font-size: 16px;
+        scrollbar-width: thin;
+        scrollbar-color: color-mix(in srgb, var(--color-text-muted) 40%, transparent) transparent;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        min-height: 100dvh;
+        font-family: var(--font-family);
+        font-size: var(--font-size-body);
+        line-height: var(--line-height-body);
+        color: var(--color-text);
+        background: var(--color-bg-body);
+        transition:
+          background-color var(--transition-normal),
+          color var(--transition-normal);
+      }
+
+      a { color: inherit; text-decoration: none; }
+
+      button, select, textarea, input {
+        font-family: inherit;
+      }
+
+      button:focus-visible,
+      a:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible,
+      input:focus-visible {
+        outline: none;
+        box-shadow: var(--focus-ring);
+      }
+
+      .page-shell {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        flex-shrink: 0;
+        background: var(--color-bg-frosted);
+        border-bottom: 1px solid var(--color-border);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+      }
+
+      .site-header__inner {
+        max-width: var(--layout-max-width);
+        margin: 0 auto;
+        padding: var(--spacing-md) var(--page-gutter);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--spacing-md);
+        min-height: var(--header-height);
+      }
+
+      .site-header__brand {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+        font-weight: 800;
+        font-size: var(--font-size-lg);
+        color: var(--color-text);
+      }
+
+      .site-header__logo {
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+        display: block;
+        background-color: var(--color-accent);
+        mask: url('/assets/logo-solid.svg') center / contain no-repeat;
+        -webkit-mask: url('/assets/logo-solid.svg') center / contain no-repeat;
+      }
+
+      .site-header__badge {
+        font-size: var(--font-size-caption);
+        font-weight: 700;
+        letter-spacing: var(--letter-spacing-overline);
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+        padding: 0.35rem 0.75rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-pill);
+        background: var(--color-bg-panel);
+      }
+
+      .page-content {
+        flex: 1;
+        max-width: var(--layout-max-width);
+        width: 100%;
+        margin: 0 auto;
+        padding: var(--page-content-top) var(--page-gutter) var(--spacing-3xl);
+      }
+
+      .update-back {
+        display: inline-block;
+        margin-bottom: var(--spacing-md);
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        color: var(--color-accent);
+      }
+
+      .update-back:hover { text-decoration: underline; }
+
+      .update-hero {
+        margin-bottom: var(--spacing-xl);
+        max-width: 42rem;
+      }
+
+      .text-overline {
+        margin: 0 0 var(--spacing-xs);
+        font-size: var(--font-size-caption);
+        font-weight: 700;
+        letter-spacing: var(--letter-spacing-overline);
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+      }
+
+      .page-title {
+        margin: 0 0 var(--spacing-sm);
+        font-size: var(--font-size-2xl);
+        font-weight: 800;
+        line-height: var(--line-height-tight);
+        letter-spacing: var(--letter-spacing-tight);
+        color: var(--color-text);
+      }
+
+      .text-meta {
+        margin: 0;
+        font-size: var(--font-size-sm);
+        font-weight: 500;
+        color: var(--color-text-muted);
+        line-height: var(--line-height-body);
+      }
+
+      .update-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 400px);
+        gap: var(--spacing-xl);
+        align-items: start;
+      }
+
+      @media (max-width: 960px) {
+        .update-layout {
+          grid-template-columns: 1fr;
+        }
+        .update-discord-col { position: static; }
+      }
+
+      .update-card {
+        background: var(--color-bg-panel);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-tile);
+        overflow: hidden;
+        box-shadow: var(--shadow-1);
+      }
+
+      .update-card__head {
+        padding: var(--spacing-lg);
+        border-bottom: 1px solid var(--color-border);
+        background: color-mix(in srgb, var(--pastel-mint) 20%, var(--color-mix-base));
+      }
+
+      .update-card__title {
+        margin: 0;
+        font-size: var(--font-size-lg);
+        font-weight: 700;
+        color: var(--color-text);
+      }
+
+      .update-card__lead {
+        margin: var(--spacing-xs) 0 0;
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+        line-height: 1.5;
+      }
+
+      .update-card__body {
+        padding: var(--spacing-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+      }
+
+      .update-banner {
+        padding: var(--spacing-md) var(--spacing-lg);
+        border-radius: var(--radius-md);
+        font-size: var(--font-size-sm);
+        font-weight: 600;
+        border: 1px solid var(--color-border);
+        background: var(--color-bg-section-alt);
+      }
+
+      .update-banner.ok {
+        border-color: color-mix(in srgb, var(--pastel-mint) 55%, var(--color-border));
+        background: color-mix(in srgb, var(--pastel-mint) 28%, var(--color-bg-panel));
+        color: var(--color-text);
+      }
+
+      .update-banner.err {
+        border-color: color-mix(in srgb, var(--color-coral) 45%, var(--color-border));
+        background: color-mix(in srgb, var(--color-coral) 12%, var(--color-bg-panel));
+        color: var(--color-coral);
+      }
+
+      .update-banner.warn {
+        border-color: color-mix(in srgb, var(--color-accent-gold) 45%, var(--color-border));
+        background: color-mix(in srgb, var(--color-accent-gold) 12%, var(--color-bg-panel));
+        color: var(--color-text);
+      }
+
+      .update-field label {
+        display: block;
+        font-weight: 600;
+        font-size: var(--font-size-body);
+        color: var(--color-text);
+        margin-bottom: var(--spacing-xs);
+      }
+
+      .update-field__hint {
+        margin: 0 0 var(--spacing-sm);
+        font-size: var(--font-size-sm);
+        color: var(--color-text-muted);
+        line-height: 1.45;
+      }
+
+      .update-field__hint code {
+        font-size: 0.92em;
+        padding: 0.1em 0.35em;
+        border-radius: var(--radius-sm);
+        background: var(--color-bg-section-alt);
+        border: 1px solid var(--color-border);
+      }
+
+      .update-field select,
+      .update-field textarea,
+      .update-field input[type="password"] {
+        width: 100%;
+        padding: 0.65rem 0.85rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        font: inherit;
+        color: var(--color-text);
+        background: var(--color-bg-panel);
+      }
+
+      .update-field select:focus,
+      .update-field textarea:focus,
+      .update-field input[type="password"]:focus {
+        border-color: var(--color-accent);
+        box-shadow: var(--focus-ring);
+      }
+
+      .update-field textarea {
+        min-height: 5rem;
+        resize: vertical;
+        line-height: var(--line-height-body);
+      }
+
+      .update-field textarea.changes {
+        min-height: 10rem;
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        font-size: var(--font-size-sm);
+      }
+
+      .update-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--spacing-sm);
+        padding-top: var(--spacing-xs);
+      }
+
+      .pill-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-sm);
+        min-height: 2.75rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: var(--radius-pill);
+        font-weight: 700;
+        font-size: var(--font-size-body);
+        border: 1px solid var(--color-border);
+        background: var(--color-bg-panel);
+        color: var(--color-text);
+        cursor: pointer;
+        transition:
+          background var(--transition-fast),
+          border-color var(--transition-fast),
+          color var(--transition-fast),
+          transform var(--transition-fast);
+      }
+
+      .pill-btn:active:not(:disabled) { transform: scale(0.97); }
+
+      .pill-btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .pill-btn--filled {
+        background: var(--color-accent);
+        border-color: var(--color-accent);
+        color: var(--color-on-accent);
+      }
+
+      .pill-btn--filled:hover:not(:disabled) {
+        background: var(--color-accent-hover);
+        border-color: var(--color-accent-hover);
+      }
+
+      .pill-btn--outline:hover:not(:disabled) {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+      }
+
+      .update-progress {
+        margin: 0;
+        font-size: var(--font-size-caption);
+        font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+        white-space: pre-wrap;
+        color: var(--color-text-muted);
+        background: var(--color-bg-section-alt);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        padding: var(--spacing-md);
+        max-height: 200px;
+        overflow: auto;
+      }
+
+      .update-preview {
+        border-top: 1px solid var(--color-border);
+        padding-top: var(--spacing-lg);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-md);
+      }
+
+      .update-preview__block h3 {
+        margin: 0 0 var(--spacing-xs);
+        font-size: var(--font-size-caption);
+        font-weight: 700;
+        letter-spacing: var(--letter-spacing-overline);
+        text-transform: uppercase;
+        color: var(--color-text-muted);
+      }
+
+      .update-preview__block p,
+      .release-md {
+        margin: 0;
+        font-size: var(--font-size-sm);
+        line-height: var(--line-height-body);
+        color: var(--color-text);
+      }
+
+      .release-md ul { padding-left: 1.25rem; }
+
+      .update-discord-col {
+        position: sticky;
+        top: calc(var(--header-height) + var(--spacing-md));
+      }
+
+      .discord-shell {
+        background: #313338;
+        border-radius: var(--radius-md);
+        padding: 12px;
+      }
+
+      .discord-row { display: flex; gap: 12px; align-items: flex-start; }
+
+      .discord-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background: linear-gradient(145deg, #5865f2, #3c45a5);
+      }
+
+      .discord-name { color: #fff; font-weight: 600; font-size: 15px; }
+
+      .discord-badge {
+        background: #5865f2;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 5px;
+        border-radius: 4px;
+        margin-left: 6px;
+      }
+
+      .discord-time { color: #949ba4; font-size: 12px; margin-left: 8px; }
+
+      .discord-mount {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 6px;
+      }
+
+      .discord-empty {
+        color: #949ba4;
+        font-size: 13px;
+        font-style: italic;
+        margin: 0;
+      }
+
+      .dc-embed {
+        background: #2b2d31;
+        border-radius: 4px;
+        border-left: 4px solid #0088ff;
+        overflow: hidden;
+        max-width: 100%;
+      }
+
+      .dc-embed--media { border-left: 0; }
+
+      .dc-embed--media img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .dc-embed-inner { padding: 8px 12px 12px; }
+
+      .dc-embed-title {
+        color: #fff;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      .dc-embed-desc {
+        color: #dbdee1;
+        font-size: 14px;
+        line-height: 1.375;
+      }
+
+      .dc-embed-desc p { margin: 0 0 0.5rem; }
+
+      .dc-embed-desc blockquote {
+        margin: 0 0 0.5rem;
+        padding-left: 0.5rem;
+        border-left: 3px solid #4e5058;
+        color: #b5bac1;
+      }
+
+      .dc-embed-desc ul,
+      .dc-embed-desc ol {
+        margin: 0.25rem 0 0.5rem;
+        padding-left: 1.25rem;
+      }
+
+      .dc-embed-desc code {
+        background: #1e1f22;
+        padding: 0.1em 0.35em;
+        border-radius: 3px;
+        font-size: 0.85em;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a class="site-header__brand" href="/">
+            <span class="site-header__logo" aria-hidden="true"></span>
+            <span>ShareMii.net</span>
+          </a>
+          <span class="site-header__badge">Dev changelog</span>
+        </div>
+      </header>
+
+      <main class="page-content">
+        <a class="update-back" href="/">← Back to plaza</a>
+
+        <div class="update-hero">
+          <p class="text-overline">Site updates → Discord</p>
+          <h1 class="page-title">Write this update</h1>
+          <p class="text-meta" id="meta">Loading…</p>
+        </div>
+
+        <div class="update-layout">
+          <section class="update-card">
+            <div class="update-card__head">
+              <h2 class="update-card__title">Release notes</h2>
+              <p class="update-card__lead">Bump the version, commit your changes, publish to Discord, and push.</p>
+            </div>
+
+            <div class="update-card__body">
+              <div id="banner" class="update-banner" hidden></div>
+
+              <div id="tokenSection" class="update-field" hidden>
+                <p class="update-field__hint">Local passphrase required (set <code>SHAREMII_UPDATE_TOOL_TOKEN</code> in <code>.env.local</code>).</p>
+                <label for="token">Passphrase</label>
+                <input id="token" type="password" autocomplete="off" />
+              </div>
+
+              <div class="update-field">
+                <label for="bump">Version bump</label>
+                <select id="bump">
+                  <option value="patch">Patch — fixes &amp; polish</option>
+                  <option value="minor">Minor — new features</option>
+                  <option value="major">Major — big milestone</option>
+                </select>
+              </div>
+
+              <div class="update-field">
+                <label for="summary">Headline (Discord blockquote)</label>
+                <textarea id="summary" placeholder="One or two short sentences — what changed?"></textarea>
+              </div>
+
+              <div class="update-field">
+                <label for="changes">Full notes (markdown)</label>
+                <textarea id="changes" class="changes" placeholder="- Fixed …&#10;+ Added …"></textarea>
+              </div>
+
+              <div class="update-actions">
+                <button type="button" id="btnCommit" class="pill-btn pill-btn--filled">Commit, Push &amp; Publish</button>
+                <button type="button" id="btnReload" class="pill-btn pill-btn--outline">Refresh</button>
+              </div>
+
+              <pre id="progress" class="update-progress" hidden></pre>
+
+              <div id="previewPanel" class="update-preview" hidden>
+                <div class="update-preview__block">
+                  <h3>Version</h3>
+                  <p id="previewSubject"></p>
+                </div>
+                <div class="update-preview__block">
+                  <h3>Headline</h3>
+                  <p id="previewSummary"></p>
+                </div>
+                <div class="update-preview__block">
+                  <h3>Full notes preview</h3>
+                  <div id="previewChanges" class="release-md"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="update-discord-col">
+            <section class="update-card">
+              <div class="update-card__head">
+                <h2 class="update-card__title">Discord preview</h2>
+                <p class="update-card__lead">Live preview of the webhook embed as you type.</p>
+              </div>
+              <div class="update-card__body" style="padding-top: var(--spacing-md);">
+                <div class="discord-shell">
+                  <div class="discord-row">
+                    <div class="discord-avatar" aria-hidden="true"></div>
+                    <div style="min-width:0;flex:1">
+                      <div>
+                        <span class="discord-name">ShareMii.net</span>
+                        <span class="discord-badge">APP</span>
+                        <span class="discord-time" id="dcTime">—</span>
+                      </div>
+                      <div id="discordMount" class="discord-mount">
+                        <p class="discord-empty">Preview updates as you type.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </aside>
+        </div>
+      </main>
+    </div>
+
+    <script type="module">
+      const api = (path) => "/__update-tool/api" + path;
+      const $ = (id) => document.getElementById(id);
+
+      let mdLib = null;
+      async function loadMarkdownLibs() {
+        if (!mdLib) {
+          const [markedMod, dpMod] = await Promise.all([
+            import("https://esm.sh/marked@18.0.2"),
+            import("https://esm.sh/dompurify@3.4.1"),
+          ]);
+          mdLib = {
+            marked: markedMod.marked,
+            DOMPurify: dpMod.default ?? dpMod,
+          };
+          mdLib.marked.setOptions({ gfm: true, breaks: true });
+        }
+        return mdLib;
+      }
+
+      function authHeaders() {
+        const h = {};
+        const t = $("token")?.value.trim();
+        if (t) h["X-ShareMii-Update-Token"] = t;
+        return h;
+      }
+
+      function payload() {
+        return {
+          bump: $("bump").value,
+          summary: $("summary").value,
+          changes: $("changes").value,
+        };
+      }
+
+      function showBanner(kind, text) {
+        const b = $("banner");
+        b.hidden = false;
+        b.className = "update-banner " + (kind || "");
+        b.textContent = text;
+      }
+      function hideBanner() { $("banner").hidden = true; }
+
+      function setBusy(busy) {
+        for (const id of ["btnCommit", "btnReload", "bump", "summary", "changes", "token"]) {
+          const el = $(id);
+          if (el) el.disabled = busy;
+        }
+      }
+
+      function appendProgress(line) {
+        const p = $("progress");
+        p.hidden = false;
+        p.textContent = p.textContent ? p.textContent + "\n" + line : line;
+      }
+      function clearProgress() {
+        $("progress").hidden = true;
+        $("progress").textContent = "";
+      }
+
+      function touchTime() {
+        const d = new Date();
+        $("dcTime").textContent = "Today at " + d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+      }
+
+      function renderMd(container, md, { marked, DOMPurify }) {
+        container.replaceChildren();
+        const trimmed = String(md ?? "").replace(/\r\n/g, "\n").trim();
+        if (!trimmed) {
+          container.textContent = "No detail text yet.";
+          return;
+        }
+        container.innerHTML = DOMPurify.sanitize(marked.parse(trimmed, { async: false, gfm: true, breaks: true }), {
+          USE_PROFILES: { html: true },
+          ADD_TAGS: ["img"],
+          ADD_ATTR: ["src", "alt", "loading"],
+        });
+      }
+
+      function renderDiscordEmbeds(embeds, { marked, DOMPurify }) {
+        const mount = $("discordMount");
+        mount.replaceChildren();
+        if (!Array.isArray(embeds) || embeds.length === 0) {
+          const p = document.createElement("p");
+          p.className = "discord-empty";
+          p.textContent = "No embeds yet.";
+          mount.appendChild(p);
+          return;
+        }
+        for (const emb of embeds) {
+          const imgUrl = emb?.image?.url;
+          const hasBody = emb?.title || emb?.description;
+          if (imgUrl && !hasBody) {
+            const wrap = document.createElement("div");
+            wrap.className = "dc-embed dc-embed--media";
+            const img = document.createElement("img");
+            img.src = imgUrl;
+            img.alt = "";
+            img.loading = "lazy";
+            wrap.appendChild(img);
+            mount.appendChild(wrap);
+            continue;
+          }
+          const wrap = document.createElement("div");
+          wrap.className = "dc-embed";
+          if (typeof emb?.color === "number") {
+            wrap.style.borderLeftColor = "#" + emb.color.toString(16).padStart(6, "0");
+          }
+          const inner = document.createElement("div");
+          inner.className = "dc-embed-inner";
+          if (emb?.title) {
+            const t = document.createElement("div");
+            t.className = "dc-embed-title";
+            t.textContent = emb.title;
+            inner.appendChild(t);
+          }
+          if (emb?.description) {
+            const desc = document.createElement("div");
+            desc.className = "dc-embed-desc";
+            desc.innerHTML = DOMPurify.sanitize(
+              marked.parse(String(emb.description).replace(/^-#\s+(.+)$/gm, "> *$1*"), { async: false, gfm: true, breaks: true }),
+              { USE_PROFILES: { html: true } },
+            );
+            inner.appendChild(desc);
+          }
+          wrap.appendChild(inner);
+          if (imgUrl) {
+            const media = document.createElement("div");
+            media.className = "dc-embed--media";
+            const img = document.createElement("img");
+            img.src = imgUrl;
+            img.alt = "";
+            media.appendChild(img);
+            wrap.appendChild(media);
+          }
+          mount.appendChild(wrap);
+        }
+      }
+
+      let previewTimer = null;
+      let previewBusy = false;
+      let previewRerun = false;
+
+      async function runPreview({ silent } = { silent: false }) {
+        if (previewBusy) {
+          previewRerun = true;
+          return;
+        }
+        previewBusy = true;
+        try {
+          const md = await loadMarkdownLibs();
+          const res = await fetch(api("/preview"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...authHeaders() },
+            body: JSON.stringify(payload()),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            if (!silent) showBanner("err", data.error ?? res.statusText);
+            return;
+          }
+          $("previewSubject").textContent = data.commitSubject ?? data.nextVersion ?? "";
+          $("previewSummary").textContent = data.summaryPlain ?? "";
+          renderMd($("previewChanges"), data.changesMarkdown ?? "", md);
+          renderDiscordEmbeds(data.discordEmbeds ?? [], md);
+          touchTime();
+          $("previewPanel").hidden = false;
+        } catch (e) {
+          if (!silent) showBanner("err", e?.message ?? String(e));
+        } finally {
+          previewBusy = false;
+          if (previewRerun) {
+            previewRerun = false;
+            void runPreview({ silent: true });
+          }
+        }
+      }
+
+      function schedulePreview() {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(() => void runPreview({ silent: true }), 350);
+      }
+
+      async function loadState() {
+        hideBanner();
+        const res = await fetch(api("/state"), { headers: authHeaders() });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showBanner("err", data.error ?? res.statusText);
+          return;
+        }
+        $("tokenSection").hidden = !data.tokenRequired;
+        $("btnCommit").disabled = !data.discordConfigured;
+        const discordHint = data.discordConfigured
+          ? "Commit will publish to Discord automatically."
+          : "Set DISCORD_WEBHOOK_URL_CHANGELOG in .env.local, then restart dev.";
+        $("meta").textContent = `v${data.version} · ${data.branch} · ${data.userName || "git user unset"}${data.dirty ? " · dirty working tree" : ""} · ${discordHint}`;
+      }
+
+      async function postAction(path, confirmMsg) {
+        if (confirmMsg && !confirm(confirmMsg)) return;
+        hideBanner();
+        clearProgress();
+        const p = payload();
+        if (!p.summary.trim()) {
+          showBanner("err", "Add a headline before posting.");
+          return;
+        }
+        setBusy(true);
+        try {
+          const res = await fetch(api(path), {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...authHeaders() },
+            body: JSON.stringify(p),
+          });
+          const raw = await res.text();
+          let data = {};
+          try { data = JSON.parse(raw); } catch { /* */ }
+          if (!res.ok) {
+            showBanner("err", data.error ?? (raw.slice(0, 200) || res.statusText));
+            return;
+          }
+          if (data.steps) {
+            for (const s of data.steps) appendProgress(s);
+          }
+          if (data.discordOk === false) {
+            showBanner("warn", data.message ?? `Discord failed: ${data.discordError}`);
+          } else if (!data.pushOk) {
+            showBanner("warn", data.message ?? "Published to Discord; push failed.");
+          } else {
+            showBanner("ok", data.message ?? "Committed, pushed, and published to Discord.");
+          }
+          void loadState();
+        } catch (e) {
+          showBanner("err", e?.message ?? String(e));
+        } finally {
+          setBusy(false);
+        }
+      }
+
+      $("btnReload").addEventListener("click", () => void loadState());
+      $("btnCommit").addEventListener("click", () =>
+        void postAction("/commit", "Bump version, commit, publish to Discord, and push?"),
+      );
+      for (const id of ["bump", "summary", "changes"]) {
+        $(id).addEventListener("input", schedulePreview);
+        $(id).addEventListener("change", schedulePreview);
+      }
+
+      void loadState();
+      schedulePreview();
+    </script>
+  </body>
+</html>

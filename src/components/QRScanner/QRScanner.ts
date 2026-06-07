@@ -9,6 +9,7 @@ import {
   scanQrFromImageFile,
 } from '@/services/qrDecode';
 import type { DecodedQrMii } from '@/types';
+import { lockBodyScroll, unlockBodyScroll } from '@/utils/modalScrollLock';
 
 export interface QRScannerCallbacks {
   onSuccess: (decoded: DecodedQrMii) => void;
@@ -17,6 +18,23 @@ export interface QRScannerCallbacks {
 
 const INVALID_MII_MSG =
   'This QR code does not contain a valid Mii. Supports 3DS, Wii U, Switch, and Tomodachi Life Mii QR codes.';
+
+/** Max edge length for live jsQR frames (full-res decode uses miijs separately). */
+const SCAN_MAX_DIM = 640;
+/** Run jsQR every N animation frames to keep the scan-line animation smooth. */
+const JSQR_FRAME_INTERVAL = 3;
+/** Run the heavier miijs canvas scan every N jsQR attempts. */
+const MIJS_SCAN_INTERVAL = 12;
+
+function fitScanDimensions(width: number, height: number): { width: number; height: number } {
+  const maxDim = Math.max(width, height);
+  if (maxDim <= SCAN_MAX_DIM) return { width, height };
+  const scale = SCAN_MAX_DIM / maxDim;
+  return {
+    width: Math.max(1, Math.round(width * scale)),
+    height: Math.max(1, Math.round(height * scale)),
+  };
+}
 
 export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
   const overlay = document.createElement('div');
@@ -36,6 +54,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     cancelAnimationFrame(rafId);
     stream?.getTracks().forEach((t) => t.stop());
     overlay.remove();
+    unlockBodyScroll();
     document.removeEventListener('keydown', onKeyDown);
   }
 
@@ -79,6 +98,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     try {
       const decoded = await decodeQrPayload(binary);
       overlay.remove();
+      unlockBodyScroll();
       document.removeEventListener('keydown', onKeyDown);
       callbacks.onSuccess(decoded);
     } catch {
@@ -93,6 +113,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
         const rescanned = await scanQrFromCanvas(canvas);
         const decoded = await decodeQrPayload(rescanned);
         overlay.remove();
+        unlockBodyScroll();
         document.removeEventListener('keydown', onKeyDown);
         callbacks.onSuccess(decoded);
       } catch {
@@ -114,6 +135,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
       </div>
       <div class="qr-scanner-viewfinder">
         <video playsinline muted autoplay></video>
+        <div class="qr-scanner-shade" aria-hidden="true"></div>
         <div class="qr-scanner-guide" aria-hidden="true"></div>
       </div>
       <p class="qr-scanner-status">Point your camera at a Mii QR code (3DS, Wii U, Switch, or Tomodachi Life)</p>
@@ -125,6 +147,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
+    lockBodyScroll();
 
     modal.querySelector('.qr-scanner-modal__close')?.addEventListener('click', cancel);
 
@@ -152,9 +175,18 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
     });
 
     const video = modal.querySelector('video')!;
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+    const scanCanvas = document.createElement('canvas');
+    const scanCtx = scanCanvas.getContext('2d', { willReadFrequently: true })!;
+    const fullCanvas = document.createElement('canvas');
+    const fullCtx = fullCanvas.getContext('2d')!;
+
     let frameCount = 0;
+    let jsqrAttempts = 0;
+    let heavyScanPending = false;
+    let scanWidth = 0;
+    let scanHeight = 0;
+    let fullWidth = 0;
+    let fullHeight = 0;
 
     try {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -172,12 +204,44 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
 
     function scheduleNextFrame(): void {
       if (closed || processing) return;
-      rafId = requestAnimationFrame(() => {
-        void tick();
-      });
+      rafId = requestAnimationFrame(tick);
     }
 
-    async function tick(): Promise<void> {
+    function ensureScanCanvasSize(videoWidth: number, videoHeight: number): void {
+      const next = fitScanDimensions(videoWidth, videoHeight);
+      if (next.width !== scanWidth || next.height !== scanHeight) {
+        scanWidth = next.width;
+        scanHeight = next.height;
+        scanCanvas.width = scanWidth;
+        scanCanvas.height = scanHeight;
+      }
+      if (videoWidth !== fullWidth || videoHeight !== fullHeight) {
+        fullWidth = videoWidth;
+        fullHeight = videoHeight;
+        fullCanvas.width = fullWidth;
+        fullCanvas.height = fullHeight;
+      }
+    }
+
+    function runHeavyScan(): void {
+      if (heavyScanPending || closed || processing) return;
+      heavyScanPending = true;
+      void (async () => {
+        try {
+          if (closed || processing || video.readyState !== video.HAVE_ENOUGH_DATA) return;
+          ensureScanCanvasSize(video.videoWidth, video.videoHeight);
+          fullCtx.drawImage(video, 0, 0);
+          const scanned = await scanQrFromCanvas(fullCanvas);
+          await handleDecodedBytes(scanned, status);
+        } catch {
+          /* fall back to jsQR on later frames */
+        } finally {
+          heavyScanPending = false;
+        }
+      })();
+    }
+
+    function tick(): void {
       if (closed || processing) return;
 
       if (video.readyState !== video.HAVE_ENOUGH_DATA) {
@@ -185,25 +249,21 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
         return;
       }
 
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx.drawImage(video, 0, 0);
-
       frameCount += 1;
-
-      if (frameCount % 15 === 0) {
-        try {
-          const scanned = await scanQrFromCanvas(canvas);
-          await handleDecodedBytes(scanned, status);
-          return;
-        } catch {
-          /* continue with fast jsQR path */
-        }
+      if (frameCount % JSQR_FRAME_INTERVAL !== 0) {
+        scheduleNextFrame();
+        return;
       }
 
-      if (closed || processing) return;
+      ensureScanCanvasSize(video.videoWidth, video.videoHeight);
+      scanCtx.drawImage(video, 0, 0, scanWidth, scanHeight);
 
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      jsqrAttempts += 1;
+      if (jsqrAttempts % MIJS_SCAN_INTERVAL === 0) {
+        runHeavyScan();
+      }
+
+      const imageData = scanCtx.getImageData(0, 0, scanWidth, scanHeight);
       const code = jsQR(imageData.data, imageData.width, imageData.height, {
         inversionAttempts: 'attemptBoth',
       });
@@ -211,7 +271,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
       if (code) {
         const binary = extractQrBytes(code);
         if (binary?.length) {
-          await handleDecodedBytes(binary, status);
+          void handleDecodedBytes(binary, status);
           return;
         }
       }
@@ -219,7 +279,7 @@ export function openQRScanner(callbacks: QRScannerCallbacks): () => void {
       scheduleNextFrame();
     }
 
-    tick();
+    scheduleNextFrame();
   }
 
   startCamera();

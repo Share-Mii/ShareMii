@@ -24,8 +24,13 @@ import { fetchFollowSuggestions } from '@/services/discovery';
 import { fetchFollowingFeedMiis } from '@/services/social';
 import { isSupabaseConfigured } from '@/services/supabase';
 import { createEmptyState } from '@/utils/emptyState';
-import { icon } from '@/utils/icon';
+import { icon, iconSpan } from '@/utils/icon';
+import {
+  bindFilterDrawer,
+  type FilterDrawerHandle,
+} from '@/utils/filterDrawer';
 import type { ActivityFeedFilter, Mii } from '@/types';
+import { MOBILE_MQ } from '@/utils/viewport';
 
 const PAGE_SIZE = 30;
 const FEED_SKELETON_COUNT = 6;
@@ -51,6 +56,7 @@ export function renderFeed(container: HTMLElement): () => void {
   let pollTimer: number | null = null;
   let followingMiis: Mii[] = [];
   let shellReady = false;
+  let filterDrawer: FilterDrawerHandle | null = null;
 
   const page = document.createElement('main');
   page.className = 'page-content page-content--offset-top feed-page';
@@ -62,52 +68,31 @@ export function renderFeed(container: HTMLElement): () => void {
   const filterBar = document.createElement('div');
   filterBar.className = 'feed-page__filter-bar';
 
-  const filterToggle = document.createElement('button');
-  filterToggle.type = 'button';
-  filterToggle.className =
-    'feed-page__filter-toggle pill-btn pill-btn--outline interactive';
-  filterToggle.innerHTML = `${icon('filter')} Filter`;
-
   const filters = document.createElement('div');
   filters.className = 'feed-page__filters';
 
-  const filterSheetBackdrop = document.createElement('button');
-  filterSheetBackdrop.type = 'button';
-  filterSheetBackdrop.className = 'feed-page__filter-backdrop';
-  filterSheetBackdrop.setAttribute('aria-label', 'Close filters');
-  filterSheetBackdrop.hidden = true;
+  const filterPanel = document.createElement('aside');
+  filterPanel.className = 'filter-panel feed-page__filter-panel';
+  filterPanel.setAttribute('role', 'dialog');
+  filterPanel.setAttribute('aria-label', 'Activity filters');
 
-  const filterSheet = document.createElement('div');
-  filterSheet.className = 'feed-page__filter-sheet';
-  filterSheet.hidden = true;
-  filterSheet.setAttribute('role', 'dialog');
-  filterSheet.setAttribute('aria-label', 'Activity filters');
+  const filterPanelTitle = document.createElement('h3');
+  filterPanelTitle.className = 'filter-panel__title';
+  filterPanelTitle.innerHTML = `${icon('filter')} Filter activity`;
 
-  const filterSheetTitle = document.createElement('p');
-  filterSheetTitle.className = 'feed-page__filter-sheet-title';
-  filterSheetTitle.textContent = 'Filter activity';
+  const filterPanelOptions = document.createElement('div');
+  filterPanelOptions.className = 'feed-page__filter-options';
 
-  const filterSheetChips = document.createElement('div');
-  filterSheetChips.className = 'feed-page__filter-sheet-chips';
+  const filterApplyBar = document.createElement('div');
+  filterApplyBar.className = 'filter-panel__apply-bar feed-page__filter-apply';
+  const filterApplyBtn = document.createElement('button');
+  filterApplyBtn.type = 'button';
+  filterApplyBtn.className =
+    'pill-btn pill-btn--filled interactive filter-panel__apply-btn';
+  filterApplyBtn.textContent = 'Done';
+  filterApplyBar.appendChild(filterApplyBtn);
 
-  function closeFilterSheet(): void {
-    filterSheet.hidden = true;
-    filterSheetBackdrop.hidden = true;
-    filterSheet.classList.remove('feed-page__filter-sheet--open');
-    filterSheetBackdrop.classList.remove('feed-page__filter-backdrop--open');
-  }
-
-  function openFilterSheet(): void {
-    filterSheet.hidden = false;
-    filterSheetBackdrop.hidden = false;
-    requestAnimationFrame(() => {
-      filterSheet.classList.add('feed-page__filter-sheet--open');
-      filterSheetBackdrop.classList.add('feed-page__filter-backdrop--open');
-    });
-  }
-
-  filterToggle.addEventListener('click', openFilterSheet);
-  filterSheetBackdrop.addEventListener('click', closeFilterSheet);
+  filterPanel.append(filterPanelTitle, filterPanelOptions, filterApplyBar);
 
   const list = document.createElement('div');
   list.className = 'feed-list';
@@ -135,6 +120,9 @@ export function renderFeed(container: HTMLElement): () => void {
 
     page.replaceChildren();
 
+    const stickyHead = document.createElement('div');
+    stickyHead.className = 'feed-page__sticky-head';
+
     const heading = document.createElement('h1');
     heading.className = 'feed-page__title page-title';
     heading.innerHTML = `${icon('rss')} Feed`;
@@ -146,22 +134,36 @@ export function renderFeed(container: HTMLElement): () => void {
 
     renderTabs();
     renderFilterChips();
-    filterBar.append(filterToggle, filters);
-    filterSheet.append(filterSheetTitle, filterSheetChips);
+    filterBar.appendChild(filters);
+    stickyHead.append(heading, lead, tabs, filterBar);
     page.append(
-      heading,
-      lead,
-      tabs,
-      filterBar,
-      filterSheetBackdrop,
-      filterSheet,
+      stickyHead,
+      filterPanel,
       suggestionsHost,
       list,
       uploadsPanel,
       loadMoreWrap,
     );
+
+    filterDrawer = bindFilterDrawer(page, filterPanel, filterBar);
+    filterDrawer.toggle.classList.add('feed-page__filter-toggle');
+    filterDrawer.toggle.innerHTML = `${iconSpan('filter')} Filter`;
+    filterApplyBtn.addEventListener('click', () => filterDrawer?.close());
+
+    syncFeedAppClass();
     syncPanelVisibility();
   }
+
+  function syncFeedAppClass(): void {
+    const isMobile = window.matchMedia(MOBILE_MQ).matches;
+    page.classList.toggle('feed-page--app', isMobile);
+    filterPanel.classList.toggle('filter-panel--bottom-sheet', isMobile);
+    filterDrawer?.setNavDock(isMobile);
+    if (!isMobile) filterDrawer?.close();
+  }
+
+  const feedMq = window.matchMedia(MOBILE_MQ);
+  feedMq.addEventListener('change', syncFeedAppClass);
 
   function showContentSkeleton(): void {
     loadMoreWrap.hidden = true;
@@ -198,10 +200,8 @@ export function renderFeed(container: HTMLElement): () => void {
 
   function renderFilterChips(): void {
     filters.replaceChildren();
-    filterSheetChips.replaceChildren();
-    const activeLabel =
-      FILTERS.find((f) => f.value === eventFilter)?.label ?? 'All';
-    filterToggle.innerHTML = `${icon('filter')} ${activeLabel}`;
+    filterPanelOptions.replaceChildren();
+    filterDrawer?.setBadgeCount(eventFilter === 'all' ? 0 : 1);
 
     for (const f of FILTERS) {
       const makeChip = (host: HTMLElement): void => {
@@ -212,18 +212,19 @@ export function renderFeed(container: HTMLElement): () => void {
           btn.classList.add('feed-page__filter-chip--active');
         }
         btn.textContent = f.label;
+        btn.setAttribute('aria-pressed', String(f.value === eventFilter));
         btn.disabled = loadingContent;
         btn.addEventListener('click', () => {
           if (loadingContent || eventFilter === f.value) return;
           eventFilter = f.value;
           renderFilterChips();
-          closeFilterSheet();
+          filterDrawer?.close();
           void reloadActivity();
         });
         host.appendChild(btn);
       };
       makeChip(filters);
-      makeChip(filterSheetChips);
+      makeChip(filterPanelOptions);
     }
   }
 
@@ -471,5 +472,7 @@ export function renderFeed(container: HTMLElement): () => void {
     abort = true;
     if (pollTimer) window.clearInterval(pollTimer);
     document.removeEventListener('visibilitychange', onVisible);
+    feedMq.removeEventListener('change', syncFeedAppClass);
+    filterDrawer?.destroy();
   };
 }

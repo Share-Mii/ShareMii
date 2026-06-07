@@ -24,12 +24,8 @@ export function getStoredTheme(): Theme | null {
   return null;
 }
 
-export function getSystemTheme(): Theme {
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
 export function getPreferredTheme(): Theme {
-  return getStoredTheme() ?? getSystemTheme();
+  return getStoredTheme() ?? 'dark';
 }
 
 export function isDarkTheme(): boolean {

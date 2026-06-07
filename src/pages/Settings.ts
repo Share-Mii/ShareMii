@@ -1,6 +1,6 @@
+import './pages.css';
 import './Settings.css';
 import { navigateTo } from '@/utils/navigation';
-import './pages.css';
 import '@/components/shared.css';
 import { wrapPublicPage } from '@/layout/pageShell';
 import { getAuthSession, isLoggedIn, signOut } from '@/services/auth';

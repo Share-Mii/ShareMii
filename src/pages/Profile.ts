@@ -1,7 +1,7 @@
+import './pages.css';
+import './Collections.css';
 import './Profile.css';
 import { navigateTo } from '@/utils/navigation';
-import './Collections.css';
-import './pages.css';
 import '@/components/shared.css';
 import '@/components/IconActionButton/IconActionButton.css';
 import '@/components/IconActionCluster/IconActionCluster.css';
@@ -40,7 +40,7 @@ import {
   createMiiTileCornerOverflowOnly,
   createProfileShareActionCluster,
 } from '@/components/ShareActions/ShareActions';
-import { setPageMeta } from '@/utils/pageMeta';
+import { getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
 import {
   fetchPublicCollectionsForUser,
   fetchUserCollections,
@@ -131,7 +131,7 @@ export function renderProfile(
       title: profile.username,
       description: profile.bio || `Miis shared by ${profile.username} on ShareMii`,
       type: 'profile',
-      url: `${window.location.origin}/u/${encodeURIComponent(profile.username)}`,
+      url: `${getSiteOrigin()}/u/${encodeURIComponent(profile.username)}`,
     });
 
     container.replaceChildren(wrapPublicPage(page));

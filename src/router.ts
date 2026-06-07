@@ -1,7 +1,6 @@
 import { renderHome } from '@/pages/Home';
 import { renderDetail } from '@/pages/Detail';
 import { renderBrowse } from '@/pages/Browse';
-import { renderCreate } from '@/pages/Create';
 import { fetchMiiById } from '@/services/supabase';
 import { renderProfile } from '@/pages/Profile';
 import { renderFavorites } from '@/pages/Favorites';
@@ -137,6 +136,7 @@ function navigate(): void {
         return;
       }
 
+      const { renderCreate } = await import('@/pages/Create');
       runWithPageTransition(() => renderCreate(app, { remixMii: mii }));
     });
     return;
@@ -156,6 +156,7 @@ function navigate(): void {
         navigateTo('/');
         return;
       }
+      const { renderCreate } = await import('@/pages/Create');
       runWithPageTransition(() => renderCreate(app));
     });
     return;
@@ -191,6 +192,7 @@ function navigate(): void {
         return;
       }
 
+      const { renderCreate } = await import('@/pages/Create');
       runWithPageTransition(() => renderCreate(app, { editMii: mii }));
     });
     return;
@@ -320,6 +322,14 @@ function navigate(): void {
 
   if (path === '/browse') {
     runWithPageTransition(() => renderBrowse(app));
+    return;
+  }
+
+  if (path === '/tags') {
+    void import('@/pages/TagsIndex').then(({ renderTagsIndex }) => {
+      if (getRoutePath() !== '/tags') return;
+      runWithPageTransition(() => renderTagsIndex(app));
+    });
     return;
   }
 

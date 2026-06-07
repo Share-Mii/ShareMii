@@ -1,7 +1,9 @@
 .settings-page {
   max-width: 42rem;
   margin: 0 auto;
-  padding: var(--page-content-top) var(--spacing-lg) var(--spacing-2xl);
+  padding: var(--page-content-top) var(--page-gutter) var(--spacing-2xl);
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .settings-page__title {
@@ -240,7 +242,21 @@
   pointer-events: none;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  .settings-page {
+    padding-bottom: var(--spacing-lg);
+    max-width: 100%;
+    overflow-x: clip;
+  }
+
+  .settings-page__title {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .settings-page__card {
+    margin-bottom: var(--spacing-lg);
+  }
+
   .settings-row {
     flex-wrap: wrap;
   }
@@ -252,5 +268,11 @@
   .settings-row__action .pill-btn {
     width: 100%;
     justify-content: center;
+  }
+
+  .settings-row__action--links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
   }
 }

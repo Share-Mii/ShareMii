@@ -1,3 +1,4 @@
+import { SITEMAP_STATIC_LASTMOD } from '../../seo/content';
 import { fetchSitemapIds, type WorkerEnv } from '../data/supabase';
 import { siteOrigin } from '../data/meta';
 
@@ -5,6 +6,7 @@ const STATIC_PATHS: { path: string; changefreq: string; priority: string }[] = [
   { path: '/', changefreq: 'daily', priority: '1.0' },
   { path: '/browse', changefreq: 'weekly', priority: '0.8' },
   { path: '/create', changefreq: 'weekly', priority: '0.8' },
+  { path: '/tags', changefreq: 'weekly', priority: '0.7' },
   { path: '/collections/browse', changefreq: 'weekly', priority: '0.7' },
   { path: '/about', changefreq: 'monthly', priority: '0.6' },
   { path: '/help', changefreq: 'monthly', priority: '0.6' },
@@ -63,6 +65,7 @@ export async function generateSitemap(
         `${origin}${path === '/' ? '/' : path}`,
         changefreq,
         priority,
+        SITEMAP_STATIC_LASTMOD,
       ),
     );
   }

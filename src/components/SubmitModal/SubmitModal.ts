@@ -14,6 +14,7 @@ import {
   insertMii,
   updateMii,
 } from '@/services/supabase';
+import { notifyPublicMiiUrl } from '@/services/indexNow';
 import { icon, iconSpan } from '@/utils/icon';
 import type { ContentVisibility, DecodedQrMii, Mii, Platform } from '@/types';
 
@@ -25,6 +26,7 @@ const PLATFORMS: { value: Platform; label: string }[] = [
 ];
 
 import { MII_NAME_MAX, truncateMiiName, validateMiiName } from '@/utils/miiName';
+import { lockBodyScroll, unlockBodyScroll } from '@/utils/modalScrollLock';
 import { moderationFailReasonForUserText } from '@/utils/contentModeration';
 
 const DESC_MAX = 500;
@@ -43,7 +45,10 @@ let activeTeardown: (() => void) | null = null;
 let openGeneration = 0;
 
 function removeAllSubmitOverlays(): void {
+  const hadOverlay =
+    document.querySelectorAll('.submit-modal-overlay').length > 0;
   document.querySelectorAll('.submit-modal-overlay').forEach((el) => el.remove());
+  if (hadOverlay) unlockBodyScroll();
   activeTeardown = null;
 }
 
@@ -307,7 +312,7 @@ function buildModal(
 
   const descOptional = document.createElement('span');
   descOptional.className = 'submit-modal__hint';
-  descOptional.textContent = 'Optional';
+  descOptional.textContent = 'Recommended for search';
 
   const descCount = document.createElement('span');
   descCount.className = 'submit-modal__hint';
@@ -319,7 +324,8 @@ function buildModal(
   descInput.name = 'description';
   descInput.maxLength = DESC_MAX;
   descInput.rows = 3;
-  descInput.placeholder = 'Where did you find them? Any fun details?';
+  descInput.placeholder =
+    'e.g. Baldi fan character, Tomodachi Life celebrity — helps others find this Mii in search';
   descInput.value = editMii?.description ?? '';
 
   function updateDescCount(): void {
@@ -364,6 +370,7 @@ function buildModal(
   modal.append(closeBtn, header, body);
   overlay.appendChild(modal);
   document.body.appendChild(overlay);
+  lockBodyScroll();
 
   let closed = false;
   let submitting = false;
@@ -415,6 +422,7 @@ function buildModal(
     if (closed) return;
     closed = true;
     overlay.remove();
+    unlockBodyScroll();
     document.removeEventListener('keydown', onKeydown);
     if (activeTeardown === dismiss) {
       activeTeardown = null;
@@ -504,6 +512,9 @@ function buildModal(
         });
 
         dismiss();
+        if (selectedVisibility === 'public') {
+          notifyPublicMiiUrl(mii.id);
+        }
         callbacks.onSuccess?.(mii.id);
         navigateTo(`/mii/${mii.id}`);
       } else {
@@ -520,6 +531,9 @@ function buildModal(
         });
 
         dismiss();
+        if (selectedVisibility === 'public') {
+          notifyPublicMiiUrl(mii.id);
+        }
         callbacks.onSuccess?.(mii.id);
         navigateToUploadedMii(mii.id);
       }

@@ -11,7 +11,7 @@
 
 @media (max-width: 768px) {
   .create-page {
-    padding-bottom: calc(var(--bottom-bar-total-height) + var(--spacing-xl));
+    padding-bottom: var(--spacing-xl);
   }
 
   .create-page .mii-maker__toolbar {
@@ -21,5 +21,21 @@
 
   .create-page .mii-maker__toolbar-actions {
     flex-wrap: wrap;
+    gap: var(--spacing-xs);
+  }
+
+  .create-page .mii-maker__toolbar-btn-label {
+    display: none;
+  }
+
+  .create-page .mii-maker__toolbar-actions .pill-btn:not(.pill-btn--filled) {
+    min-width: var(--touch-target-min);
+    padding-inline: var(--spacing-sm);
+  }
+
+  .create-page .mii-maker__toolbar-actions .pill-btn--filled {
+    flex: 1 1 100%;
+    min-height: var(--touch-target-min);
+    justify-content: center;
   }
 }

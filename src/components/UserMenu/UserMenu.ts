@@ -1,6 +1,7 @@
 import './UserMenu.css';
 import type { Profile } from '@/types';
 import { iconSpan } from '@/utils/icon';
+import { isMobile as isMobileMenu } from '@/utils/viewport';
 
 export type UserMenuItem =
   | { kind: 'separator' }
@@ -14,12 +15,6 @@ export type UserMenuItem =
       variant?: 'default' | 'danger';
       action?: () => void | Promise<void>;
     };
-
-const MOBILE_MENU_MQ = '(max-width: 768px)';
-
-function isMobileMenu(): boolean {
-  return window.matchMedia(MOBILE_MENU_MQ).matches;
-}
 
 export function createUserMenuButton(
   profile: Profile | null,
@@ -151,11 +146,16 @@ function appendMenuItem(
   menu.appendChild(a);
 }
 
+export type UserMenuPresentation = 'dropdown' | 'sheet';
+
 export function createUserMenuDropdown(
   items: UserMenuItem[],
   onClose: () => void,
+  options: { presentation?: UserMenuPresentation } = {},
 ): HTMLElement {
-  const useSheet = isMobileMenu();
+  const useSheet =
+    options.presentation === 'sheet' ||
+    (options.presentation !== 'dropdown' && isMobileMenu());
 
   const backdrop = document.createElement('button');
   backdrop.type = 'button';
