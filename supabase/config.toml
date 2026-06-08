@@ -22,3 +22,21 @@ additional_redirect_urls = [
   "https://sharemii.net",
   "https://www.sharemii.net",
 ]
+
+# Branded auth emails — source HTML in supabase/templates/
+# Production: paste into Dashboard → Authentication → Email Templates (see library/SUPABASE_EMAIL.md)
+[auth.email.template.confirmation]
+subject = "Confirm your ShareMii.net account"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.recovery]
+subject = "Reset your ShareMii.net password"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.magic_link]
+subject = "Sign in to ShareMii.net"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.email_change]
+subject = "Confirm your new email for ShareMii.net"
+content_path = "./supabase/templates/email_change.html"

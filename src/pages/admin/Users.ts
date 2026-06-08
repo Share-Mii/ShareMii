@@ -10,6 +10,10 @@ import { wrapAdminPage } from '@/pages/admin/adminShell';
 import { escapeHtml } from '@/utils/escapeHtml';
 import { createCustomSelect } from '@/components/CustomSelect/CustomSelect';
 import { isAdmin, roleLabel } from '@/utils/permissions';
+import '@/components/ListPager/ListPager.css';
+import { iconSpan } from '@/utils/icon';
+
+const USERS_PAGE_SIZE = 20;
 
 export async function renderAdminUsers(
   container: HTMLElement,
@@ -27,36 +31,149 @@ export async function renderAdminUsers(
   searchBtn.type = 'button';
   searchBtn.className = 'pill-btn pill-btn--filled interactive';
   searchBtn.textContent = 'Search';
-  toolbar.append(searchInput, searchBtn);
+  const clearBtn = document.createElement('button');
+  clearBtn.type = 'button';
+  clearBtn.className = 'pill-btn pill-btn--outline interactive';
+  clearBtn.textContent = 'Show all';
+  toolbar.append(searchInput, searchBtn, clearBtn);
+
+  const listWrap = document.createElement('div');
+  listWrap.className = 'list-pager admin-user-list';
 
   const results = document.createElement('div');
-  results.className = 'admin-user-results';
-  content.append(toolbar, results);
+  results.className = 'admin-user-results list-pager__list';
 
-  async function runSearch(): Promise<void> {
+  const pager = document.createElement('nav');
+  pager.className = 'list-pager__controls admin-user-list__pager';
+  pager.setAttribute('aria-label', 'User list pages');
+  pager.hidden = true;
+
+  const pagerSummary = document.createElement('p');
+  pagerSummary.className = 'admin-user-list__summary admin-meta';
+
+  listWrap.append(pagerSummary, results, pager);
+  content.append(toolbar, listWrap);
+
+  let currentPage = 0;
+  let total = 0;
+  let loading = false;
+
+  function totalPages(): number {
+    return Math.max(1, Math.ceil(total / USERS_PAGE_SIZE));
+  }
+
+  function renderPager(): void {
+    pager.replaceChildren();
+    if (total <= USERS_PAGE_SIZE) {
+      pager.hidden = true;
+      return;
+    }
+
+    pager.hidden = false;
+    const pages = totalPages();
+    const safePage = Math.min(currentPage, pages - 1);
+    currentPage = safePage;
+
+    const prev = document.createElement('button');
+    prev.type = 'button';
+    prev.className = 'list-pager__btn interactive';
+    prev.disabled = safePage <= 0 || loading;
+    prev.innerHTML = iconSpan('chevron-left');
+    prev.setAttribute('aria-label', 'Previous page');
+    prev.addEventListener('click', () => {
+      currentPage = Math.max(0, currentPage - 1);
+      void runSearch();
+    });
+
+    const label = document.createElement('span');
+    label.className = 'list-pager__label';
+    label.textContent = `Page ${safePage + 1} of ${pages}`;
+
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'list-pager__btn interactive';
+    next.disabled = safePage >= pages - 1 || loading;
+    next.innerHTML = iconSpan('chevron-right');
+    next.setAttribute('aria-label', 'Next page');
+    next.addEventListener('click', () => {
+      currentPage = Math.min(totalPages() - 1, currentPage + 1);
+      void runSearch();
+    });
+
+    pager.append(prev, label, next);
+  }
+
+  function updateSummary(): void {
+    if (total === 0) {
+      pagerSummary.textContent = searchInput.value.trim()
+        ? 'No users match your search.'
+        : 'No users yet.';
+      return;
+    }
+
+    const start = currentPage * USERS_PAGE_SIZE + 1;
+    const end = Math.min(total, (currentPage + 1) * USERS_PAGE_SIZE);
     const q = searchInput.value.trim();
-    if (!q) return;
+    const range = `${start.toLocaleString()}–${end.toLocaleString()} of ${total.toLocaleString()}`;
+    pagerSummary.textContent = q
+      ? `${range} matching “${q}”`
+      : `${range} users · newest first`;
+  }
+
+  async function runSearch(resetPage = false): Promise<void> {
+    if (loading) return;
+    if (resetPage) currentPage = 0;
+
+    loading = true;
+    searchBtn.disabled = true;
+    clearBtn.disabled = true;
     results.replaceChildren();
+    results.innerHTML = '<p class="admin-meta">Loading users…</p>';
+
     try {
-      const users = await searchUsers(q);
-      if (!users.length) {
+      const q = searchInput.value.trim();
+      const { items, total: count } = await searchUsers(
+        q,
+        USERS_PAGE_SIZE,
+        currentPage * USERS_PAGE_SIZE,
+      );
+      total = count;
+      currentPage = Math.min(currentPage, totalPages() - 1);
+
+      results.replaceChildren();
+      if (!items.length) {
         results.innerHTML = '<p class="admin-meta">No users found.</p>';
-        return;
+      } else {
+        for (const u of items) {
+          results.appendChild(renderUserCard(u, profile));
+        }
       }
-      for (const u of users) {
-        results.appendChild(renderUserCard(u, profile));
-      }
+
+      updateSummary();
+      renderPager();
     } catch (err) {
+      total = 0;
+      pager.hidden = true;
+      pagerSummary.textContent = '';
       results.innerHTML = `<p class="page-error">${escapeHtml(err instanceof Error ? err.message : 'Search failed.')}</p>`;
+    } finally {
+      loading = false;
+      searchBtn.disabled = false;
+      clearBtn.disabled = false;
     }
   }
 
-  searchBtn.addEventListener('click', () => void runSearch());
+  searchBtn.addEventListener('click', () => void runSearch(true));
+  clearBtn.addEventListener('click', () => {
+    searchInput.value = '';
+    void runSearch(true);
+  });
   searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') void runSearch();
+    if (e.key === 'Enter') void runSearch(true);
   });
 
   container.replaceChildren(wrapAdminPage(profile, 'Users', content));
+  await runSearch(true);
 }
 
 function renderUserCard(user: AdminUserSummary, staff: Profile): HTMLElement {

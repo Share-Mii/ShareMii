@@ -148,13 +148,30 @@ export async function liftRestriction(restrictionId: string): Promise<void> {
   if (error) throw new Error(formatError(error));
 }
 
-export async function searchUsers(query: string, limit = 20): Promise<AdminUserSummary[]> {
+export interface AdminUserSearchResult {
+  items: AdminUserSummary[];
+  total: number;
+}
+
+export async function searchUsers(
+  query: string,
+  limit = 20,
+  offset = 0,
+): Promise<AdminUserSearchResult> {
   const { data, error } = await getSupabaseClient().rpc('admin_search_users', {
     p_query: query,
     p_limit: limit,
+    p_offset: offset,
   });
   if (error) throw new Error(formatError(error));
-  return (data ?? []) as AdminUserSummary[];
+  const payload = (data ?? { items: [], total: 0 }) as {
+    items?: AdminUserSummary[];
+    total?: number;
+  };
+  return {
+    items: payload.items ?? [],
+    total: payload.total ?? 0,
+  };
 }
 
 export async function listAuditLog(limit = 50, offset = 0): Promise<ModerationAction[]> {

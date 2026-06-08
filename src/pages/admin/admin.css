@@ -768,6 +768,19 @@
   border-radius: var(--radius-md);
 }
 
+.admin-user-list {
+  gap: var(--spacing-md);
+}
+
+.admin-user-list__summary {
+  margin: 0;
+}
+
+.admin-user-list__pager {
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-md);
+}
+
 .admin-user-results {
   display: flex;
   flex-direction: column;
