@@ -28,6 +28,7 @@ export interface LiveMiiRendererHandle {
   root: HTMLElement;
   setMiiData: (miiData: string) => void;
   setView: (view: MiiViewPreset) => void;
+  setType: (type: string) => void;
   setExpression: (expression: string | undefined) => void;
 }
 
@@ -123,13 +124,14 @@ export function createLiveMiiRenderer(
 
   let currentView: MiiViewPreset | undefined = options.view;
   let currentExpression: string | undefined = options.expression;
+  let currentType = options.type ?? 'face';
   let renderOpts = resolveRenderOptions(options);
   let currentMiiData = miiData;
 
   const baseRenderOpts = (): Omit<RenderOptions, 'characterYRotate' | 'cameraXRotate'> => ({
     width: options.width ?? 256,
     expression: currentExpression,
-    type: options.type ?? 'face',
+    type: currentType,
     bodyType: DEFAULT_BODY_TYPE,
     shaderType: DEFAULT_SHADER_TYPE,
   });
@@ -224,6 +226,15 @@ export function createLiveMiiRenderer(
     },
     setView: (view: MiiViewPreset) => {
       currentView = view;
+      renderOpts = rebuildRenderOpts();
+      displayedUrl = null;
+      if (hasMiiData(currentMiiData)) {
+        void applyMiiData(currentMiiData);
+      }
+    },
+    setType: (type: string) => {
+      if (currentType === type) return;
+      currentType = type;
       renderOpts = rebuildRenderOpts();
       displayedUrl = null;
       if (hasMiiData(currentMiiData)) {

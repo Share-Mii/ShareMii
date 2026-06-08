@@ -712,29 +712,22 @@ export function createEditorWorkspace(
     return cat.controls.find((c) => c.path === path);
   }
 
-  function mountGeneralCard(
-    title: string,
-    subtitle: string,
+  function mountGeneralRow(
+    label: string,
     host: HTMLElement,
   ): HTMLElement {
-    const card = document.createElement('section');
-    card.className = 'mii-maker__general-card';
+    const row = document.createElement('section');
+    row.className = 'mii-maker__general-row';
 
-    const head = document.createElement('div');
-    head.className = 'mii-maker__general-card-head';
-    const h = document.createElement('h3');
-    h.className = 'mii-maker__general-card-title';
-    h.textContent = title;
-    const p = document.createElement('p');
-    p.className = 'mii-maker__general-card-desc';
-    p.textContent = subtitle;
-    head.append(h, p);
+    const heading = document.createElement('h3');
+    heading.className = 'mii-maker__general-row-label';
+    heading.textContent = label;
 
-    const cardBody = document.createElement('div');
-    cardBody.className = 'mii-maker__general-card-body';
-    card.append(head, cardBody);
-    host.appendChild(card);
-    return cardBody;
+    const rowBody = document.createElement('div');
+    rowBody.className = 'mii-maker__general-row-body';
+    row.append(heading, rowBody);
+    host.appendChild(row);
+    return rowBody;
   }
 
   function mountGeneralHub(): void {
@@ -745,73 +738,43 @@ export function createEditorWorkspace(
     studio.className = 'mii-maker__general-studio';
     studio.setAttribute('aria-label', 'General Mii settings');
 
-    const intro = document.createElement('div');
-    intro.className = 'mii-maker__general-intro';
-    intro.innerHTML = `
-      <h2 class="mii-maker__general-title">General</h2>
-      <p class="mii-maker__general-lead">Set your Mii’s body, favorite color, and birthday.</p>
-    `;
-    studio.appendChild(intro);
-
-    const grid = document.createElement('div');
-    grid.className = 'mii-maker__general-grid';
+    const settings = document.createElement('div');
+    settings.className = 'mii-maker__general-settings';
 
     const genderCtrl = controlByPath('general.gender');
     if (genderCtrl) {
-      const cardBody = mountGeneralCard(
-        'Gender',
-        'Switch between male and female defaults.',
-        grid,
-      );
-      mountToggleSection(genderCtrl, cardBody);
+      const rowBody = mountGeneralRow('Gender', settings);
+      mountToggleSection(genderCtrl, rowBody);
+      rowBody.querySelector('.mii-maker__panel-label')?.remove();
     }
 
     const favCtrl = controlByPath('general.favoriteColor');
     if (favCtrl) {
-      const cardBody = mountGeneralCard(
-        'Favorite color',
-        'Shown on the Mii’s profile and plaza tile.',
-        grid,
-      );
-      mountColorSection(favCtrl, cardBody);
-      cardBody.querySelector('.mii-maker__swatches')?.classList.add(
+      const rowBody = mountGeneralRow('Favorite color', settings);
+      mountColorSection(favCtrl, rowBody);
+      rowBody.querySelector('.mii-maker__panel-label')?.remove();
+      rowBody.querySelector('.mii-maker__swatches')?.classList.add(
         'mii-maker__swatches--favorite',
       );
-    }
-
-    const heightCtrl = controlByPath('general.height');
-    const weightCtrl = controlByPath('general.weight');
-    if (heightCtrl || weightCtrl) {
-      const cardBody = mountGeneralCard(
-        'Character size',
-        'Make your Mii taller, shorter, thinner, or heavier.',
-        grid,
-      );
-      const sizeRow = document.createElement('div');
-      sizeRow.className = 'mii-maker__general-size-row';
-      if (heightCtrl) mountSliderSection(heightCtrl, sizeRow);
-      if (weightCtrl) mountSliderSection(weightCtrl, sizeRow);
-      cardBody.appendChild(sizeRow);
     }
 
     const monthCtrl = controlByPath('general.birthMonth');
     const dayCtrl = controlByPath('general.birthday');
     const yearCtrl = controlByPath('miic.birthYear');
     if (monthCtrl || dayCtrl || yearCtrl) {
-      const cardBody = mountGeneralCard(
-        'Date of birth',
-        'Used for birthday celebrations in supported games.',
-        grid,
-      );
+      const rowBody = mountGeneralRow('Birthday', settings);
       const birthGrid = document.createElement('div');
       birthGrid.className = 'mii-maker__general-birth';
       if (monthCtrl) mountNumberInputSection(monthCtrl, birthGrid);
       if (dayCtrl) mountNumberInputSection(dayCtrl, birthGrid);
       if (yearCtrl) mountNumberInputSection(yearCtrl, birthGrid);
-      cardBody.appendChild(birthGrid);
+      rowBody.appendChild(birthGrid);
+      for (const field of rowBody.querySelectorAll('.mii-maker__birth-field')) {
+        field.querySelector('.mii-maker__panel-label')?.remove();
+      }
     }
 
-    studio.appendChild(grid);
+    studio.appendChild(settings);
     pickerHost.appendChild(studio);
   }
 

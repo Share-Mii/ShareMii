@@ -143,6 +143,16 @@ function navigate(): void {
   }
 
   if (path === '/create') {
+    const importDraft =
+      new URLSearchParams(window.location.search).get('import') === 'draft';
+    if (importDraft) {
+      void import('@/pages/CreateImport').then(({ renderCreateImport }) => {
+        if (getRoutePath() !== '/create') return;
+        runWithPageTransition(() => renderCreateImport(app));
+      });
+      return;
+    }
+
     void getAuthSession().then(async (session) => {
       if (getRoutePath() !== '/create') return;
       if (!isLoggedIn(session)) {
@@ -158,6 +168,14 @@ function navigate(): void {
       }
       const { renderCreate } = await import('@/pages/Create');
       runWithPageTransition(() => renderCreate(app));
+    });
+    return;
+  }
+
+  if (path === '/embed/maker') {
+    void import('@/pages/Create').then(({ renderCreate }) => {
+      if (getRoutePath() !== '/embed/maker') return;
+      runWithPageTransition(() => renderCreate(app, { embed: true }));
     });
     return;
   }

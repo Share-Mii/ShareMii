@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShareMii Mii Maker</title>
+    <meta
+      name="description"
+      content="Mii Maker — create Nintendo Miis in your browser, save QR codes, and upload to ShareMii Plaza."
+    />
+    <!--
+      itch.io upload
+      ────────────
+      1. Zip this folder (index.html at root).
+      2. New project → Kind: HTML → upload zip.
+      3. Viewport: 960 × 640 or larger.
+      4. Allow cross-origin if prompted (embeds sharemii.net).
+
+      Live maker: https://sharemii.net/embed/maker
+    -->
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #121214;
+      }
+
+      iframe {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe
+      title="ShareMii Mii Maker"
+      src="https://sharemii.net/embed/maker"
+      allow="fullscreen"
+      referrerpolicy="origin"
+    ></iframe>
+  </body>
+</html>

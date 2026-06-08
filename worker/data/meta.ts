@@ -228,16 +228,16 @@ export function browseMeta(
 
 export function createMeta(origin: string): SeoMeta {
   const description =
-    `Free online Mii Maker — create and customize Nintendo Miis in your browser, export QR codes, and share with the ${BRAND_NAME} community. Works for 3DS, Wii U, and Tomodachi Life.`;
+    `Mii Maker — create and customize Nintendo Miis in your browser, export QR codes, and share with the ${BRAND_NAME} community. Works for 3DS, Wii U, and Tomodachi Life.`;
   return {
-    title: formatTitle('Free Online Mii Maker — Create Mii QR Codes'),
+    title: formatTitle('Mii Maker — Create Mii QR Codes'),
     description,
     canonical: `${origin}/create`,
     image: DEFAULT_OG_IMAGE,
     imageWidth: OG_DEFAULT_WIDTH,
     imageHeight: OG_DEFAULT_HEIGHT,
     bodyHtml:
-      '<main><h1>Free Online Mii Maker</h1>' +
+      '<main><h1>Mii Maker</h1>' +
       `<p>${escapeHtml(description)}</p></main>`,
     jsonLd: withBreadcrumbs(
       {
@@ -255,6 +255,19 @@ export function createMeta(origin: string): SeoMeta {
         { name: 'Mii Maker', url: `${origin}/create` },
       ],
     ),
+  };
+}
+
+export function embedMakerMeta(origin: string): SeoMeta {
+  const description = `Create Nintendo Miis in your browser and export QR codes. Embeddable Mii Maker powered by ${BRAND_NAME}.`;
+  return {
+    title: formatTitle('Mii Maker'),
+    description,
+    canonical: `${origin}/embed/maker`,
+    noindex: true,
+    bodyHtml:
+      '<main><h1>Mii Maker</h1>' +
+      `<p>${escapeHtml(description)}</p></main>`,
   };
 }
 

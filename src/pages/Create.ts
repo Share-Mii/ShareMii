@@ -3,7 +3,9 @@ import './pages.css';
 import '@/components/shared.css';
 import '@/components/MiiMaker/MiiMaker.css';
 import { wrapPublicPage } from '@/layout/pageShell';
+import { wrapEmbedPage } from '@/layout/embedShell';
 import { createCategoryNav, updateCategoryNav } from '@/components/MiiMaker/CategoryNav';
+import { openEmbedFinishModal } from '@/components/MiiMaker/EmbedFinishModal';
 import { attachMiiMakerLayout } from '@/components/MiiMaker/miiMakerLayout';
 import { createMiiMakerPreview } from '@/components/MiiMaker/MiiMakerPreview';
 import {
@@ -23,6 +25,7 @@ import {
   miiFieldsToDecoded,
   MiiUndoStack,
   randomizeMiiFields,
+  getNestedField,
   setNestedField,
   type EditorCategoryId,
   type MiiFields,
@@ -36,6 +39,8 @@ import { DEFAULT_OG_IMAGE, getSiteOrigin, setPageMeta } from '@/utils/pageMeta';
 export interface MiiMakerPageOptions {
   editMii?: Mii;
   remixMii?: Mii;
+  /** Standalone embed for itch.io and other hosts — no auth, QR export finish step. */
+  embed?: boolean;
 }
 
 export function renderCreate(
@@ -44,23 +49,28 @@ export function renderCreate(
 ): () => void {
   const editMii = options.editMii;
   const remixMii = options.remixMii;
+  const isEmbed = Boolean(options.embed);
   const isEdit = Boolean(editMii);
   const isRemix = Boolean(remixMii);
 
   const origin = getSiteOrigin();
-  const publicMaker = !isEdit && !isRemix;
+  const publicMaker = !isEdit && !isRemix && !isEmbed;
   setPageMeta({
-    title: isEdit
-      ? 'Edit Mii'
-      : isRemix
-        ? 'Remix Mii'
-        : 'Free Online Mii Maker — Create Mii QR Codes',
-    description: isEdit
-      ? 'Edit your Mii on ShareMii and update your shared QR code.'
-      : isRemix
-        ? 'Remix a community Mii in the ShareMii online Mii Maker.'
-        : `Free online Mii Maker — create Nintendo Miis in your browser, export QR codes, and share with the ${BRAND_NAME} community.`,
-    url: `${origin}/create`,
+    title: isEmbed
+      ? 'Mii Maker'
+      : isEdit
+        ? 'Edit Mii'
+        : isRemix
+          ? 'Remix Mii'
+          : 'Mii Maker — Create Mii QR Codes',
+    description: isEmbed
+      ? `Create Nintendo Miis in your browser and export QR codes. Powered by ${BRAND_NAME}.`
+      : isEdit
+        ? 'Edit your Mii on ShareMii and update your shared QR code.'
+        : isRemix
+          ? 'Remix a community Mii in the ShareMii online Mii Maker.'
+          : `Mii Maker — create Nintendo Miis in your browser, export QR codes, and share with the ${BRAND_NAME} community.`,
+    url: isEmbed ? `${origin}/embed/maker` : `${origin}/create`,
     image: DEFAULT_OG_IMAGE,
     jsonLd: publicMaker
       ? {
@@ -83,7 +93,9 @@ export function renderCreate(
   let workspace: EditorWorkspaceHandle | undefined;
 
   const page = document.createElement('main');
-  page.className = 'page-content page-content--offset-top create-page';
+  page.className = isEmbed
+    ? 'page-content create-page create-page--embed'
+    : 'page-content page-content--offset-top create-page';
 
   const maker = document.createElement('div');
   maker.className = 'mii-maker';
@@ -96,7 +108,9 @@ export function renderCreate(
     ? 'Edit Mii'
     : isRemix
       ? 'Remix Mii'
-      : 'Free Online Mii Maker';
+      : isEmbed
+        ? 'Mii Maker'
+        : 'Mii Maker';
   const toolbarActions = document.createElement('div');
   toolbarActions.className = 'mii-maker__toolbar-actions';
   toolbar.append(toolbarTitle, toolbarActions);
@@ -104,53 +118,12 @@ export function renderCreate(
   const studio = document.createElement('div');
   studio.className = 'mii-maker__studio';
 
-  const categoryNav = createCategoryNav(activeCategory, (id) => {
-    activeCategory = id;
-    updateCategoryNav(categoryNav, id);
-    mountWorkspace();
-  });
-
-  const preview = createMiiMakerPreview('');
-
-  const previewCol = document.createElement('div');
-  previewCol.className = 'mii-maker__preview-col';
-  previewCol.appendChild(preview.root);
-
-  const workspaceHost = document.createElement('div');
-  workspaceHost.className = 'mii-maker__workspace-host';
-
-  studio.append(categoryNav, previewCol, workspaceHost);
-  maker.append(toolbar, studio);
-  page.append(maker);
-  container.replaceChildren(wrapPublicPage(page));
-
-  const detachLayout = attachMiiMakerLayout(studio, preview);
-
   const undoBtn = document.createElement('button');
   undoBtn.type = 'button';
   undoBtn.className = 'pill-btn interactive';
   undoBtn.innerHTML = `${iconSpan('rotate-left')}<span class="mii-maker__toolbar-btn-label"> Undo</span>`;
   undoBtn.setAttribute('aria-label', 'Undo');
   undoBtn.disabled = true;
-
-  const randomBtn = document.createElement('button');
-  randomBtn.type = 'button';
-  randomBtn.className = 'pill-btn interactive';
-  randomBtn.innerHTML = `${iconSpan('shuffle')}<span class="mii-maker__toolbar-btn-label"> Randomize</span>`;
-  randomBtn.setAttribute('aria-label', 'Randomize');
-
-  const shareBtn = document.createElement('button');
-  shareBtn.type = 'button';
-  shareBtn.className = 'pill-btn pill-btn--filled interactive';
-  const shareLabel = isEdit ? 'Save Changes' : 'Share on ShareMii';
-  shareBtn.innerHTML = isEdit
-    ? `${iconSpan('floppy-disk')}<span class="mii-maker__toolbar-btn-label"> ${shareLabel}</span>`
-    : `${iconSpan('share-nodes')}<span class="mii-maker__toolbar-btn-label"> ${shareLabel}</span>`;
-  shareBtn.setAttribute('aria-label', shareLabel);
-
-  toolbarActions.append(undoBtn, randomBtn, shareBtn);
-
-  let cleanupModal: (() => void) | undefined;
 
   const callbacks = {
     getFields: () => fields,
@@ -164,6 +137,75 @@ export function renderCreate(
       void applyFields(next, path);
     },
   };
+
+  let syncPreviewLayout = (): void => {};
+  const preview = createMiiMakerPreview('', {
+    onSizeChange: (path, value) => {
+      callbacks.onChange(callbacks.getFields(), path, value);
+    },
+    onViewportChange: () => syncPreviewLayout(),
+  });
+
+  function setGeneralLayout(enabled: boolean): void {
+    studio.classList.toggle('mii-maker__studio--general', enabled);
+    preview.setGeneralMode(enabled);
+    if (enabled) {
+      preview.syncSizeSliders(
+        Number(getNestedField(fields, 'general.height') ?? 64),
+        Number(getNestedField(fields, 'general.weight') ?? 64),
+      );
+    }
+  }
+
+  const categoryNav = createCategoryNav(activeCategory, (id) => {
+    activeCategory = id;
+    updateCategoryNav(categoryNav, id);
+    setGeneralLayout(id === 'general');
+    mountWorkspace();
+  });
+
+  const previewCol = document.createElement('div');
+  previewCol.className = 'mii-maker__preview-col';
+  previewCol.appendChild(preview.root);
+
+  const workspaceHost = document.createElement('div');
+  workspaceHost.className = 'mii-maker__workspace-host';
+
+  studio.append(categoryNav, previewCol, workspaceHost);
+  maker.append(toolbar, studio);
+  page.append(maker);
+  container.replaceChildren(
+    isEmbed ? wrapEmbedPage(page) : wrapPublicPage(page),
+  );
+
+  const { disconnect: detachLayout, sync: syncPreviewLayoutFn } =
+    attachMiiMakerLayout(studio, preview);
+  syncPreviewLayout = syncPreviewLayoutFn;
+
+  const randomBtn = document.createElement('button');
+  randomBtn.type = 'button';
+  randomBtn.className = 'pill-btn interactive';
+  randomBtn.innerHTML = `${iconSpan('shuffle')}<span class="mii-maker__toolbar-btn-label"> Randomize</span>`;
+  randomBtn.setAttribute('aria-label', 'Randomize');
+
+  const shareBtn = document.createElement('button');
+  shareBtn.type = 'button';
+  shareBtn.className = 'pill-btn pill-btn--filled interactive';
+  const shareLabel = isEdit
+    ? 'Save Changes'
+    : isEmbed
+      ? 'Finish'
+      : 'Share on ShareMii';
+  shareBtn.innerHTML = isEdit
+    ? `${iconSpan('floppy-disk')}<span class="mii-maker__toolbar-btn-label"> ${shareLabel}</span>`
+    : isEmbed
+      ? `${iconSpan('qrcode')}<span class="mii-maker__toolbar-btn-label"> ${shareLabel}</span>`
+      : `${iconSpan('share-nodes')}<span class="mii-maker__toolbar-btn-label"> ${shareLabel}</span>`;
+  shareBtn.setAttribute('aria-label', shareLabel);
+
+  toolbarActions.append(undoBtn, randomBtn, shareBtn);
+
+  let cleanupModal: (() => void) | undefined;
 
   function mountWorkspace(): void {
     workspaceHost.classList.remove('mii-maker__workspace-host--enter');
@@ -189,6 +231,12 @@ export function renderCreate(
       previewBase64 = await encodeFieldsToBase64(fields);
       debouncedPreview(previewBase64);
       workspace?.sync(fields);
+      if (activeCategory === 'general') {
+        preview.syncSizeSliders(
+          Number(getNestedField(fields, 'general.height') ?? 64),
+          Number(getNestedField(fields, 'general.weight') ?? 64),
+        );
+      }
       if (changedPath === 'general.gender') {
         workspace?.resetPanels();
       }
@@ -225,6 +273,10 @@ export function renderCreate(
       .then((decoded) => {
         decoded.name = name;
         cleanupModal?.();
+        if (isEmbed) {
+          cleanupModal = openEmbedFinishModal(decoded);
+          return;
+        }
         cleanupModal = openSubmitModal(
           decoded,
           {

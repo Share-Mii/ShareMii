@@ -1,0 +1,3 @@
+/embed/*
+  Content-Security-Policy: frame-ancestors 'self' https://itch.io https://*.itch.io https://html-classic.itch.zone https://itch.zone http://localhost:* http://127.0.0.1:*;
+  X-Robots-Tag: noindex, nofollow

@@ -4,6 +4,7 @@ import {
   collectionMeta,
   collectionsBrowseMeta,
   createMeta,
+  embedMakerMeta,
   helpMeta,
   homeMeta,
   legalMeta,
@@ -50,6 +51,10 @@ export async function resolveSeoMeta(
   pathname: string,
 ): Promise<SeoMeta | null> {
   const origin = siteOrigin(env, request);
+
+  if (pathname === '/embed/maker') {
+    return embedMakerMeta(origin);
+  }
 
   if (NOINDEX_PREFIXES.some((p) => pathname === p || pathname.startsWith(p))) {
     return { ...notFoundMeta(origin), noindex: true };
