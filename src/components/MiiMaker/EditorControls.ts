@@ -245,6 +245,16 @@ export function createEditorWorkspace(
       }
     }
 
+    for (const block of root.querySelectorAll<HTMLElement>('[data-range-path]')) {
+      const path = block.dataset.rangePath!;
+      const control = cat.controls.find((c) => c.path === path);
+      const input = block.querySelector<HTMLInputElement>('.mii-maker__range-input');
+      if (!input || control?.type !== 'slider') continue;
+      const raw = getNestedField(fields, path);
+      const n = Number(raw);
+      input.value = String(Number.isFinite(n) ? clampSlider(control, n) : control.min ?? 0);
+    }
+
     for (const block of root.querySelectorAll<HTMLElement>('[data-number-path]')) {
       const path = block.dataset.numberPath!;
       const input = block.querySelector<HTMLInputElement>('.mii-maker__birth-input');
@@ -342,6 +352,73 @@ export function createEditorWorkspace(
 
     section.append(heading, input);
     host.appendChild(section);
+  }
+
+  function mountRangeSliderSection(
+    control: EditorControl,
+    host: HTMLElement,
+    orientation: 'horizontal' | 'vertical' = 'horizontal',
+  ): void {
+    const block = document.createElement('div');
+    block.className = [
+      'mii-maker__control-section',
+      'mii-maker__range-block',
+      orientation === 'vertical' ? 'mii-maker__range-block--vertical' : '',
+    ]
+      .filter(Boolean)
+      .join(' ');
+    block.dataset.rangePath = control.path;
+
+    const nudges = nudgesForSlider(control);
+    const low = nudges[0];
+    const high = nudges[1];
+
+    const lowCap = document.createElement('span');
+    lowCap.className = 'mii-maker__range-cap';
+    if (low) {
+      lowCap.innerHTML = miiEditorIconHtml(
+        low.editorIcon,
+        'mii-editor-icon mii-maker__range-cap-icon',
+      );
+      lowCap.title = low.label;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'range';
+    input.className = 'mii-maker__range-input';
+    input.min = String(control.min ?? 0);
+    input.max = String(control.max ?? 127);
+    input.setAttribute('aria-label', control.label);
+    const raw = getNestedField(callbacks.getFields(), control.path);
+    const n = Number(raw);
+    input.value = String(
+      Number.isFinite(n) ? clampSlider(control, n) : control.min ?? 0,
+    );
+
+    input.addEventListener('input', () => {
+      callbacks.onChange(
+        callbacks.getFields(),
+        control.path,
+        clampSlider(control, Number(input.value)),
+      );
+    });
+
+    const highCap = document.createElement('span');
+    highCap.className = 'mii-maker__range-cap';
+    if (high) {
+      highCap.innerHTML = miiEditorIconHtml(
+        high.editorIcon,
+        'mii-editor-icon mii-maker__range-cap-icon',
+      );
+      highCap.title = high.label;
+    }
+
+    const label = document.createElement('span');
+    label.className = 'mii-maker__range-label';
+    label.textContent = control.label;
+
+    block.append(lowCap, input, highCap, label);
+    host.appendChild(block);
   }
 
   function mountSliderSection(control: EditorControl, host: HTMLElement): void {
@@ -756,6 +833,17 @@ export function createEditorWorkspace(
       rowBody.querySelector('.mii-maker__swatches')?.classList.add(
         'mii-maker__swatches--favorite',
       );
+    }
+
+    const heightCtrl = controlByPath('general.height');
+    const weightCtrl = controlByPath('general.weight');
+    if (heightCtrl || weightCtrl) {
+      const rowBody = mountGeneralRow('Size', settings);
+      const sizeSliders = document.createElement('div');
+      sizeSliders.className = 'mii-maker__general-size-sliders';
+      if (heightCtrl) mountRangeSliderSection(heightCtrl, sizeSliders, 'vertical');
+      if (weightCtrl) mountRangeSliderSection(weightCtrl, sizeSliders, 'horizontal');
+      rowBody.appendChild(sizeSliders);
     }
 
     const monthCtrl = controlByPath('general.birthMonth');

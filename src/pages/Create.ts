@@ -25,7 +25,6 @@ import {
   miiFieldsToDecoded,
   MiiUndoStack,
   randomizeMiiFields,
-  getNestedField,
   setNestedField,
   type EditorCategoryId,
   type MiiFields,
@@ -138,23 +137,13 @@ export function renderCreate(
     },
   };
 
+  const preview = createMiiMakerPreview('');
+
   let syncPreviewLayout = (): void => {};
-  const preview = createMiiMakerPreview('', {
-    onSizeChange: (path, value) => {
-      callbacks.onChange(callbacks.getFields(), path, value);
-    },
-    onViewportChange: () => syncPreviewLayout(),
-  });
 
   function setGeneralLayout(enabled: boolean): void {
-    studio.classList.toggle('mii-maker__studio--general', enabled);
     preview.setGeneralMode(enabled);
-    if (enabled) {
-      preview.syncSizeSliders(
-        Number(getNestedField(fields, 'general.height') ?? 64),
-        Number(getNestedField(fields, 'general.weight') ?? 64),
-      );
-    }
+    requestAnimationFrame(() => syncPreviewLayout());
   }
 
   const categoryNav = createCategoryNav(activeCategory, (id) => {
@@ -231,12 +220,6 @@ export function renderCreate(
       previewBase64 = await encodeFieldsToBase64(fields);
       debouncedPreview(previewBase64);
       workspace?.sync(fields);
-      if (activeCategory === 'general') {
-        preview.syncSizeSliders(
-          Number(getNestedField(fields, 'general.height') ?? 64),
-          Number(getNestedField(fields, 'general.weight') ?? 64),
-        );
-      }
       if (changedPath === 'general.gender') {
         workspace?.resetPanels();
       }

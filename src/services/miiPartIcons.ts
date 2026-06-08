@@ -95,8 +95,6 @@ const LIGHT_FACE_SHAPE = {
 
 /** High-contrast picker icon colors in dark mode (shape preview, not swatch colors). */
 const DARK_PICKER_FEATURE = {
-  faceWrinkles: '#ffffff',
-  headStroke: '#ffffff',
   eyebrowFill: '#ffffff',
   facialHairFill: '#ffffff',
   eyeColor: '#ffffff',
@@ -105,7 +103,6 @@ const DARK_PICKER_FEATURE = {
   mouthTooth: '#3a3a40',
   glassesFill: '#ffffff',
   glassesShade: '#c8c8d0',
-  featureColor: '#ffffff',
 } as const;
 
 export function hasPartIcon(path: string): boolean {
@@ -207,9 +204,11 @@ export function applyIconThemeVars(host: HTMLElement, fields: MiiFields): void {
     '--icon-hat-stroke': dark ? '#c8c8d0' : '#333333',
     '--icon-face-stroke': LIGHT_FACE_SHAPE.stroke,
     '--icon-face-detail': LIGHT_FACE_SHAPE.detail,
-    '--icon-face-wrinkles': dark ? DARK_PICKER_FEATURE.faceWrinkles : '#996d54',
-    '--icon-head-stroke': dark ? DARK_PICKER_FEATURE.headStroke : '#999999',
+    '--icon-face-wrinkles': LIGHT_FACE_SHAPE.detail,
+    '--icon-head-stroke': LIGHT_FACE_SHAPE.stroke,
   };
+
+  host.style.color = LIGHT_FACE_SHAPE.stroke;
 
   if (dark) {
     Object.assign(vars, {
@@ -223,11 +222,8 @@ export function applyIconThemeVars(host: HTMLElement, fields: MiiFields): void {
       '--icon-glasses-shade': DARK_PICKER_FEATURE.glassesShade,
     });
     propagateIconVars(host, vars);
-    host.style.color = DARK_PICKER_FEATURE.featureColor;
     return;
   }
-
-  host.style.removeProperty('color');
   Object.assign(vars, {
     '--icon-eyebrow-fill': HAIR_COLORS[brows % HAIR_COLORS.length] ?? '#402010',
     '--icon-facial-hair-fill':
